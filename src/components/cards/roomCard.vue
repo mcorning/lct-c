@@ -165,8 +165,6 @@ import visitorIdentityCard from '@/components/cards/visitorIdentityCard';
 import logsCard from '@/components/cards/logsCard';
 import mapCard from '@/components/cards/mapCard';
 
-import Room from '@/models/Room';
-
 import { data } from '@/assets/data/sistersBusiness.json';
 
 export default {
@@ -274,7 +272,6 @@ export default {
     },
 
     exposeEventPromise(event, data) {
-      let self = this;
       return new Promise(function (resolve) {
         socket.emit(event, data, (results) => {
           resolve(results);
@@ -319,7 +316,6 @@ export default {
     },
   },
   async mounted() {
-    await Room.$fetch();
     this.panelState = [0]; // open only the 0th element of expansion-panels
   },
 };

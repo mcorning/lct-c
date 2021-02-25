@@ -45,17 +45,21 @@
         v-if="!usernameAlreadySelected"
         @input="onUsernameSelection"
       />
-      <div v-else>
-        <chat />
-        <Visitor />
-      </div>
+      <v-row v-else>
+        <v-col>
+          <chat />
+        </v-col>
+        <v-col>
+          <Visitor />
+        </v-col>
+      </v-row>
     </v-main>
 
     <v-app-bar bottom dense app color="primary" dark>
       <v-row align="center" dense justify="space-between">
-        <v-col class="text-left"><small>{{}}</small></v-col>
+        <v-col class="text-left"><small>Put Socket URL here</small></v-col>
         <v-col class="text-right">
-          <small>Put Build Nr Here </small>
+          <small>Put build nr here </small>
           <!-- <small>V {{ build }} </small> -->
         </v-col>
       </v-row>

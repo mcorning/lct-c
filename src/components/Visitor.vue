@@ -42,6 +42,21 @@
     <diaryCard />
 
     <!-- roomCard -->
+    <v-row no-gutters>
+      <v-col>
+        <!-- LCT-B does not interact with Rooms on the node Server.  -->
+        <!-- LCT-B interacts with RedisGraph server, instead (where the ID of the room is all that's necessary for the graph.). -->
+        <roomCard
+          ref="roomSelect"
+          :log="log"
+          :nickName="enabled.visitor.visitor"
+          :favorites="favorites"
+          @spaceSelected="onSpaceSelected"
+          :messages="messages"
+          :roomName="roomName"
+        />
+      </v-col>
+    </v-row>
 
     <!-- likert -->
     <v-row no-gutters>
@@ -76,7 +91,7 @@ import Visitor from '@/models/Visitor';
 
 import diaryCard from '@/components/cards/diaryCard';
 
-// import roomCard from "@/components/cards/roomCard";
+import roomCard from '@/components/cards/roomCard';
 
 // import roomIdentityCard from '@/components/cards/roomIdentityCard';
 
@@ -101,7 +116,7 @@ export default {
 
   components: {
     diaryCard,
-    // roomCard,
+    roomCard,
   },
   computed: {
     favorites() {
@@ -165,7 +180,6 @@ export default {
       set(newVal) {
         // flatten newVal
         const msg = {
-          // id: base64id.generateId(),
           room: newVal.room,
           visitor: newVal.visitor.visitor,
           roomId: newVal.room,
