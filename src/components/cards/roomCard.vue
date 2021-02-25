@@ -1,5 +1,7 @@
 <template>
   <div>
+    <!-- <pre>{{ socketID }}</pre>
+    <pre>{{ user }}</pre> -->
     <v-card class="overflow-hidden" color="primary lighten-2" dark :height="ht">
       <v-dialog v-model="alert" max-width="450">
         <v-card dark color="warning darken-1" class="white--text">
@@ -44,7 +46,7 @@
       <v-card v-if="showSpaces" :height="ht">
         <v-card-text>
           Pick a {{ nsp }} public space category:
-          <v-row>
+          <v-row no-gutters>
             <v-col cols="12">
               <v-chip-group
                 v-model="selectedCategory"
@@ -89,7 +91,7 @@
       <v-card v-if="showGatherings" :height="ht">
         <v-card-title>Identify the gathering</v-card-title>
         <v-card-text>
-          <v-row>
+          <v-row no-gutters>
             <v-col cols="10" md="4">
               <v-text-field
                 v-model="selectedSpace"
@@ -103,7 +105,14 @@
         </v-card-text>
       </v-card>
 
-      <visitorIdentityCard :log="log" @warned="onWarned($event)" :height="ht" />
+      <!-- <visitorIdentityCard
+        :log="log"
+        @warned="onWarned($event)"
+        :height="ht"
+        :user="user"
+        :socketID="socketID"
+        },
+      /> -->
     </v-card>
     <v-card>
       <v-tooltip left>
@@ -161,7 +170,7 @@
 import socket from '../../socket.js';
 
 // import warnRoomCard from "@/components/cards/warnRoomCard";
-import visitorIdentityCard from '@/components/cards/visitorIdentityCard';
+// import visitorIdentityCard from '@/components/cards/visitorIdentityCard';
 import logsCard from '@/components/cards/logsCard';
 import mapCard from '@/components/cards/mapCard';
 
@@ -179,11 +188,13 @@ export default {
     },
     log: { type: Function },
     roomName: { type: String },
+    user: { type: Object },
+    socketID: { type: String },
   },
   components: {
     // warnRoomCard,
     mapCard,
-    visitorIdentityCard,
+    // visitorIdentityCard,
     logsCard,
   },
   computed: {

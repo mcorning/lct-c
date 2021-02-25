@@ -2,7 +2,7 @@
   <div class="user" @click="onClick" :class="{ selected: selected }">
     <div class="description">
       <div class="name">
-        {{ user.username }} {{ user.self ? " (yourself)" : "" }}
+        {{ user.username }} {{ user.self ? ' (yourself)' : '' }}
         <div>
           <small>userID: {{ user.userID }}</small>
         </div>
@@ -19,9 +19,9 @@
 </template>
 
 <script>
-import StatusIcon from "./StatusIcon";
+import StatusIcon from './StatusIcon';
 export default {
-  name: "User",
+  name: 'User',
   components: { StatusIcon },
   props: {
     user: Object,
@@ -30,12 +30,12 @@ export default {
   },
   methods: {
     onClick() {
-      this.$emit("select");
+      this.$emit('select');
     },
   },
   computed: {
     status() {
-      return this.user.connected ? "online" : "offline";
+      return this.user.connected ? 'online' : 'offline';
     },
   },
 };

@@ -1,15 +1,23 @@
+const { DateTime, Interval } = require('luxon');
+
+const clc = require('cli-color');
+const success = clc.green.bold;
+// const error = clc.red.bold;
+// const warn = clc.yellow;
+// const info = clc.cyan;
+// const notice = clc.blue;
+// const highlight = clc.magenta;
+// const bold = clc.bold;
+// const bgBlue = clc.bgBlue;
+// const bgMagenta = clc.bgMagenta;
+
 export default {
   data() {
     return {
+      success: success,
       daysBack: 14,
-      today: 'YYYY-MM-DD',
-      // visitFormat: "HH:mm:ss:SSS on ddd, MMM DD",
-      visitFormat: 'HH:mm ddd, MMM DD',
-      defaultQuery: {
-        visitor: '',
-        id: '',
-        nsp: '',
-      },
+      today: 'yyyy-mm-dd',
+      visitFormat: 'HH:mm ccc, MMM DD',
     };
   },
   methods: {
@@ -40,28 +48,21 @@ export default {
 
     //#region this.$luxon-based code
     getNow() {
-      // const shortDateTimeFormat = 'lll';
-      const timeFormat = 'HH:mm:ss:SSS';
-      return this.$luxon(new Date(), timeFormat);
+      return DateTime.now().toLocaleString(DateTime.TIME_24_WITH_SECONDS);
     },
 
-    isToday(date, daysBack) {
-      let x = this.$luxon(date, this.today);
-      let y = this.$luxon().add(-daysBack, 'day').format(this.today);
-      return x == y;
+    isToday(date) {
+      return date == DateTime.now();
     },
 
     isBetween(date, daysBack) {
-      let visit = this.$luxon(date);
-
-      let past = this.$luxon().add(-daysBack, 'day').format('YYYY-MM-DD');
-      let tomorrow = this.$luxon().add(1, 'day').format('YYYY-MM-DD');
-      let test = visit.isBetween(past, tomorrow);
-      return test;
+      let past = DateTime.now().plus({ day: -daysBack });
+      let tomorrow = DateTime.now().plus({ day: 1 });
+      Interval.fromDateTimes(past, tomorrow).contains(date);
     },
 
     formatVisitedDate(date) {
-      let x = this.$luxon(new Date(date), this.visitFormat);
+      let x = DateTime(date, this.visitFormat);
       return x;
     },
 
@@ -71,7 +72,7 @@ export default {
       return array
         .filter((v) => v[val]) // ignore Room Opened/Closed messages
         .reduce(function (a, c) {
-          let key = this.$luxon(c[prop], 'YYYY-MM-DD');
+          let key = DateTime(c[prop], this.today);
           if (!a[key]) {
             a[key] = [];
           }

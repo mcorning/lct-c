@@ -1,6 +1,6 @@
 <template>
   <v-card class="pa-4" flat height="5o0px">
-    <v-row align="center" justify="space-around">
+    <v-row align="center" justify="space-around" no-gutters>
       <v-col cols="8" class="text-center">
         <v-text-field
           hide-details
@@ -21,7 +21,7 @@
       </v-col>
     </v-row>
 
-    <v-row align="start" class="mt-1">
+    <v-row align="start" class="mt-1" no-gutters>
       <v-img
         alt="campus"
         class="shrink mr-2"

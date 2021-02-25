@@ -1,26 +1,27 @@
 <template>
   <v-app>
     <v-app-bar app color="primary" dense dark>
-      <v-row align="center" justify="space-between" dense>
+      <v-row align="center" justify="space-between" no-gutters>
         <v-col>
-          <v-btn width="48" height="48" color="primary" text>
-            <soteria-icon />
-          </v-btn>
+          <soteria-icon />
           <a
             class="white--text"
             href="https://soteriainstitute.org/safe-in-sisters/"
             target="_blank"
             rel="noopener"
             style="text-decoration: none"
-            ><small>Soteria Institute</small></a
+            >Soteria</a
           >
         </v-col>
-
+        <v-spacer></v-spacer>
         <v-col cols="auto"
-          ><v-card-title class="d-sm-none">LCT</v-card-title>
+          ><v-card-title class="d-sm-none">LCT - {{ nsp }} </v-card-title>
           <v-card-title class="d-sm-inline d-none">
-            Local Contact Tracing</v-card-title
+            Local Contact Tracing - {{ nsp }}</v-card-title
           >
+        </v-col>
+        <v-col cols="1">
+          <v-avatar size="36px"> <img :src="avatar" /> </v-avatar>
         </v-col>
       </v-row>
     </v-app-bar>
@@ -41,26 +42,32 @@
       </template>
     </v-snackbar>
     <v-main>
-      <select-username
-        v-if="!usernameAlreadySelected"
-        @input="onUsernameSelection"
-      />
-      <v-row v-else>
-        <v-col>
-          <chat />
+      <!-- <Welcome v-if="usernameAlreadySelected" /> -->
+      <Welcome v-if="!sid" @input="onUsernameSelection" />
+
+      <Visitor v-else />
+
+      <!-- For later when we add back messaging
+        <v-row v-else>
+        <v-col cols="3">
+          <Chat />
         </v-col>
-        <v-col>
+        <v-col cols="9">
           <Visitor />
         </v-col>
-      </v-row>
+      </v-row>  -->
     </v-main>
 
-    <v-app-bar bottom dense app color="primary" dark>
-      <v-row align="center" dense justify="space-between">
-        <v-col class="text-left"><small>Put Socket URL here</small></v-col>
+    <v-app-bar app bottom height="36" dense color="primary" dark>
+      <v-row align="center" dense justify="space-between" no-gutters>
+        <v-col class="text-left">
+          <small>You: {{ uid }} </small>
+        </v-col>
+        <v-col class="text-center">
+          <small>Ver: {{ build }} </small>
+        </v-col>
         <v-col class="text-right">
-          <small>Put build nr here </small>
-          <!-- <small>V {{ build }} </small> -->
+          <small>Session: {{ sid }} </small>
         </v-col>
       </v-row>
     </v-app-bar>
@@ -69,22 +76,34 @@
 
 <script>
 import Visitor from './components/Visitor';
+import Welcome from './components/Welcome';
 import update from '@/mixins/update.js';
 import helpers from '@/mixins/helpers.js';
-import SelectUsername from './components/SelectUsername';
-import Chat from './components/Chat';
+// import Chat from './components/Chat';
 import socket from './socket';
 
 export default {
   name: 'App',
   components: {
-    Chat,
-    SelectUsername,
+    // Chat,
     Visitor,
+    Welcome,
+  },
+  computed: {
+    avatar() {
+      let randomId = Math.round(Math.random() * 100);
+      return `https://randomuser.me/api/portraits/men/${randomId}.jpg`;
+    },
+    build() {
+      return this.$store.getters.appVersion;
+    },
   },
   data() {
     return {
+      nsp: 'Sisters',
       usernameAlreadySelected: false,
+      sid: '',
+      uid: 'Not connected',
     };
   },
   methods: {
@@ -99,25 +118,30 @@ export default {
 
   created() {
     const sessionID = localStorage.getItem('sessionID');
-
+    console.log(sessionID);
     if (sessionID) {
       this.usernameAlreadySelected = true;
+      this.sid = sessionID;
       socket.auth = { sessionID };
       socket.connect();
     }
 
     socket.on('session', ({ sessionID, userID }) => {
+      console.log(sessionID, userID);
       // attach the session ID to the next reconnection attempts
       socket.auth = { sessionID };
       // store it in the localStorage
       localStorage.setItem('sessionID', sessionID);
       // save the ID of the user
       socket.userID = userID;
+      this.sid = sessionID;
+      this.uid = userID;
     });
 
     socket.on('connect_error', (err) => {
       if (err.message === 'invalid username') {
         this.usernameAlreadySelected = false;
+        this.sid = '';
       }
     });
   },
