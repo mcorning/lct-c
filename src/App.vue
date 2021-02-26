@@ -1,7 +1,11 @@
 <template>
   <v-app>
+    <v-overlay :value="overlay">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
+
     <v-app-bar app color="primary" dense dark>
-      <v-row align="center" justify="space-between" no-gutters>
+      <v-row align="center" no-gutters>
         <v-col>
           <soteria-icon />
           <a
@@ -20,8 +24,15 @@
             Local Contact Tracing - {{ nsp }}</v-card-title
           >
         </v-col>
-        <v-col cols="1">
-          <v-avatar size="36px"> <img :src="avatar" /> </v-avatar>
+        <v-col cols="1" class="text-right">
+          <v-tooltip left>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn text v-bind="attrs" v-on="on" @click="clearSessionID">
+                <v-avatar size="36px"> <img :src="avatar" /> </v-avatar>
+              </v-btn>
+            </template>
+            <span>Login again</span>
+          </v-tooltip>
         </v-col>
       </v-row>
     </v-app-bar>
@@ -42,11 +53,12 @@
       </template>
     </v-snackbar>
     <v-main>
-      <!-- <Welcome v-if="usernameAlreadySelected" /> -->
-      <Welcome v-if="!sid" @input="onUsernameSelection" />
+      <v-row justify="center">
+        <!-- <Welcome v-if="usernameAlreadySelected" /> -->
+        <Welcome v-if="!sid" @input="onUsernameSelection" />
 
-      <Visitor v-else />
-
+        <Visitor v-else />
+      </v-row>
       <!-- For later when we add back messaging
         <v-row v-else>
         <v-col cols="3">
@@ -101,12 +113,17 @@ export default {
   data() {
     return {
       nsp: 'Sisters',
+      overlay: true,
       usernameAlreadySelected: false,
       sid: '',
       uid: 'Not connected',
     };
   },
   methods: {
+    clearSessionID() {
+      localStorage.removeItem('sessionID');
+    },
+
     onUsernameSelection(username) {
       this.usernameAlreadySelected = true;
       socket.auth = { username };
@@ -116,6 +133,17 @@ export default {
 
   mixins: [update, helpers],
 
+  watch: {
+    // in case we timeout on an async function
+    overlay(val) {
+      val &&
+        setTimeout(() => {
+          this.overlay = false;
+        }, 10000);
+    },
+  },
+
+  //#region Lifecycle Hooks
   created() {
     const sessionID = localStorage.getItem('sessionID');
     console.log(sessionID);
@@ -145,9 +173,16 @@ export default {
       }
     });
   },
+
   destroyed() {
     socket.off('connect_error');
   },
+
+  async mounted() {
+    this.overlay = false;
+    console.log('Visitor.vue mounted');
+  },
+  //#endregion
 };
 </script>
 

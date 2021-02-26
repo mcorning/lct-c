@@ -19,8 +19,16 @@ const storyMapUsers = new Map();
 storyMap.set('sessions', storyMapSessions);
 storyMap.set('users', storyMapUsers);
 
-// When the user logs in on the client for the first time:
-//    the client's socket connects with the entered username attached to the socket's auth object
+// When the user logs in on the client for the first time on any client browser:
+//    - entered username decorates the client socket
+//    - the client socket then connects to the server
+//    - after server returns session data, client stores sessionID in localStorage
+// Subsequent logins for the each used client browser
+//    by:
+//      - refreshing or restarting the browser
+//      - opening another public tab
+//    will reuse the initial sessionID for that client
+// NOTE: opening a private or incognito window starts the login process over again
 io.use((socket, next) => {
   console.groupCollapsed('Inside io.use() handling socket', socket.id);
   const sessionID = socket.handshake.auth.sessionID; // where does client get the sessionID?
