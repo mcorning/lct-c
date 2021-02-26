@@ -10,7 +10,9 @@ const randomId = () => crypto.randomBytes(8).toString('hex');
 
 const { InMemorySessionStore } = require('./sessionStore');
 const sessionStore = new InMemorySessionStore();
-const { printJson, error, warn, success } = require('./helpers.js');
+const { printJson, error, warn, success, highlight } = require('./helpers.js');
+const { version } = require('./package.json');
+const { DateTime } = require('luxon');
 // const { toUnicode } = require('punycode'); //Punycode is used to encode internationalized domain names (IDN).
 
 const storyMap = new Map();
@@ -214,6 +216,13 @@ function tellUserStory(username, socket) {
 
 const PORT = process.env.PORT || 3000;
 
-httpServer.listen(PORT, () =>
-  console.log(`server listening at http://localhost:${PORT}`)
-);
+httpServer.listen(PORT, () => {
+  console.log(
+    highlight(
+      `Running index.js version ${version} at ${DateTime.now().toLocaleString(
+        DateTime.DATETIME_FULL
+      )}`
+    )
+  );
+  console.log(highlight(`Server listening at http://localhost:${PORT}`));
+});

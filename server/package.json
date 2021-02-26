@@ -1,13 +1,16 @@
 {
   "name": "server",
-  "version": "1.0.0",
+  "version": "2.25.18",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "monitor": "nodemon index.js"
   },
-  "author": "Damien Arrachequesne <damien.arrachequesne@gmail.com>",
+  "authors": [
+    "Damien Arrachequesne <damien.arrachequesne@gmail.com>",
+    "Michael Corning <mcorning@soteriaInstitute.org>"
+  ],
   "license": "MIT",
   "dependencies": {
     "cli-color": "^2.0.0",

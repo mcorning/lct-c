@@ -27,7 +27,12 @@
         <v-col cols="1" class="text-right">
           <v-tooltip left>
             <template v-slot:activator="{ on, attrs }">
-              <v-btn text v-bind="attrs" v-on="on" @click="clearSessionID">
+              <v-btn
+                text
+                v-bind="attrs"
+                v-on="on"
+                @click="usernameAlreadySelected = false"
+              >
                 <v-avatar size="36px"> <img :src="avatar" /> </v-avatar>
               </v-btn>
             </template>
@@ -55,8 +60,7 @@
 
     <v-main>
       <v-row justify="center">
-        <!-- <Welcome v-if="usernameAlreadySelected" /> -->
-        <Welcome v-if="!sid" @input="onUsernameSelection" />
+        <Welcome v-if="!usernameAlreadySelected" @input="onUsernameSelection" />
 
         <Visitor v-else @connectionStatusChanged="onConnectionStatusChanged" />
       </v-row>
@@ -161,11 +165,13 @@ export default {
       this.usernameAlreadySelected = true;
       this.sid = sessionID;
       socket.auth = { sessionID };
+      // if server finds a session we will connect
       socket.connect();
     }
 
     socket.on('connect', () => {
       this.onConnectionStatusChanged(true);
+      this.uid = socket.userID;
     });
 
     socket.on('session', ({ sessionID, userID }) => {
