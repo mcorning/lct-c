@@ -31,7 +31,7 @@
                 <v-avatar size="36px"> <img :src="avatar" /> </v-avatar>
               </v-btn>
             </template>
-            <span>Login again</span>
+            <span>{{ username }}, click to login with different nickname</span>
           </v-tooltip>
         </v-col>
       </v-row>
@@ -52,12 +52,13 @@
         </v-btn>
       </template>
     </v-snackbar>
+
     <v-main>
       <v-row justify="center">
         <!-- <Welcome v-if="usernameAlreadySelected" /> -->
         <Welcome v-if="!sid" @input="onUsernameSelection" />
 
-        <Visitor v-else />
+        <Visitor v-else @connectionStatusChanged="onConnectionStatusChanged" />
       </v-row>
       <!-- For later when we add back messaging
         <v-row v-else>
@@ -74,6 +75,7 @@
       <v-row align="center" dense justify="space-between" no-gutters>
         <v-col class="text-left">
           <small>You: {{ uid }} </small>
+          <status-icon :connected="connectionStatus" />
         </v-col>
         <v-col class="text-center">
           <small>Ver: {{ build }} </small>
@@ -92,6 +94,7 @@ import Welcome from './components/Welcome';
 import update from '@/mixins/update.js';
 import helpers from '@/mixins/helpers.js';
 // import Chat from './components/Chat';
+import StatusIcon from './components/StatusIcon';
 import socket from './socket';
 
 export default {
@@ -100,6 +103,7 @@ export default {
     // Chat,
     Visitor,
     Welcome,
+    StatusIcon,
   },
   computed: {
     avatar() {
@@ -112,11 +116,13 @@ export default {
   },
   data() {
     return {
+      connectionStatus: false,
       nsp: 'Sisters',
       overlay: true,
       usernameAlreadySelected: false,
       sid: '',
       uid: 'Not connected',
+      username: '',
     };
   },
   methods: {
@@ -124,8 +130,13 @@ export default {
       localStorage.removeItem('sessionID');
     },
 
+    onConnectionStatusChanged(val) {
+      this.connectionStatus = val;
+    },
+
     onUsernameSelection(username) {
       this.usernameAlreadySelected = true;
+      this.username = username;
       socket.auth = { username };
       socket.connect();
     },
@@ -146,7 +157,6 @@ export default {
   //#region Lifecycle Hooks
   created() {
     const sessionID = localStorage.getItem('sessionID');
-    console.log(sessionID);
     if (sessionID) {
       this.usernameAlreadySelected = true;
       this.sid = sessionID;
@@ -154,8 +164,11 @@ export default {
       socket.connect();
     }
 
+    socket.on('connect', () => {
+      this.onConnectionStatusChanged(true);
+    });
+
     socket.on('session', ({ sessionID, userID }) => {
-      console.log(sessionID, userID);
       // attach the session ID to the next reconnection attempts
       socket.auth = { sessionID };
       // store it in the localStorage

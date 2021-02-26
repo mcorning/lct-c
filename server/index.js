@@ -1,7 +1,7 @@
 const httpServer = require('http').createServer();
 const io = require('socket.io')(httpServer, {
   cors: {
-    origin: 'http://localhost:8080',
+    origin: ['http://localhost:8080', 'http://localhost:8081'],
   },
 });
 
@@ -19,8 +19,11 @@ const storyMapUsers = new Map();
 storyMap.set('sessions', storyMapSessions);
 storyMap.set('users', storyMapUsers);
 
+// Move this up to Vue glogals based on process.env
+const DEBUG = 0;
+
 // When the user logs in on the client for the first time on any client browser:
-//    - entered username decorates the client socket
+//    - the entered username decorates the client socket
 //    - the client socket then connects to the server
 //    - after server returns session data, client stores sessionID in localStorage
 // Subsequent logins for the each used client browser
@@ -161,7 +164,7 @@ io.on('connection', (socket) => {
 });
 
 function tellConnectionStory(socket) {
-  if (storyMapSessions.size) {
+  if (storyMapSessions.size && DEBUG) {
     for (let session of storyMapSessions.keys()) {
       if (session.sessionID == socket.sessionID) {
         let x = storyMapSessions.get(session);
@@ -175,34 +178,38 @@ function tellConnectionStory(socket) {
 }
 
 function tellSessionStory(sessionID, socket, session) {
-  storyMapSessions.set(
-    { sessionID },
-    {
-      'handshake.timestamp': socket.handshake.time,
-      'socket.sessionID': sessionID,
-      'socket.userID': session.userID,
-      'socket.username': session.username,
-    }
-  );
-  console.log('Session data:');
-  console.log(printJson([...storyMapSessions]));
+  if (DEBUG) {
+    storyMapSessions.set(
+      { sessionID },
+      {
+        'handshake.timestamp': socket.handshake.time,
+        'socket.sessionID': sessionID,
+        'socket.userID': session.userID,
+        'socket.username': session.username,
+      }
+    );
+    console.log('Session data:');
+    console.log(printJson([...storyMapSessions]));
+  }
 }
 
 function tellUserStory(username, socket) {
-  storyMapUsers.set(
-    { username },
-    {
-      'socket.sessionID': socket.sessionID,
-      'socket.userID': socket.userID,
-      'socket.username': socket.username,
-    }
-  );
-  console.log('Session data:');
-  console.log(printJson([...storyMap.get('sessions')]));
-  console.log('User data:');
-  console.log(printJson([...storyMap.get('users')]));
-  console.log(success('Leaving io.use()'));
-  console.groupEnd();
+  if (DEBUG) {
+    storyMapUsers.set(
+      { username },
+      {
+        'socket.sessionID': socket.sessionID,
+        'socket.userID': socket.userID,
+        'socket.username': socket.username,
+      }
+    );
+    console.log('Session data:');
+    console.log(printJson([...storyMap.get('sessions')]));
+    console.log('User data:');
+    console.log(printJson([...storyMap.get('users')]));
+    console.log(success('Leaving io.use()'));
+    console.groupEnd();
+  }
 }
 
 const PORT = process.env.PORT || 3000;
