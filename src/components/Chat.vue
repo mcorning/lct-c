@@ -1,37 +1,51 @@
 <template>
-  <div>
-    <div class="left-panel">
-      <user
-        v-for="user in users"
-        :key="user.userID"
-        :user="user"
-        :socketID="socketID"
-        :selected="selectedUser === user"
-        @select="onSelectUser(user)"
-      />
-    </div>
-    <message-panel
-      v-if="selectedUser"
-      :user="selectedUser"
-      @input="onMessage"
-      class="right-panel"
+  <div class="left-panel">
+    <v-card-title> {{ nsp }}</v-card-title>
+    <v-card-subtitle>{{ users.length }} of you</v-card-subtitle>
+    <user
+      v-for="user in users"
+      :key="user.userID"
+      :user="user"
+      :socketID="socketID"
+      :selected="selectedUser === user"
+      @select="onSelectUser(user)"
     />
   </div>
 </template>
 
 <script>
-import socket from "../socket";
-import User from "./User";
-import MessagePanel from "./MessagePanel";
+import socket from '../socket';
+import User from './User';
+// import MessagePanel from './MessagePanel';
 
 export default {
-  name: "Chat",
-  components: { User, MessagePanel },
-  computed: {},
+  name: 'Chat',
+  props: {
+    nsp: String,
+  },
+  components: {
+    User,
+    // MessagePanel,
+  },
+  computed: {
+    status() {
+      return this.user.connected ? 'online' : 'offline';
+    },
+
+    showMessages() {
+      return this.selectedUser && false;
+    },
+
+    // username() {
+    //   let x = this.users.filter((v) => v.username == v.self).username;
+    //   return x;
+    // },
+  },
 
   data() {
     return {
-      socketID: "",
+      selectedItem: 0,
+      socketID: '',
       selectedUser: null,
       users: [],
     };
@@ -39,7 +53,7 @@ export default {
   methods: {
     onMessage(content) {
       if (this.selectedUser) {
-        socket.emit("private message", {
+        socket.emit('private message', {
           content,
           to: this.selectedUser.userID,
         });
@@ -55,7 +69,7 @@ export default {
     },
   },
   created() {
-    socket.on("connect", () => {
+    socket.on('connect', () => {
       this.socketID = socket.id;
       this.users.forEach((user) => {
         if (user.self) {
@@ -64,7 +78,7 @@ export default {
       });
     });
 
-    socket.on("disconnect", () => {
+    socket.on('disconnect', () => {
       this.users.forEach((user) => {
         if (user.self) {
           user.connected = false;
@@ -77,7 +91,7 @@ export default {
       user.hasNewMessages = false;
     };
 
-    socket.on("users", (users) => {
+    socket.on('users', (users) => {
       users.forEach((user) => {
         for (let i = 0; i < this.users.length; i++) {
           const existingUser = this.users[i];
@@ -99,7 +113,7 @@ export default {
       });
     });
 
-    socket.on("user connected", (user) => {
+    socket.on('user connected', (user) => {
       for (let i = 0; i < this.users.length; i++) {
         const existingUser = this.users[i];
         if (existingUser.userID === user.userID) {
@@ -111,7 +125,7 @@ export default {
       this.users.push(user);
     });
 
-    socket.on("user disconnected", (id) => {
+    socket.on('user disconnected', (id) => {
       for (let i = 0; i < this.users.length; i++) {
         const user = this.users[i];
         if (user.userID === id) {
@@ -121,7 +135,7 @@ export default {
       }
     });
 
-    socket.on("private message", ({ content, from, to }) => {
+    socket.on('private message', ({ content, from, to }) => {
       for (let i = 0; i < this.users.length; i++) {
         const user = this.users[i];
         const fromSelf = socket.userID === from;
@@ -138,13 +152,14 @@ export default {
       }
     });
   },
+  // anything that takes this control out of memory (e.g., v-if that turns false) will trigger this event
   destroyed() {
-    socket.off("connect");
-    socket.off("disconnect");
-    socket.off("users");
-    socket.off("user connected");
-    socket.off("user disconnected");
-    socket.off("private message");
+    socket.off('connect');
+    socket.off('disconnect');
+    socket.off('users');
+    socket.off('user connected');
+    socket.off('user disconnected');
+    socket.off('private message');
   },
 };
 </script>
@@ -153,15 +168,15 @@ export default {
 .left-panel {
   position: fixed;
   left: 0;
-  top: 0;
-  bottom: 0;
-  width: 260px;
+  top: 36px;
+  bottom: 36px;
   overflow-x: hidden;
   background-color: #3f0e40;
   color: white;
 }
 
 .right-panel {
-  margin-left: 260px;
+  margin-left: 150px;
+  width: 150px;
 }
 </style>

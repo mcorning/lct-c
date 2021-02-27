@@ -5,39 +5,15 @@
     </v-overlay>
 
     <v-app-bar app color="primary" dense dark>
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-navigation-drawer v-model="drawer" app>
+        <Chat :nsp="nsp" />
+      </v-navigation-drawer>
+
       <v-row align="center" no-gutters>
-        <v-col>
-          <soteria-icon />
-          <a
-            class="white--text"
-            href="https://soteriainstitute.org/safe-in-sisters/"
-            target="_blank"
-            rel="noopener"
-            style="text-decoration: none"
-            >Soteria</a
-          >
-        </v-col>
         <v-spacer></v-spacer>
-        <v-col cols="auto"
-          ><v-card-title class="d-sm-none">LCT - {{ nsp }} </v-card-title>
-          <v-card-title class="d-sm-inline d-none">
-            Local Contact Tracing - {{ nsp }}</v-card-title
-          >
-        </v-col>
-        <v-col cols="1" class="text-right">
-          <v-tooltip left>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                text
-                v-bind="attrs"
-                v-on="on"
-                @click="usernameAlreadySelected = false"
-              >
-                <v-avatar size="36px"> <img :src="avatar" /> </v-avatar>
-              </v-btn>
-            </template>
-            <span>{{ username }}, click to login with different nickname</span>
-          </v-tooltip>
+        <v-col cols="auto" class="text-right"
+          ><v-card-title>Local Contact Tracing </v-card-title>
         </v-col>
       </v-row>
     </v-app-bar>
@@ -59,33 +35,43 @@
     </v-snackbar>
 
     <v-main>
-      <v-row justify="center">
-        <Welcome v-if="!usernameAlreadySelected" @input="onUsernameSelection" />
-
-        <Visitor v-else @connectionStatusChanged="onConnectionStatusChanged" />
+      <v-row v-if="!usernameAlreadySelected" justify="center" no-gutters>
+        <Welcome @input="onUsernameSelection" />
       </v-row>
-      <!-- For later when we add back messaging
-        <v-row v-else>
-        <v-col cols="3">
-          <Chat />
-        </v-col>
-        <v-col cols="9">
-          <Visitor />
-        </v-col>
-      </v-row>  -->
+      <!-- <v-row v-else justify="start" no-gutters>
+        <v-col  cols="2"> -->
+      <!-- <Chat v-show="showUsers" :nsp="nsp" /> -->
+      <!-- </v-col>
+        <v-col cols="cols"> -->
+      <Visitor
+        :showLogs="showLogs"
+        @warn="onWarn"
+        @visitorLoggedVisit="onVisitorLoggedVisit"
+      />
+      <!-- </v-col>
+      </v-row> -->
     </v-main>
 
-    <v-app-bar app bottom height="36" dense color="primary" dark>
+    <v-app-bar app bottom dense color="primary" dark>
       <v-row align="center" dense justify="space-between" no-gutters>
-        <v-col class="text-left">
-          <small>You: {{ uid }} </small>
-          <status-icon :connected="connectionStatus" />
+        <v-col>
+          <soteria-icon />
+          <a
+            class="white--text"
+            href="https://soteriainstitute.org/safe-in-sisters/"
+            target="_blank"
+            rel="noopener"
+            style="text-decoration: none"
+            >Soteria</a
+          >
         </v-col>
         <v-col class="text-center">
           <small>Ver: {{ build }} </small>
         </v-col>
         <v-col class="text-right">
-          <small>Session: {{ sid }} </small>
+          <v-btn text @click="showLogs = !showLogs">
+            <v-icon>mdi-console</v-icon>
+          </v-btn>
         </v-col>
       </v-row>
     </v-app-bar>
@@ -97,29 +83,27 @@ import Visitor from './components/Visitor';
 import Welcome from './components/Welcome';
 import update from '@/mixins/update.js';
 import helpers from '@/mixins/helpers.js';
-// import Chat from './components/Chat';
-import StatusIcon from './components/StatusIcon';
+import Chat from './components/Chat';
 import socket from './socket';
 
 export default {
   name: 'App',
   components: {
-    // Chat,
+    Chat,
     Visitor,
     Welcome,
-    StatusIcon,
   },
   computed: {
-    avatar() {
-      let randomId = Math.round(Math.random() * 100);
-      return `https://randomuser.me/api/portraits/men/${randomId}.jpg`;
-    },
     build() {
       return this.$store.getters.appVersion;
     },
   },
   data() {
     return {
+      showLogs: false,
+      drawer: false,
+      showUsers: true,
+      cols: '',
       connectionStatus: false,
       nsp: 'Sisters',
       overlay: true,
@@ -130,10 +114,6 @@ export default {
     };
   },
   methods: {
-    clearSessionID() {
-      localStorage.removeItem('sessionID');
-    },
-
     onConnectionStatusChanged(val) {
       this.connectionStatus = val;
     },
@@ -143,6 +123,19 @@ export default {
       this.username = username;
       socket.auth = { username };
       socket.connect();
+    },
+
+    onVisitorLoggedVisit(val) {
+      alert('Visit ' + val);
+    },
+
+    onWarn(val) {
+      alert('Warning! ' + val);
+    },
+
+    showChat() {
+      this.showUsers = !this.showUsers;
+      this.cols = this.showUsers ? 10 : 12;
     },
   },
 
@@ -161,18 +154,19 @@ export default {
   //#region Lifecycle Hooks
   created() {
     const sessionID = localStorage.getItem('sessionID');
+
     if (sessionID) {
       this.usernameAlreadySelected = true;
-      this.sid = sessionID;
+      // this.sid = sessionID;
       socket.auth = { sessionID };
       // if server finds a session we will connect
       socket.connect();
     }
 
-    socket.on('connect', () => {
-      this.onConnectionStatusChanged(true);
-      this.uid = socket.userID;
-    });
+    // socket.on('connect', () => {
+    //   this.onConnectionStatusChanged(true);
+    //   this.uid = socket.userID;
+    // });
 
     socket.on('session', ({ sessionID, userID }) => {
       // attach the session ID to the next reconnection attempts
@@ -181,14 +175,14 @@ export default {
       localStorage.setItem('sessionID', sessionID);
       // save the ID of the user
       socket.userID = userID;
-      this.sid = sessionID;
-      this.uid = userID;
+      // this.sid = sessionID;
+      // this.uid = userID;
     });
 
     socket.on('connect_error', (err) => {
       if (err.message === 'invalid username') {
         this.usernameAlreadySelected = false;
-        this.sid = '';
+        // this.sid = '';
       }
     });
   },

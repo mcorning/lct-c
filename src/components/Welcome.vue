@@ -16,12 +16,14 @@
               counter="10"
               hint=""
               label="Enter your nickname"
+              clearable
               @blur="onSubmit()"
             ></v-text-field
           ></v-card-text>
+
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-dialog v-model="dialog" persistent max-width="600px">
+            <v-dialog v-model="dialog" persistent max-width="400px">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn color="primary" dark v-bind="attrs" v-on="on">
                   Next
@@ -29,22 +31,23 @@
               </template>
               <v-card>
                 <v-card-title class="headline">
-                  Let's get to work
+                  Let's get to work (safely)
                 </v-card-title>
 
                 <v-card-text>
-                  If you proceed, you will always log on to the server as
-                  {{ username }}. Ready?
+                  If you proceed, (using this browser) you will always log on to
+                  the server as
+                  {{ username }}. Ready to crush this virus?
                 </v-card-text>
 
                 <v-card-actions>
                   <v-spacer></v-spacer>
 
-                  <v-btn color="green darken-1" text @click="dialog = false">
-                    No
+                  <v-btn color="primary darken-1" text @click="dialog = false">
+                    No thanks
                   </v-btn>
 
-                  <v-btn color="green darken-1" text @click="onGo">
+                  <v-btn color="primary darken-1" text @click="onGo">
                     Absolutely
                   </v-btn>
                 </v-card-actions>

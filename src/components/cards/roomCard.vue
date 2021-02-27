@@ -1,7 +1,5 @@
 <template>
   <div>
-    <!-- <pre>{{ socketID }}</pre>
-    <pre>{{ user }}</pre> -->
     <v-card class="overflow-hidden" color="primary lighten-2" dark :height="ht">
       <v-dialog v-model="alert" max-width="450">
         <v-card dark color="warning darken-1" class="white--text">
@@ -152,12 +150,8 @@
         <v-icon>mdi-home</v-icon>
       </v-btn>
       <v-btn @click="show = 3">
-        <span>Getherings</span>
+        <span>Gathering</span>
         <v-icon>mdi-account-group</v-icon>
-      </v-btn>
-      <v-btn @click="show = 4">
-        <span>Logs</span>
-        <v-icon>mdi-console</v-icon>
       </v-btn>
     </v-bottom-navigation>
 
@@ -167,10 +161,7 @@
 </template>
 
 <script>
-import socket from '../../socket.js';
-
 // import warnRoomCard from "@/components/cards/warnRoomCard";
-// import visitorIdentityCard from '@/components/cards/visitorIdentityCard';
 import logsCard from '@/components/cards/logsCard';
 import mapCard from '@/components/cards/mapCard';
 
@@ -190,6 +181,7 @@ export default {
     roomName: { type: String },
     user: { type: Object },
     socketID: { type: String },
+    showLogs: Boolean,
   },
   components: {
     // warnRoomCard,
@@ -214,16 +206,6 @@ export default {
     showGatherings() {
       return this.show == 3;
     },
-    showLogs() {
-      if (this.$refs.logs) {
-        this.$vuetify.goTo(this.$refs.logs, {
-          duration: 300,
-          offset: 0,
-          easing: this.easing,
-        });
-      }
-      return this.show == 4;
-    },
 
     selectedFavorite() {
       return this.favorites[this.favorite];
@@ -244,7 +226,7 @@ export default {
     return {
       spaceLabel: '',
       show: 0,
-      ht: '500px',
+      ht: '400px',
       value: 0,
       selectedCategory: [],
       usePanels: false,
@@ -282,13 +264,6 @@ export default {
       return res;
     },
 
-    exposeEventPromise(event, data) {
-      return new Promise(function (resolve) {
-        socket.emit(event, data, (results) => {
-          resolve(results);
-        });
-      });
-    },
     save() {
       this.alert = true;
     },
@@ -301,11 +276,12 @@ export default {
  MERGE (v)-[r:visited{visitedOn:'${this.visitedOn}'}]->(s)`;
       this.log(q, 'RedisGraph: add visit query');
 
-      this.exposeEventPromise('logVisit', q).then((results) => {
-        this.log(results, 'ACK: logVisit');
-        this.$emit('spaceSelected', { room: this.selectedSpace, id: '' });
-        this.hasSaved = true;
-      });
+      this.$emit('logVisit', q);
+      // this.exposeEventPromise('logVisit', q).then((results) => {
+      //   this.log(results, 'ACK: logVisit');
+      //   this.$emit('spaceSelected', { room: this.selectedSpace, id: '' });
+      //   this.hasSaved = true;
+      // });
     },
   },
 
