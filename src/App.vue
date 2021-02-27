@@ -44,6 +44,7 @@
       <!-- </v-col>
         <v-col cols="cols"> -->
       <Visitor
+        v-else
         :showLogs="showLogs"
         @warn="onWarn"
         @visitorLoggedVisit="onVisitorLoggedVisit"
