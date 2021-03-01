@@ -169,7 +169,9 @@ export default {
     socket.on('connect', () => {
       // this.onConnectionStatusChanged(true);
       // this.uid = socket.userID;
-      socket.emit('comm check');
+      socket.emit('comm check', socket.username, (ack) => {
+        console.log(ack);
+      });
     });
 
     socket.on('session', ({ sessionID, userID }) => {

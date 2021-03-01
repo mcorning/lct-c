@@ -160,8 +160,11 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('comm check', () => {
-    console.log(success('Comm check received from socket.js'));
+  socket.on('comm check', (data, ack) => {
+    console.log(success('Comm check received from', data));
+    if (ack) {
+      ack('connected to server');
+    }
   });
 
   socket.on('logVisit', (query, ack) => {
