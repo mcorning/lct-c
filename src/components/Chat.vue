@@ -9,6 +9,12 @@
       :socketID="socketID"
       :selected="selectedUser === user"
       @select="onSelectUser(user)"
+      @logVisit="onLogVisit(query)"
+    />
+    <message-panel
+      v-if="selectedUser"
+      :user="selectedUser"
+      @input="onMessage"
     />
   </div>
 </template>
@@ -16,16 +22,17 @@
 <script>
 import socket from '../socket';
 import User from './User';
-// import MessagePanel from './MessagePanel';
+import MessagePanel from './MessagePanel';
 
 export default {
   name: 'Chat',
   props: {
     nsp: String,
+    query: String,
   },
   components: {
     User,
-    // MessagePanel,
+    MessagePanel,
   },
   computed: {
     status() {
@@ -63,11 +70,27 @@ export default {
         });
       }
     },
+    onLogVisit(query) {
+      socket.emit('logVisit', {
+        query,
+      });
+      this.selectedUser.messages.push({
+        query,
+        fromSelf: true,
+      });
+    },
     onSelectUser(user) {
       this.selectedUser = user;
       user.hasNewMessages = false;
     },
   },
+
+  watch: {
+    query(query) {
+      socket.emit('logVisit ', query);
+    },
+  },
+
   created() {
     socket.on('connect', () => {
       this.socketID = socket.id;

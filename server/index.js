@@ -1,9 +1,14 @@
+//#region Servers
+
 const httpServer = require('http').createServer();
 const io = require('socket.io')(httpServer, {
   cors: {
     origin: ['http://localhost:8080', 'http://localhost:8081'],
   },
 });
+
+const Graph = require('./redis');
+//#endregion
 
 const DEBUG = 0;
 
@@ -13,6 +18,7 @@ const randomId = () => crypto.randomBytes(8).toString('hex');
 const { InMemorySessionStore } = require('./sessionStore');
 const sessionStore = new InMemorySessionStore();
 const { printJson, error, warn, success } = require('./helpers.js');
+
 //const { toUnicode } = require("punycode"); //Punycode is used to encode internationalized domain names (IDN).
 
 const storyMap = new Map();
@@ -26,6 +32,7 @@ io.use((socket, next) => {
   const sessionID = socket.handshake.auth.sessionID; // where does client get the sessionID?
   if (sessionID) {
     console.log(
+      sessionID,
       'sessionID sent by client (after a refresh or after restarting the browser)'
     );
     const session = sessionStore.findSession(sessionID);
@@ -150,6 +157,21 @@ io.on('connection', (socket) => {
       content,
       from: socket.userID,
       to,
+    });
+  });
+
+  socket.on('comm check', () => {
+    console.log(success('Comm check received from socket.js'));
+  });
+
+  socket.on('logVisit', (query, ack) => {
+    console.log(success(query));
+    Graph.query(query).then((results) => {
+      const stats = results._statistics._raw;
+      console.log(`stats: ${printJson(stats)}`);
+      if (ack) {
+        ack(stats);
+      }
     });
   });
 

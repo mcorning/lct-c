@@ -226,7 +226,7 @@ export default {
     return {
       spaceLabel: '',
       show: 0,
-      ht: '400px',
+      ht: '480px',
       value: 0,
       selectedCategory: [],
       usePanels: false,

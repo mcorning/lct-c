@@ -7,7 +7,7 @@
     <v-app-bar app color="primary" dense dark>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-navigation-drawer v-model="drawer" app>
-        <Chat :nsp="nsp" />
+        <Chat :nsp="nsp" :query="query" />
       </v-navigation-drawer>
 
       <v-row align="center" no-gutters>
@@ -38,18 +38,19 @@
       <v-row v-if="!usernameAlreadySelected" justify="center" no-gutters>
         <Welcome @input="onUsernameSelection" />
       </v-row>
-      <!-- <v-row v-else justify="start" no-gutters>
-        <v-col  cols="2"> -->
-      <!-- <Chat v-show="showUsers" :nsp="nsp" /> -->
-      <!-- </v-col>
-        <v-col cols="cols"> -->
-      <Visitor
-        v-else
-        :showLogs="showLogs"
-        @warn="onWarn"
-        @visitorLoggedVisit="onVisitorLoggedVisit"
-      />
-      <!-- </v-col>
+      <v-row v-else justify="start" no-gutters>
+        <v-col cols="cols">
+          <Visitor
+            :showLogs="showLogs"
+            @warn="onWarn"
+            @visitorLoggedVisit="onVisitorLoggedVisit"
+          />
+        </v-col>
+      </v-row>
+      <!-- <v-row>
+        <v-col>
+          <Chat :nsp="nsp" :query="query" />
+        </v-col>
       </v-row> -->
     </v-main>
 
@@ -101,6 +102,7 @@ export default {
   },
   data() {
     return {
+      query: '',
       showLogs: false,
       drawer: false,
       showUsers: true,
@@ -126,8 +128,8 @@ export default {
       socket.connect();
     },
 
-    onVisitorLoggedVisit(val) {
-      alert('Visit ' + val);
+    onVisitorLoggedVisit(query) {
+      socket.emit('logVisit', query);
     },
 
     onWarn(val) {
@@ -164,10 +166,11 @@ export default {
       socket.connect();
     }
 
-    // socket.on('connect', () => {
-    //   this.onConnectionStatusChanged(true);
-    //   this.uid = socket.userID;
-    // });
+    socket.on('connect', () => {
+      // this.onConnectionStatusChanged(true);
+      // this.uid = socket.userID;
+      socket.emit('comm check');
+    });
 
     socket.on('session', ({ sessionID, userID }) => {
       // attach the session ID to the next reconnection attempts
