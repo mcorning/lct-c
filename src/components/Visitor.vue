@@ -91,6 +91,7 @@ export default {
 
   props: {
     showLogs: Boolean,
+    nickname: String,
   },
 
   components: {
@@ -129,7 +130,6 @@ export default {
   },
 
   data: () => ({
-    users: [],
     dialog: false,
     entered: false,
     easing: 'easeInOutCubic',
@@ -146,14 +146,10 @@ export default {
     socketMessage: 'visitor',
     search: '',
 
-    oldRoomId: '',
-    changingRoom: false,
     rating: 3,
     alertIcon: 'mdi-alert',
     alertColor: '',
-    // alert: false,
     alertMessage: '',
-    occupancy: 0,
     socketId: '',
     enabled: { visitor: {}, room: {}, canEnter: -1 },
 

@@ -1,8 +1,8 @@
 //https://github.com/RedisGraph/redisgraph.js
 const RedisGraph = require('redisgraph.js').Graph;
-
+const host = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
 const options = {
-  host: 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com',
+  host: host,
   port: 11939,
   password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
 };
@@ -10,7 +10,7 @@ const PROD = 0;
 const nsp = PROD ? 'Sisters' : 'Test';
 const Graph = new RedisGraph(nsp, null, null, options);
 
-module.exports = Graph;
+module.exports = { Graph, nsp, host };
 
 // if we store these output Cypher commands in a text file, we can bulk import them into Redis
 // run this command in the terminal (outside of redis-cli)

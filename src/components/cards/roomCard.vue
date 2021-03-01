@@ -179,7 +179,6 @@ export default {
     },
     log: { type: Function },
     roomName: { type: String },
-    user: { type: Object },
     socketID: { type: String },
     showLogs: Boolean,
   },
@@ -270,18 +269,12 @@ export default {
 
     saveMe() {
       this.alert = false;
-      // this is where we send a Cypher query to RedisGraph
-      const q = `MERGE (v:visitor{ name: '${this.nickName}'})
- MERGE (s:space{ name: '${this.selectedSpace}' })
- MERGE (v)-[r:visited{visitedOn:'${this.visitedOn}'}]->(s)`;
-      this.log(q, 'RedisGraph: add visit query');
+      const q = {
+        selectedSpace: this.selectedSpace,
+        visitedOn: this.visitedOn,
+      };
 
       this.$emit('logVisit', q);
-      // this.exposeEventPromise('logVisit', q).then((results) => {
-      //   this.log(results, 'ACK: logVisit');
-      //   this.$emit('spaceSelected', { room: this.selectedSpace, id: '' });
-      //   this.hasSaved = true;
-      // });
     },
   },
 

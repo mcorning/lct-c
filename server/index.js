@@ -7,7 +7,7 @@ const io = require('socket.io')(httpServer, {
   },
 });
 
-const Graph = require('./redis');
+const { Graph, nsp, host } = require('./redis');
 //#endregion
 
 const DEBUG = 0;
@@ -124,6 +124,7 @@ io.on('connection', (socket) => {
   socket.emit('session', {
     sessionID: socket.sessionID,
     userID: socket.userID,
+    username: socket.username,
   });
 
   // join the "userID" room
@@ -168,14 +169,21 @@ io.on('connection', (socket) => {
   });
 
   socket.on('logVisit', (query, ack) => {
-    console.log(success(query));
-    Graph.query(query).then((results) => {
-      const stats = results._statistics._raw;
-      console.log(`stats: ${printJson(stats)}`);
-      if (ack) {
-        ack(stats);
-      }
-    });
+    console.log(success('Visit query:', printJson(query)));
+    Graph.query(query)
+      .then((results) => {
+        const stats = results._statistics._raw;
+        console.log(`stats: ${printJson(stats)}`);
+        if (ack) {
+          ack(stats);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        console.log(
+          `Be sure there is a graph named "${nsp}" on the Redis server: ${host}`
+        );
+      });
   });
 
   // notify users upon disconnection

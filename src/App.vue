@@ -42,6 +42,7 @@
         <v-col cols="cols">
           <Visitor
             :showLogs="showLogs"
+            :nickname="username"
             @warn="onWarn"
             @visitorLoggedVisit="onVisitorLoggedVisit"
           />
@@ -128,8 +129,14 @@ export default {
       socket.connect();
     },
 
-    onVisitorLoggedVisit(query) {
-      socket.emit('logVisit', query);
+    onVisitorLoggedVisit(data) {
+      // this is where we send a Cypher query to RedisGraph
+      const query = `MERGE (v:visitor{ name: '${this.username}'})
+ MERGE (s:space{ name: '${data.selectedSpace}' })
+ MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
+      console.log('RedisGraph query:');
+      console.log(query);
+      socket.emit('logVisit', query, (results) => console.log(results));
     },
 
     onWarn(val) {
@@ -169,12 +176,12 @@ export default {
     socket.on('connect', () => {
       // this.onConnectionStatusChanged(true);
       // this.uid = socket.userID;
-      socket.emit('comm check', socket.username, (ack) => {
+      socket.emit('comm check on socket', socket.id, (ack) => {
         console.log(ack);
       });
     });
 
-    socket.on('session', ({ sessionID, userID }) => {
+    socket.on('session', ({ sessionID, userID, username }) => {
       // attach the session ID to the next reconnection attempts
       socket.auth = { sessionID };
       // store it in the localStorage
@@ -182,7 +189,7 @@ export default {
       // save the ID of the user
       socket.userID = userID;
       // this.sid = sessionID;
-      // this.uid = userID;
+      this.username = username;
     });
 
     socket.on('connect_error', (err) => {
