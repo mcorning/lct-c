@@ -175,10 +175,11 @@ io.on('connection', (socket) => {
     console.log(success('Visit query:', printJson(query)));
     Graph.query(query)
       .then((results) => {
-        const stats = results._statistics._raw;
-        console.log(`stats: ${printJson(stats)}`);
+        console.log(printJson(results._results.map((v) => v._values)));
+        const msg = `Alerting ${results._resultsCount} other visitors.`;
+        console.log(msg);
         if (ack) {
-          ack(stats);
+          ack(msg);
         }
       })
       .catch((error) => {
