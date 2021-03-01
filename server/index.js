@@ -168,7 +168,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('alert', (subject, ack) => {
+  socket.on('exposureWarning', (subject, ack) => {
     const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) 
   WHERE a1.name = '${subject}' AND a2.name <> '${subject}' 
   RETURN a2.name, s.name`;
@@ -189,7 +189,11 @@ io.on('connection', (socket) => {
       });
   });
 
-  socket.on('logVisit', (query, ack) => {
+  socket.on('logVisit', (data, ack) => {
+    // this is where we send a Cypher query to RedisGraph
+    const query = `MERGE (v:visitor{ name: '${data.username}'})
+ MERGE (s:space{ name: '${data.selectedSpace}' })
+ MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
     console.log(success('Visit query:', printJson(query)));
     Graph.query(query)
       .then((results) => {

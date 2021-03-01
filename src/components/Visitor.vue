@@ -181,7 +181,7 @@ export default {
     },
 
     onExposureWarning() {
-      alert('Warning');
+      this.$emit('sendExposureWarning');
     },
 
     onLogVisit(data) {

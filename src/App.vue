@@ -43,7 +43,7 @@
           <Visitor
             :showLogs="showLogs"
             :nickname="username"
-            @warn="onWarn"
+            @sendExposureWarning="onSendExposureWarning"
             @visitorLoggedVisit="onVisitorLoggedVisit"
           />
         </v-col>
@@ -125,17 +125,20 @@ export default {
     },
 
     onVisitorLoggedVisit(data) {
-      // this is where we send a Cypher query to RedisGraph
-      const query = `MERGE (v:visitor{ name: '${this.username}'})
- MERGE (s:space{ name: '${data.selectedSpace}' })
- MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
-      console.log('RedisGraph query:');
-      console.log(query);
+      const query = {
+        username: this.username,
+        selectedSpace: data.selectedSpace,
+        visitedOn: data.visitedOn,
+      };
+      console.log('Query data:', query);
+
       socket.emit('logVisit', query, (results) => console.log(results));
     },
 
-    onWarn(val) {
-      alert('Warning! ' + val);
+    onSendExposureWarning() {
+      socket.emit('exposureWarning', this.username, (results) =>
+        console.log(results)
+      );
     },
 
     showChat() {
