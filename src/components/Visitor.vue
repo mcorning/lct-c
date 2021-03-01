@@ -39,7 +39,7 @@
       </v-card>
     </v-dialog>
 
-    <diaryCard />
+    <diaryCard @exposureWarning="onExposureWarning" />
 
     <!-- roomCard -->
     <v-row no-gutters>
@@ -48,13 +48,12 @@
         <!-- LCT-B interacts with RedisGraph server, instead (where the ID of the room is all that's necessary for the graph.). -->
         <roomCard
           ref="roomSelect"
-          :log="log"
-          :nickName="enabled.visitor.visitor"
           :favorites="favorites"
-          @spaceSelected="onSpaceSelected"
-          @logVisit="onLogVisit"
+          :log="log"
           :messages="messages"
           :showLogs="showLogs"
+          @spaceSelected="onSpaceSelected"
+          @logVisit="onLogVisit"
         />
       </v-col>
     </v-row>
@@ -179,6 +178,10 @@ export default {
         type: type,
         message: msg,
       });
+    },
+
+    onExposureWarning() {
+      alert('Warning');
     },
 
     onLogVisit(data) {

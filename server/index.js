@@ -168,6 +168,27 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('alert', (subject, ack) => {
+    const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) 
+  WHERE a1.name = '${subject}' AND a2.name <> '${subject}' 
+  RETURN a2.name, s.name`;
+    console.log(success('Visit query:', printJson(query)));
+    Graph.query(query)
+      .then((results) => {
+        const stats = results._statistics._raw;
+        console.log(`stats: ${printJson(stats)}`);
+        if (ack) {
+          ack(stats);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        console.log(
+          `Be sure there is a graph named "${nsp}" on the Redis server: ${host}`
+        );
+      });
+  });
+
   socket.on('logVisit', (query, ack) => {
     console.log(success('Visit query:', printJson(query)));
     Graph.query(query)

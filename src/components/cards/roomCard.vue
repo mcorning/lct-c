@@ -102,15 +102,6 @@
           </v-row>
         </v-card-text>
       </v-card>
-
-      <!-- <visitorIdentityCard
-        :log="log"
-        @warned="onWarned($event)"
-        :height="ht"
-        :user="user"
-        :socketID="socketID"
-        },
-      /> -->
     </v-card>
     <v-card>
       <v-tooltip left>
@@ -156,7 +147,7 @@
     </v-bottom-navigation>
 
     <!-- Your Logs -->
-    <logsCard v-if="showLogs" :messages="messages" :roomName="roomName" />
+    <logsCard v-if="showLogs" :messages="messages" :roomName="selectedSpace" />
   </div>
 </template>
 
@@ -169,17 +160,9 @@ import { data } from '@/assets/data/sistersBusiness.json';
 
 export default {
   props: {
-    messages: { type: Array },
-    nickName: {
-      type: String,
-      default: '',
-    },
-    favorites: {
-      type: Array,
-    },
-    log: { type: Function },
-    roomName: { type: String },
-    socketID: { type: String },
+    favorites: Array,
+    log: Function,
+    messages: Array,
     showLogs: Boolean,
   },
   components: {

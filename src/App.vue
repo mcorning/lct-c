@@ -48,11 +48,6 @@
           />
         </v-col>
       </v-row>
-      <!-- <v-row>
-        <v-col>
-          <Chat :nsp="nsp" :query="query" />
-        </v-col>
-      </v-row> -->
     </v-main>
 
     <v-app-bar app bottom dense color="primary" dark>
