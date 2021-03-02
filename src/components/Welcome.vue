@@ -75,6 +75,7 @@ export default {
 
   methods: {
     onSubmit() {
+      localStorage.setItem('username', this.username);
       this.dialog = true;
     },
 
@@ -83,6 +84,10 @@ export default {
 
       this.$emit('input', this.username);
     },
+  },
+
+  created() {
+    this.username = localStorage.getItem('username');
   },
 };
 </script>

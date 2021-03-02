@@ -127,6 +127,7 @@ export default {
     onVisitorLoggedVisit(data) {
       const query = {
         username: this.username,
+        userID: socket.userID,
         selectedSpace: data.selectedSpace,
         visitedOn: data.visitedOn,
       };
@@ -194,6 +195,26 @@ export default {
       if (err.message === 'invalid username') {
         this.usernameAlreadySelected = false;
         // this.sid = '';
+      }
+    });
+    socket.on('exposureAlert', (alert) => {
+      alert(alert);
+    });
+
+    socket.on('private message', ({ content, from, to }) => {
+      for (let i = 0; i < this.users.length; i++) {
+        const user = this.users[i];
+        const fromSelf = socket.userID === from;
+        if (user.userID === (fromSelf ? to : from)) {
+          user.messages.push({
+            content,
+            fromSelf,
+          });
+          if (user !== this.selectedUser) {
+            user.hasNewMessages = true;
+          }
+          break;
+        }
       }
     });
   },

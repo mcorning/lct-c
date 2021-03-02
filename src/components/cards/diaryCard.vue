@@ -2,7 +2,9 @@
   <v-card class="black--text" color="secondary lighten-1">
     <v-list-item>
       <v-list-item-content>
-        <v-list-item-title class="title"> Your Travel Log </v-list-item-title>
+        <v-list-item-title class="title">
+          {{ nickname }}'s Travel Log
+        </v-list-item-title>
         <v-btn
           fab
           color="red"
@@ -32,6 +34,9 @@
 
 <script>
 export default {
+  props: {
+    nickname: String,
+  },
   computed: {
     small() {
       return this.$vuetify.breakpoint.xs;

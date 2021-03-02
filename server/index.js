@@ -153,6 +153,9 @@ io.on('connection', (socket) => {
   });
 
   // forward the private message to the right recipient (and to other tabs of the sender)
+  // "to" is the userID of the alert recipient
+  // socket.userID is the sender
+  // in chat, both parties need to see the same message
   socket.on('private message', ({ content, to }) => {
     socket.to(to).to(socket.userID).emit('private message', {
       content,
@@ -168,19 +171,27 @@ io.on('connection', (socket) => {
     }
   });
 
+  // "to" is the userID of the alert recipient
+  // socket.userID is the one issuing the warning
+  // (they don't need to see all subsequent alerts sent by server)
+
   socket.on('exposureWarning', (subject, ack) => {
-    const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) 
-  WHERE a1.name = '${subject}' AND a2.name <> '${subject}' 
-  RETURN a2.name, s.name`;
+    const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = '${subject}' AND a2.name <> '${subject}' RETURN a2.userID`;
     console.log(success('Visit query:', printJson(query)));
     Graph.query(query)
       .then((results) => {
-        console.log(printJson(results._results.map((v) => v._values)));
-        const msg = `Alerting ${results._resultsCount} other visitors.`;
-        console.log(msg);
-        if (ack) {
-          ack(msg);
-        }
+        const ret = `Alerting ${results._resultsCount} other visitors.`;
+        const msg = 'Please get tested and quarantine, if necessary.';
+
+        const alerts = results._results.flatMap((v) => v._values);
+        alerts.forEach((to) => {
+          console.log('Warning', to);
+          socket.to(to).emit('exposureAlert', msg);
+          console.log(ret);
+          if (ack) {
+            ack(ret);
+          }
+        });
       })
       .catch((error) => {
         console.log(error);
@@ -192,7 +203,7 @@ io.on('connection', (socket) => {
 
   socket.on('logVisit', (data, ack) => {
     // this is where we send a Cypher query to RedisGraph
-    const query = `MERGE (v:visitor{ name: '${data.username}'})
+    const query = `MERGE (v:visitor{ name: '${data.username}', userID: '${data.userID}'})
  MERGE (s:space{ name: '${data.selectedSpace}' })
  MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
     console.log(success('Visit query:', printJson(query)));

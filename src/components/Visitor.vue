@@ -39,7 +39,7 @@
       </v-card>
     </v-dialog>
 
-    <diaryCard @exposureWarning="onExposureWarning" />
+    <diaryCard :nickname="nickname" @exposureWarning="onExposureWarning" />
 
     <!-- roomCard -->
     <v-row no-gutters>
@@ -51,6 +51,7 @@
           :favorites="favorites"
           :log="log"
           :messages="messages"
+          :nickname="nickname"
           :showLogs="showLogs"
           @spaceSelected="onSpaceSelected"
           @logVisit="onLogVisit"
