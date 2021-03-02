@@ -53,7 +53,6 @@
           :messages="messages"
           :nickname="nickname"
           :showLogs="showLogs"
-          @spaceSelected="onSpaceSelected"
           @logVisit="onLogVisit"
         />
       </v-col>
@@ -80,6 +79,9 @@
 </template>
 
 <script>
+import crypto from 'crypto';
+const randomId = () => crypto.randomBytes(8).toString('hex');
+
 import * as easings from 'vuetify/es5/services/goto/easing-patterns';
 import Message from '@/models/Message';
 import diaryCard from '@/components/cards/diaryCard';
@@ -92,6 +94,7 @@ export default {
   props: {
     showLogs: Boolean,
     nickname: String,
+    userID: String,
   },
 
   components: {
@@ -115,10 +118,11 @@ export default {
       set(newVal) {
         // flatten newVal
         const msg = {
-          room: newVal.room,
-          visitor: newVal.visitor.visitor,
-          roomId: newVal.room,
-          visitorId: newVal.visitor.id,
+          id: randomId(),
+          room: newVal.room.selectedSpace.room,
+          roomId: newVal.room.selectedSpace.id,
+          visitor: this.nickname,
+          visitorId: this.userID,
           nsp: newVal.nsp,
           sentTime: newVal.sentTime,
           message: newVal.message,
@@ -186,21 +190,17 @@ export default {
     },
 
     onLogVisit(data) {
-      this.$emit('visitorLoggedVisit', data);
-    },
-
-    // LCT-B
-    onSpaceSelected(selectedSpace) {
-      this.$emit('warn', selectedSpace);
-      console.log('Selected Space:', selectedSpace.room, selectedSpace.id);
-      this.enabled.room = selectedSpace;
+      console.log('Selected Space:', data);
+      // cache the visit in Messages
       let msg = {
-        visitor: this.enabled.visitor,
-        room: this.enabled.room.room,
+        visitor: this.nickname,
+        room: data,
         message: 'Entered',
         sentTime: new Date().toISOString(),
       };
       this.messages = msg;
+      // notify App.vue so it can send event to server
+      this.$emit('visitorLoggedVisit', data);
     },
   },
 

@@ -17,6 +17,8 @@
         </v-col>
       </v-row>
     </v-app-bar>
+
+    <!-- PWA Update -->
     <v-snackbar
       centered
       :value="updateExists"
@@ -34,6 +36,28 @@
       </template>
     </v-snackbar>
 
+    <!-- Alert Snackbar -->
+    <v-snackbar
+      centered
+      :value="alertPending"
+      :timeout="-1"
+      color="red darken-1"
+      vertical
+      dark
+    >
+      Someone in your community has tested positive for COVID-19.
+      <p>
+        You will see an exposure alert next only if you shared the same space
+        with that person.
+      </p>
+
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="alertPending = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
+
     <v-main>
       <v-row v-if="!usernameAlreadySelected" justify="center" no-gutters>
         <Welcome @input="onUsernameSelection" />
@@ -43,6 +67,7 @@
           <Visitor
             :showLogs="showLogs"
             :nickname="username"
+            :userID="userID"
             @sendExposureWarning="onSendExposureWarning"
             @visitorLoggedVisit="onVisitorLoggedVisit"
           />
@@ -98,6 +123,7 @@ export default {
   },
   data() {
     return {
+      alertPending: false,
       query: '',
       showLogs: false,
       drawer: false,
@@ -108,7 +134,7 @@ export default {
       overlay: true,
       usernameAlreadySelected: false,
       sid: '',
-      uid: 'Not connected',
+      userID: 'Not connected',
       username: '',
     };
   },
@@ -189,6 +215,7 @@ export default {
       socket.userID = userID;
       // this.sid = sessionID;
       this.username = username;
+      this.userID = userID;
     });
 
     socket.on('connect_error', (err) => {
@@ -197,8 +224,16 @@ export default {
         // this.sid = '';
       }
     });
-    socket.on('exposureAlert', (alert) => {
-      alert(alert);
+
+    socket.on('exposureAlert', (alert, ack) => {
+      console.log(alert);
+      if (ack) {
+        ack(socket.id);
+      }
+    });
+
+    socket.on('alertPending', () => {
+      this.alertPending = true;
     });
 
     socket.on('private message', ({ content, from, to }) => {

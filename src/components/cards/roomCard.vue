@@ -78,6 +78,8 @@
                     :items="filteredSpaces"
                     :filter="customFilter"
                     item-text="room"
+                    item-value="id"
+                    return-object
                     clearable
                   ></v-autocomplete>
                 </v-col>
@@ -259,6 +261,7 @@ export default {
         selectedSpace: this.selectedSpace,
         visitedOn: this.visitedOn,
       };
+      this.$emit('spaceSelected', this.selectedSpace);
 
       this.$emit('logVisit', q);
     },
@@ -267,6 +270,10 @@ export default {
   watch: {
     favorite() {
       this.selectedSpace = this.selectedFavorite;
+    },
+
+    selectedSpace(newVal) {
+      console.log(newVal);
     },
 
     selectedCategory() {

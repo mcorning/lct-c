@@ -27,6 +27,8 @@ const storyMapUsers = new Map();
 storyMap.set('sessions', storyMapSessions);
 storyMap.set('users', storyMapUsers);
 
+const cache = new Set();
+
 io.use((socket, next) => {
   console.groupCollapsed('Inside io.use() handling socket', socket.id);
   const sessionID = socket.handshake.auth.sessionID; // where does client get the sessionID?
@@ -174,23 +176,63 @@ io.on('connection', (socket) => {
   // "to" is the userID of the alert recipient
   // socket.userID is the one issuing the warning
   // (they don't need to see all subsequent alerts sent by server)
+  //#region Cheatsheet
+  /*
+See all NODES:
+MATCH n=() RETURN n
 
-  socket.on('exposureWarning', (subject, ack) => {
+See all RELATIONSHIPs:
+MATCH p=()-[*]->() RETURN p
+
+Exposed Visitors:
+MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = '${subject}' AND a2.name <> '${subject}' RETURN a2.userID
+*/
+  //#endregion
+
+  socket.on('exposureWarning', async (subject, ack) => {
+    socket.broadcast.emit('alertPending', socket.userID);
+    const matchingSockets = await io.in(socket.userID).allSockets();
+    console.log(matchingSockets);
+
     const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = '${subject}' AND a2.name <> '${subject}' RETURN a2.userID`;
     console.log(success('Visit query:', printJson(query)));
+
     Graph.query(query)
       .then((results) => {
         const ret = `Alerting ${results._resultsCount} other visitors.`;
-        const msg = 'Please get tested and quarantine, if necessary.';
-
-        const alerts = results._results.flatMap((v) => v._values);
-        alerts.forEach((to) => {
-          console.log('Warning', to);
-          socket.to(to).emit('exposureAlert', msg);
-          console.log(ret);
+        if (results._resultsCount == 0) {
           if (ack) {
             ack(ret);
           }
+          return;
+        }
+        const msg = 'Please get tested. Quarantine, if necessary.';
+
+        const alerts = results._results.flatMap((v) => v._values);
+        alerts.forEach((to) => {
+          io.in(socket.userID)
+            .allSockets()
+            .then((matchingSockets) => {
+              if (matchingSockets.size === 0) {
+                cache.add(to);
+              } else {
+                console.log('Warning', to);
+                socket.to(to).emit(
+                  'exposureAlert',
+                  msg,
+                  ack((msg) => {
+                    console.log(success(msg, 'confirms'));
+                  })
+                );
+                console.log(ret);
+                if (ack) {
+                  ack(ret);
+                }
+              }
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         });
       })
       .catch((error) => {
