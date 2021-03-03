@@ -186,15 +186,17 @@ MATCH p=()-[*]->() RETURN p
 
 Exposed Visitors:
 MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = '${subject}' AND a2.name <> '${subject}' RETURN a2.userID
+e.g., by tao:
+MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = 'tao' AND a2.name <> 'tao' RETURN a2.userID
+
 */
   //#endregion
 
-  socket.on('exposureWarning', async (subject, ack) => {
+  socket.on('exposureWarning', (subject, ack) => {
     socket.broadcast.emit('alertPending', socket.userID);
-    const matchingSockets = await io.in(socket.userID).allSockets();
-    console.log(matchingSockets);
 
-    const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = '${subject}' AND a2.name <> '${subject}' RETURN a2.userID`;
+    // General policy: use "" as query delimiters (because some values are possessive)
+    const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = "${subject}" AND a2.name <> "${subject}" RETURN a2.userID`;
     console.log(success('Visit query:', printJson(query)));
 
     Graph.query(query)
@@ -215,19 +217,16 @@ MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name
             .then((matchingSockets) => {
               if (matchingSockets.size === 0) {
                 cache.add(to);
+                console.log('Cache:', printJson(cache));
               } else {
-                console.log('Warning', to);
-                socket.to(to).emit(
+                console.log('Alerting:', to);
+                socket.in(to).emit(
                   'exposureAlert',
                   msg,
-                  ack((msg) => {
-                    console.log(success(msg, 'confirms'));
+                  ack((res) => {
+                    console.log(success(res, 'confirms'));
                   })
                 );
-                console.log(ret);
-                if (ack) {
-                  ack(ret);
-                }
               }
             })
             .catch((error) => {
@@ -245,9 +244,8 @@ MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name
 
   socket.on('logVisit', (data, ack) => {
     // this is where we send a Cypher query to RedisGraph
-    const query = `MERGE (v:visitor{ name: '${data.username}', userID: '${data.userID}'})
- MERGE (s:space{ name: '${data.selectedSpace}' })
- MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
+    // General policy: use "" as query delimiters (because some values are possessive)
+    const query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) MERGE (s:space{ name: "${data.selectedSpace}" }) MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
     console.log(success('Visit query:', printJson(query)));
     Graph.query(query)
       .then((results) => {

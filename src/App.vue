@@ -38,21 +38,53 @@
 
     <!-- Alert Snackbar -->
     <v-snackbar
-      centered
+      top
       :value="alertPending"
+      :timeout="-1"
+      color="orange darken-2"
+      vertical
+      dark
+    >
+      <v-card dark color="orange" v-if="alertPending">
+        <v-card-title>COVID-19 Detected</v-card-title>
+        <v-card-subtitle>
+          Someone in your community has tested positive for COVID-19.
+        </v-card-subtitle>
+        <v-card-text class="white--text">
+          You will see an exposure alert next only if you shared the same space
+          with that person.</v-card-text
+        >
+      </v-card>
+
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="alertPending = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
+
+    <!-- Alert Snackbar -->
+    <v-snackbar
+      centered
+      :value="exposureAlert"
       :timeout="-1"
       color="red darken-1"
       vertical
       dark
     >
-      Someone in your community has tested positive for COVID-19.
-      <p>
-        You will see an exposure alert next only if you shared the same space
-        with that person.
-      </p>
+      <v-card dark color="red darken-3" v-if="exposureAlert">
+        <v-card-title>COVID-19 Exposure Alert</v-card-title>
+        <v-card-subtitle>
+          You shared space recently with someone who tested positive
+        </v-card-subtitle>
+        <v-card-text>
+          Please get tested. If you are positive you can spread the virus - even
+          if you are immune.</v-card-text
+        >
+      </v-card>
 
       <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="alertPending = false">
+        <v-btn color="white" text v-bind="attrs" @click="exposureAlert = false">
           OK
         </v-btn>
       </template>
@@ -91,6 +123,9 @@
         <v-col class="text-center">
           <small>Ver: {{ build }} </small>
         </v-col>
+        <v-col class="text-center">
+          <small>ID: {{ userID }} </small>
+        </v-col>
         <v-col class="text-right">
           <v-btn text @click="showLogs = !showLogs">
             <v-icon>mdi-console</v-icon>
@@ -120,9 +155,15 @@ export default {
     build() {
       return this.$store.getters.appVersion;
     },
+    alertColor() {
+      return this.alertPending ? 'orange darken-2' : 'red darken-1';
+    },
   },
   data() {
     return {
+      alertText: '',
+      alertMe: false,
+      exposureAlert: false,
       alertPending: false,
       query: '',
       showLogs: false,
@@ -164,7 +205,7 @@ export default {
 
     onSendExposureWarning() {
       socket.emit('exposureWarning', this.username, (results) =>
-        console.log(results)
+        console.log('exposureWarning results:', results)
       );
     },
 
@@ -226,7 +267,8 @@ export default {
     });
 
     socket.on('exposureAlert', (alert, ack) => {
-      console.log(alert);
+      this.exposureAlert = true;
+      this.alertText = alert;
       if (ack) {
         ack(socket.id);
       }
@@ -237,18 +279,20 @@ export default {
     });
 
     socket.on('private message', ({ content, from, to }) => {
-      for (let i = 0; i < this.users.length; i++) {
-        const user = this.users[i];
-        const fromSelf = socket.userID === from;
-        if (user.userID === (fromSelf ? to : from)) {
-          user.messages.push({
-            content,
-            fromSelf,
-          });
-          if (user !== this.selectedUser) {
-            user.hasNewMessages = true;
+      if (this.users) {
+        for (let i = 0; i < this.users.length; i++) {
+          const user = this.users[i];
+          const fromSelf = socket.userID === from;
+          if (user.userID === (fromSelf ? to : from)) {
+            user.messages.push({
+              content,
+              fromSelf,
+            });
+            if (user !== this.selectedUser) {
+              user.hasNewMessages = true;
+            }
+            break;
           }
-          break;
         }
       }
     });

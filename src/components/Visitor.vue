@@ -7,7 +7,7 @@
     <v-snackbar
       v-model="snackBar"
       :timeout="4000"
-      color="primary"
+      color="secondary"
       multi-line
       vertical
     >
