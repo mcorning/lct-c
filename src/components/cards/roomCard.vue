@@ -120,7 +120,7 @@
             @click="save"
           >
             Log visit:
-            {{ selectedSpace }}
+            {{ selectedSpace.room }}
           </v-btn>
         </template>
         <span>Send your visit to the server</span>
@@ -261,8 +261,6 @@ export default {
         selectedSpace: this.selectedSpace,
         visitedOn: this.visitedOn,
       };
-      this.$emit('spaceSelected', this.selectedSpace);
-
       this.$emit('logVisit', q);
     },
   },

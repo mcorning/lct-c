@@ -196,7 +196,9 @@ MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name
     socket.broadcast.emit('alertPending', socket.userID);
 
     // General policy: use "" as query delimiters (because some values are possessive)
-    const query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name = "${subject}" AND a2.name <> "${subject}" RETURN a2.userID`;
+    let query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) `;
+    query += `WHERE a1.name = "${subject}" AND a2.name <> "${subject}" `;
+    query += `RETURN a2.userID`;
     console.log(success('Visit query:', printJson(query)));
 
     Graph.query(query)
@@ -245,8 +247,10 @@ MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name
   socket.on('logVisit', (data, ack) => {
     // this is where we send a Cypher query to RedisGraph
     // General policy: use "" as query delimiters (because some values are possessive)
-    const query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) MERGE (s:space{ name: "${data.selectedSpace}" }) MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
-    console.log(success('Visit query:', printJson(query)));
+    let query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) `;
+    query += `MERGE (s:space{ name: "${data.selectedSpace.room}", spaceID: "${data.selectedSpace.id}" }) `;
+    query += `MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
+    console.log(warn('Visit query:', printJson(query)));
     Graph.query(query)
       .then((results) => {
         const stats = results._statistics._raw;
