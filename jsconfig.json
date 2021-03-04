@@ -1,7 +1,10 @@
 {
-    "compilerOptions": {
-      "module": "es2015",
-      "target": "es2015"
-    },
-    "exclude": ["node_modules", "dist"]
-  }
+  "compilerOptions": {
+    "module": "es2015",
+    "target": "es2015"
+  },
+  "exclude": ["node_modules", "dist"],
+  "googleMapsApiKey": "AIzaSyAAHSMyZhRhjW6TLoqafzZaMsAGIKiTmZc",
+  "defaultLocation": [44.29160723928563, -121.5441825899421],
+  "nsp": "Sisters"
+}

@@ -2,6 +2,17 @@
   "data": [
     {
       "CODE": 20,
+      "NAME": "GOV",
+      "ID": "SISTERS CITY HALL",
+      "PROPERTY ADDRESS": "520 E Cascade Ave",
+      "CITY LIMIT\r": "INSIDE\r",
+      "position": [
+        44.29160723928563,
+        -121.5441825899421
+      ]
+    },
+    {
+      "CODE": 20,
       "NAME": "RETAIL",
       "ID": "CLEARWATER GALLERY",
       "PROPERTY ADDRESS": "303 W HOOD AVE",
@@ -212,7 +223,11 @@
       "NAME": "RETAIL",
       "ID": "BAXTER AUTO PARTS INC.",
       "PROPERTY ADDRESS": "303 E. HOOD AVE.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "CITY LIMIT\r": "INSIDE\r",
+      "position": [
+        44.29036387074537,
+        -121.54724429810483
+      ]
     },
     {
       "CODE": 352,
@@ -443,7 +458,11 @@
       "NAME": "RETAIL",
       "ID": "3 SISTERS FUEL STOP",
       "PROPERTY ADDRESS": "210 E. CASCADE AVE.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "CITY LIMIT\r": "INSIDE\r",
+      "position": [
+        44.291539949714284,
+        -121.5484422529003
+      ]
     },
     {
       "CODE": 752,
@@ -517,7 +536,11 @@
       "NAME": "RETAIL",
       "ID": "SISTERS 76",
       "PROPERTY ADDRESS": "591 E HWY 20",
-      "CITY LIMIT\r": "INSIDE\r"
+      "CITY LIMIT\r": "INSIDE\r",
+      "position": [
+        44.29017308565393,
+        -121.5442784702322
+      ]
     },
     {
       "CODE": 860,
@@ -626,7 +649,11 @@
       "NAME": "LODG",
       "ID": "SISTERS BUNKHOUSE",
       "PROPERTY ADDRESS": "114 N OAK STREET",
-      "CITY LIMIT\r": "INSIDE\r"
+      "CITY LIMIT\r": "INSIDE\r",
+      "position": [
+        44.291598674800376,
+        -121.55222712999574
+      ]
     },
     {
       "CODE": 1157,
@@ -756,9 +783,13 @@
     {
       "CODE": 1386,
       "NAME": "RETAIL",
-      "ID": "HAT CREEK BOOK COMPANY",
+      "ID": "PAULINA SPRINGS BOOKS ",
       "PROPERTY ADDRESS": "252 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "CITY LIMIT\r": "INSIDE\r",
+      "position": [
+        44.2906484282047,
+        -121.55183907858593
+      ]
     },
     {
       "CODE": 1404,

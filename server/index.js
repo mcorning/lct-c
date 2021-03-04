@@ -17,7 +17,7 @@ const randomId = () => crypto.randomBytes(8).toString('hex');
 
 const { InMemorySessionStore } = require('./sessionStore');
 const sessionStore = new InMemorySessionStore();
-const { printJson, error, warn, success } = require('./helpers.js');
+const { printJson, warn, success } = require('./helpers.js');
 
 //const { toUnicode } = require("punycode"); //Punycode is used to encode internationalized domain names (IDN).
 
@@ -30,13 +30,8 @@ storyMap.set('users', storyMapUsers);
 const cache = new Set();
 
 io.use((socket, next) => {
-  console.groupCollapsed('Inside io.use() handling socket', socket.id);
   const sessionID = socket.handshake.auth.sessionID; // where does client get the sessionID?
   if (sessionID) {
-    console.log(
-      sessionID,
-      'sessionID sent by client (after a refresh or after restarting the browser)'
-    );
     const session = sessionStore.findSession(sessionID);
     if (session) {
       socket.sessionID = sessionID;
@@ -55,29 +50,19 @@ io.use((socket, next) => {
         console.log('Session data:');
         console.log(printJson([...storyMapSessions]));
       }
-      console.log(
-        warn(
-          'LEAVING io.use() with that session data. On to handling the connection...'
-        )
-      );
-      console.groupEnd();
+      console.groupCollapsed('Handshake: New party');
+      console.log(warn(`LEAVING io.use() with  ${sessionID}'s session data.`));
       return next();
     }
-    console.log(warn('Continuing io.use() with only a sessionID'));
   }
 
   const username = socket.handshake.auth.username;
   if (!username) {
-    console.log(
-      error(
-        'LEAVING io.use() because username missing (e.g., client connected, but no username specified yet). Returning "invalid username" error to client'
-      )
-    );
-    console.groupEnd();
     return next(new Error('invalid username'));
   }
 
-  console.log('Assigning new sessionID and userID for passed-in username');
+  console.groupCollapsed('Handshake: Known party');
+  console.log('Assigning new sessionID and userID for', username);
   socket.sessionID = randomId(); // these values gets attached to the socket so the client knows which session has their data and messages
   socket.userID = randomId();
   socket.username = username; // username is fixed
@@ -96,12 +81,11 @@ io.use((socket, next) => {
     console.log(printJson([...storyMap.get('users')]));
   }
   console.log(success('Leaving io.use()'));
-  console.groupEnd();
   next();
 });
 
 io.on('connection', (socket) => {
-  console.groupCollapsed("Inside io.on('connection')");
+  console.log("Inside io.on('connection')");
 
   // persist session
   sessionStore.saveSession(socket.sessionID, {
@@ -121,14 +105,14 @@ io.on('connection', (socket) => {
     console.log(printJson([...storyMapSessions]));
     console.groupEnd();
   }
-
+  console.log('Returning session data to client');
   // emit session details
   socket.emit('session', {
     sessionID: socket.sessionID,
     userID: socket.userID,
     username: socket.username,
   });
-
+  console.log(`socket ${socket.id} joining ${socket.username}'s room`);
   // join the "userID" room
   socket.join(socket.userID);
 
@@ -141,8 +125,8 @@ io.on('connection', (socket) => {
       connected: session.connected,
     });
   });
-  console.groupCollapsed('users');
-  console.log('logged in users:');
+
+  console.groupCollapsed('Online users:');
   console.log(printJson(users));
   socket.emit('users', users);
   console.groupEnd();
@@ -153,6 +137,8 @@ io.on('connection', (socket) => {
     username: socket.username,
     connected: true,
   });
+  console.log('Leaving io.on(connect)');
+  console.groupEnd();
 
   // forward the private message to the right recipient (and to other tabs of the sender)
   // "to" is the userID of the alert recipient

@@ -47,43 +47,55 @@
         <v-card-text>
           Pick a {{ nsp }} public space category:
           <v-row no-gutters>
-            <v-col cols="12">
-              <v-chip-group
-                v-model="selectedCategory"
-                mandatory
-                color="secondary"
-                dark
-              >
-                <v-chip filter>
-                  <v-icon>mdi-store</v-icon>
-                </v-chip>
-                <v-chip filter>
-                  <v-icon>mdi-silverware</v-icon>
-                </v-chip>
+            <v-col cols="4">
+              <v-row>
+                <v-col cols="12">
+                  <v-chip-group
+                    v-model="selectedCategory"
+                    mandatory
+                    color="secondary"
+                    dark
+                  >
+                    <v-chip filter>
+                      <v-icon>mdi-store</v-icon>
+                    </v-chip>
+                    <v-chip filter>
+                      <v-icon>mdi-silverware</v-icon>
+                    </v-chip>
 
-                <v-chip filter>
-                  <v-icon>mdi-bed</v-icon>
-                </v-chip>
-                <v-chip filter>
-                  <v-icon>mdi-theater</v-icon>
-                </v-chip>
-              </v-chip-group>
-            </v-col>
-            <v-col cols="12">
-              <v-row no-gutters>
-                <v-col cols="12"> {{ categoryLabel }}: </v-col>
-                <v-col cols="auto">
-                  <v-autocomplete
-                    v-model="selectedSpace"
-                    :items="filteredSpaces"
-                    :filter="customFilter"
-                    item-text="room"
-                    item-value="id"
-                    return-object
-                    clearable
-                  ></v-autocomplete>
+                    <v-chip filter>
+                      <v-icon>mdi-bed</v-icon>
+                    </v-chip>
+                    <v-chip filter>
+                      <v-icon>mdi-theater</v-icon>
+                    </v-chip>
+                  </v-chip-group>
+                </v-col>
+                <v-col cols="12">
+                  <v-row no-gutters>
+                    <v-col cols="12"> {{ categoryLabel }}: </v-col>
+                    <v-col cols="auto">
+                      <v-autocomplete
+                        v-model="selectedSpace"
+                        :items="filteredSpaces"
+                        :filter="customFilter"
+                        item-text="room"
+                        item-value="id"
+                        return-object
+                        clearable
+                      ></v-autocomplete>
+                    </v-col>
+                  </v-row>
                 </v-col>
               </v-row>
+            </v-col>
+            <v-col cols="8">
+              <!-- Google Map -->
+              <GoogleMap
+                :selectedSpace="selectedSpace"
+                :categorySelected="categorySelected"
+              />
+              <!-- Google Map -->
             </v-col>
           </v-row>
         </v-card-text>
@@ -136,14 +148,14 @@
         <span>Recent</span>
         <v-icon>mdi-heart</v-icon>
       </v-btn>
-      <v-btn @click="show = 1">
-        <span>Nearby</span>
-        <v-icon>mdi-map-marker</v-icon>
-      </v-btn>
       <v-btn @click="show = 2">
         <span>Spaces</span>
-        <v-icon>mdi-home</v-icon>
+        <v-icon>mdi-map-marker</v-icon>
       </v-btn>
+      <!-- <v-btn @click="show = 2">
+        <span>Nearby</span>
+        <v-icon>mdi-home</v-icon>
+      </v-btn> -->
       <v-btn @click="show = 3">
         <span>Gathering</span>
         <v-icon>mdi-account-group</v-icon>
@@ -159,6 +171,7 @@
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
 import mapCard from '@/components/cards/mapCard';
+import GoogleMap from '@/components/cards/GoogleMap';
 
 import { data } from '@/assets/data/sistersBusiness.json';
 
@@ -175,6 +188,7 @@ export default {
     mapCard,
     // visitorIdentityCard,
     logsCard,
+    GoogleMap,
   },
   computed: {
     categoryLabel() {

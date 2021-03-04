@@ -3,7 +3,7 @@
     <v-list-item>
       <v-list-item-content>
         <v-list-item-title class="title">
-          {{ nickname }}'s Travel Log
+          {{ nickname || 'Your' }}{{ nickname ? "'s" : '' }} Travel Log
         </v-list-item-title>
         <v-btn
           fab

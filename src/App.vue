@@ -253,6 +253,7 @@ export default {
       // store it in the localStorage
       localStorage.setItem('sessionID', sessionID);
       // save the ID of the user
+      // TODO isn't userID already assigned in middleware?
       socket.userID = userID;
       // this.sid = sessionID;
       this.username = username;
