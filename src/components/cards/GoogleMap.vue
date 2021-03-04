@@ -8,14 +8,10 @@
         @click="center = m.position"
       ></gmap-marker>
     </gmap-map>
-    <div class="white--text pl-3">
-      <gmap-autocomplete
-        @place_changed="setPlace"
-        style="width: 80%"
-        class="pr-3 pt-1"
-      >
+    <div class="white--text py-3">
+      <gmap-autocomplete @place_changed="setPlace" style="width: 80%">
       </gmap-autocomplete>
-      <v-btn @click="addMarker">Pin</v-btn>
+      <!-- <v-btn @click="addMarker">Pin</v-btn> -->
     </div>
   </div>
 </template>
@@ -52,6 +48,7 @@ export default {
   methods: {
     setPlace(place) {
       this.currentPlace = place;
+      this.addMarker();
       this.$emit('addedPlace', place);
     },
     addMarker() {

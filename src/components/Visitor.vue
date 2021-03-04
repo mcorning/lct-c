@@ -83,7 +83,7 @@ import crypto from 'crypto';
 const randomId = () => crypto.randomBytes(8).toString('hex');
 
 import * as easings from 'vuetify/es5/services/goto/easing-patterns';
-import { success, warn, info } from '../utils/colors.js';
+import { success, warn, info, printJson } from '../utils/colors.js';
 
 import Message from '@/models/Message';
 import diaryCard from '@/components/cards/diaryCard';
@@ -121,8 +121,8 @@ export default {
         // flatten newVal
         const msg = {
           id: randomId(),
-          room: newVal.room.selectedSpace.room,
-          roomId: newVal.room.selectedSpace.id,
+          room: newVal.room,
+          roomId: newVal.room,
           visitor: this.nickname,
           visitorId: this.userID,
           nsp: newVal.nsp,
@@ -193,11 +193,11 @@ export default {
     },
 
     onLogVisit(data) {
-      console.log(success('Selected Space:', data));
+      console.log(success('Selected Space:', printJson(data)));
       // cache the visit in Messages
       let msg = {
         visitor: this.nickname,
-        room: data.room,
+        room: data.selectedSpace.name,
         message: 'Entered',
         sentTime: new Date().toISOString(),
       };

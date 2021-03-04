@@ -1,935 +1,829 @@
 {
   "data": [
     {
-      "CODE": 20,
-      "ID": "SISTERS CITY HALL",
-      "PROPERTY ADDRESS": "520 E Cascade Ave",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 20,
+      "id": "SISTERS CITY HALL",
+      "Property Address": "520 E Cascade Ave",
       "position": [
         44.29160723928563,
         -121.5441825899421
       ]
     },
     {
-      "CODE": 20,
-      "NAME": "RETAIL",
-      "ID": "CLEARWATER GALLERY",
-      "PROPERTY ADDRESS": "303 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 20,
+      "category": "Retail",
+      "id": "CLEARWATER GALLERY",
+      "Property Address": "303 W HOOD AVE",
       "position": [
         44.2942994,
         -121.5505399
       ]
     },
     {
-      "CODE": 62,
-      "NAME": "RES",
-      "ID": "ALPHASTAR DBA MCDONALDS",
-      "PROPERTY ADDRESS": "1001 RAILWAY",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 62,
+      "category": "Food and Drink",
+      "id": "ALPHASTAR DBA MCDONALDS",
+      "Property Address": "1001 RAILWAY"
     },
     {
-      "CODE": 69,
-      "NAME": "RES",
-      "ID": "ANGELINE'S BAKERY & CAFE",
-      "PROPERTY ADDRESS": "121 W. MAIN AVE.",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 69,
+      "category": "Food and Drink",
+      "id": "ANGELINE'S BAKERY & CAFE",
+      "Property Address": "121 W. MAIN AVE.",
       "position": [
         44.292213,
         -121.5502402
       ]
     },
     {
-      "CODE": 81,
-      "NAME": "RETAIL",
-      "ID": "BEACHAM'S CLOCK CO. INC.",
-      "PROPERTY ADDRESS": "300 W. HOOD AVE.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 81,
+      "category": "Retail",
+      "id": "BEACHAM'S CLOCK CO. INC.",
+      "Property Address": "300 W. HOOD AVE."
     },
     {
-      "CODE": 86,
-      "NAME": "RETAIL",
-      "ID": "BEDOUIN",
-      "PROPERTY ADDRESS": "143 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 86,
+      "category": "Retail",
+      "id": "BEDOUIN",
+      "Property Address": "143 E HOOD AVE",
       "postion": [
         44.29034639987152,
         -121.54932092662976
       ]
     },
     {
-      "CODE": 95,
-      "NAME": "LODG",
-      "ID": "BEST WESTERN PONDEROSA LODGE",
-      "PROPERTY ADDRESS": "500 W HWY 20",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 95,
+      "category": "Lodging",
+      "id": "BEST WESTERN PONDEROSA LODGE",
+      "Property Address": "500 W HWY 20",
       "postion": [
         44.297255484712544,
         -121.55921058153349
       ]
     },
     {
-      "CODE": 105,
-      "NAME": "RES",
-      "ID": "BRIGHT SPOT JUICE & JAVA, INC",
-      "PROPERTY ADDRESS": "130 N PINE ST",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 105,
+      "category": "Food and Drink",
+      "id": "BRIGHT SPOT JUICE & JAVA, INC",
+      "Property Address": "130 N PINE ST"
     },
     {
-      "CODE": 112,
-      "NAME": "RETAIL",
-      "ID": "BUFFALO HORN GALLERY",
-      "PROPERTY ADDRESS": "167 W SISTERS PARK DR",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 112,
+      "category": "Retail",
+      "id": "BUFFALO HORN GALLERY",
+      "Property Address": "167 W SISTERS PARK DR"
     },
     {
-      "CODE": 118,
-      "NAME": "RETAIL",
-      "ID": "CANYON CREEK POTTERY",
-      "PROPERTY ADDRESS": "310 N CEDAR ST",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 118,
+      "category": "Retail",
+      "id": "CANYON CREEK POTTERY",
+      "Property Address": "310 N CEDAR ST"
     },
     {
-      "CODE": 125,
-      "NAME": "RETAIL",
-      "ID": "EAR EXPRESSIONS",
-      "PROPERTY ADDRESS": "221 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 125,
+      "category": "Retail",
+      "id": "EAR EXPFood and DrinkSIONS",
+      "Property Address": "221 W CASCADE AVE"
     },
     {
-      "CODE": 134,
-      "NAME": "RETAIL",
-      "ID": "EUROSPORTS",
-      "PROPERTY ADDRESS": "223 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 134,
+      "category": "Retail",
+      "id": "EUROSPORTS",
+      "Property Address": "223 E HOOD AVE"
     },
     {
-      "CODE": 141,
-      "NAME": "RETAIL",
-      "ID": "FIRESIDE",
-      "PROPERTY ADDRESS": "424 NE THRID ST",
-      "CITY LIMIT\r": "OUTSIDE\r"
+      "code": 141,
+      "category": "Retail",
+      "id": "FIFood and DrinkidE",
+      "Property Address": "424 NE THRid ST"
     },
     {
-      "CODE": 145,
-      "NAME": "RETAIL",
-      "ID": "FLY FISHERS PLACE",
-      "PROPERTY ADDRESS": "151 W MAIN AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 145,
+      "category": "Retail",
+      "id": "FLY FISHERS PLACE",
+      "Property Address": "151 W MAIN AVE"
     },
     {
-      "CODE": 155,
-      "NAME": "RETAIL",
-      "ID": "GALLIMAUFRY",
-      "PROPERTY ADDRESS": "111 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 155,
+      "category": "Retail",
+      "id": "GALLIMAUFRY",
+      "Property Address": "111 W CASCADE AVE"
     },
     {
-      "CODE": 157,
-      "NAME": "RETAIL",
-      "ID": "GARDEN OF EDEN",
-      "PROPERTY ADDRESS": "200 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 157,
+      "category": "Retail",
+      "id": "GARDEN OF EDEN",
+      "Property Address": "200 W CASCADE AVE"
     },
     {
-      "CODE": 176,
-      "NAME": "RETAIL",
-      "ID": "THE HEN'S TOOTH",
-      "PROPERTY ADDRESS": "172 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 176,
+      "category": "Retail",
+      "id": "THE HEN'S TOOTH",
+      "Property Address": "172 W HOOD AVE"
     },
     {
-      "CODE": 191,
-      "NAME": "RETAIL",
-      "ID": "HOYT'S HARDWARE & BUILDING SU",
-      "PROPERTY ADDRESS": "440 N PINE ST",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 191,
+      "category": "Retail",
+      "id": "HOYT'S HARDWARE & BUILDING SU",
+      "Property Address": "440 N PINE ST",
       "position": [
         44.29436609762396,
         -121.55216716843327
       ]
     },
     {
-      "CODE": 200,
-      "NAME": "RES",
-      "ID": "THE COTTONWOOD CAFE",
-      "PROPERTY ADDRESS": "403 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 200,
+      "category": "Food and Drink",
+      "id": "THE COTTONWOOD CAFE",
+      "Property Address": "403 E HOOD AVE",
       "position": [
         44.29035902220855,
         -121.54607446195517
       ]
     },
     {
-      "CODE": 201,
-      "NAME": "RETAIL",
-      "ID": "THE JEWEL",
-      "PROPERTY ADDRESS": "221 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 201,
+      "category": "Retail",
+      "id": "THE JEWEL",
+      "Property Address": "221 W CASCADE AVE"
     },
     {
-      "CODE": 207,
-      "NAME": "RETAIL",
-      "ID": "KALAMAZOO ANTIQUE MALL",
-      "PROPERTY ADDRESS": "211 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 207,
+      "category": "Retail",
+      "id": "KALAMAZOO ANTIQUE MALL",
+      "Property Address": "211 W CASCADE AVE"
     },
     {
-      "CODE": 221,
-      "NAME": "RETAIL",
-      "ID": "LONESOME WATER BOOKS",
-      "PROPERTY ADDRESS": "221 W CASCADE AVE C",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 221,
+      "category": "Retail",
+      "id": "LONESOME WATER BOOKS",
+      "Property Address": "221 W CASCADE AVE C"
     },
     {
-      "CODE": 223,
-      "NAME": "RETAIL",
-      "ID": "SISTERS ACE HARDWARE",
-      "PROPERTY ADDRESS": "373 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 223,
+      "category": "Retail",
+      "id": "SISTERS ACE HARDWARE",
+      "Property Address": "373 E HOOD AVE",
       "position": [
         44.29026291038557,
         -121.54664990425432
       ]
     },
     {
-      "CODE": 257,
-      "NAME": "RETAIL",
-      "ID": "THE GOOD DAY CAFE",
-      "PROPERTY ADDRESS": "143 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 257,
+      "category": "Retail",
+      "id": "THE GOOD DAY CAFE",
+      "Property Address": "143 E HOOD AVE",
       "position": [
         44.29034639987152,
         -121.54932092662976
       ]
     },
     {
-      "CODE": 276,
-      "NAME": "RETAIL",
-      "ID": "PAPER PLACE, THE",
-      "PROPERTY ADDRESS": "171 S. ELM ST.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 276,
+      "category": "Retail",
+      "id": "PAPER PLACE, THE",
+      "Property Address": "171 S. ELM ST."
     },
     {
-      "CODE": 307,
-      "NAME": "RETAIL",
-      "ID": "RICHARD'S PRODUCE",
-      "PROPERTY ADDRESS": "411 W. CASCADE AVE.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 307,
+      "category": "Retail",
+      "id": "RICHARD'S PRODUCE",
+      "Property Address": "411 W. CASCADE AVE."
     },
     {
-      "CODE": 339,
-      "NAME": "RETAIL",
-      "ID": "BAXTER AUTO PARTS INC.",
-      "PROPERTY ADDRESS": "303 E. HOOD AVE.",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 339,
+      "category": "Retail",
+      "id": "BAXTER AUTO PARTS INC.",
+      "Property Address": "303 E. HOOD AVE.",
       "position": [
         44.29036387074537,
         -121.54724429810483
       ]
     },
     {
-      "CODE": 352,
-      "NAME": "RETAIL",
-      "ID": "SISTERS COFFEE CO.",
-      "PROPERTY ADDRESS": "273 W. HOOD AVE.",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 352,
+      "category": "Retail",
+      "id": "SISTERS COFFEE CO.",
+      "Property Address": "273 W. HOOD AVE.",
       "position": [
         44.290333940919105,
         -121.55208746827262
       ]
     },
     {
-      "CODE": 353,
-      "NAME": "RETAIL",
-      "ID": "STITCHIN' POST",
-      "PROPERTY ADDRESS": "311 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 353,
+      "category": "Retail",
+      "id": "STITCHIN' POST",
+      "Property Address": "311 W CASCADE AVE"
     },
     {
-      "CODE": 364,
-      "NAME": "RETAIL",
-      "ID": "PILL BOX DRUG dba SISTERS DRU",
-      "PROPERTY ADDRESS": "635 N ARROWLEAF TRAIL",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 364,
+      "category": "Retail",
+      "id": "PILL BOX DRUG dba SISTERS DRU",
+      "Property Address": "635 N ARROWLEAF TRAIL"
     },
     {
-      "CODE": 367,
-      "NAME": "RETAIL",
-      "ID": "SUNDANCE SHOES",
-      "PROPERTY ADDRESS": "141 E CASCADE STE 102",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 367,
+      "category": "Retail",
+      "id": "SUNDANCE SHOES",
+      "Property Address": "141 E CASCADE STE 102"
     },
     {
-      "CODE": 368,
-      "NAME": "RETAIL",
-      "ID": "SISTERS FEED & SUPPLY",
-      "PROPERTY ADDRESS": "102 E. MAIN AVE.",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 368,
+      "category": "Retail",
+      "id": "SISTERS FEED & SUPPLY",
+      "Property Address": "102 E. MAIN AVE.",
       "position": [
         44.29238862748117,
         -121.54971761512721
       ]
     },
     {
-      "CODE": 369,
-      "NAME": "RETAIL",
-      "ID": "SISTERS GALLERY & FRAME SHOP",
-      "PROPERTY ADDRESS": "252 W. HOOD AVE.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 369,
+      "category": "Retail",
+      "id": "SISTERS GALLERY & FRAME SHOP",
+      "Property Address": "252 W. HOOD AVE."
     },
     {
-      "CODE": 370,
-      "NAME": "RETAIL",
-      "ID": "SISTERS GLASS & MIRROR",
-      "PROPERTY ADDRESS": "177 W. SISTERS PARK DR.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 370,
+      "category": "Retail",
+      "id": "SISTERS GLASS & MIRROR",
+      "Property Address": "177 W. SISTERS PARK DR."
     },
     {
-      "CODE": 372,
-      "NAME": "RETAIL",
-      "ID": "SISTERS HAB. FOR HUM. THRIFT",
-      "PROPERTY ADDRESS": "211 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 372,
+      "category": "Retail",
+      "id": "SISTERS HAB. FOR HUM. THRIFT",
+      "Property Address": "211 E CASCADE AVE"
     },
     {
-      "CODE": 385,
-      "NAME": "RETAIL",
-      "ID": "TAYLOR TIRE CENTER",
-      "PROPERTY ADDRESS": "600 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 385,
+      "category": "Retail",
+      "id": "TAYLOR TIRE CEntertainmentER",
+      "Property Address": "600 W HOOD AVE"
     },
     {
-      "CODE": 401,
-      "NAME": "RETAIL",
-      "ID": "VILLAGE INTERIORS DESIGN CNTR",
-      "PROPERTY ADDRESS": "111 W BARCLAY DR 1A",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 401,
+      "category": "Retail",
+      "id": "VILLAGE INTERIORS DESIGN CNTR",
+      "Property Address": "111 W BARCLAY DR 1A"
     },
     {
-      "CODE": 413,
-      "NAME": "RETAIL",
-      "ID": "SISTERS LOG FURNITURE & HOME",
-      "PROPERTY ADDRESS": "121 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 413,
+      "category": "Retail",
+      "id": "SISTERS LOG FURNITURE & HOME",
+      "Property Address": "121 W CASCADE AVE"
     },
     {
-      "CODE": 419,
-      "NAME": "LODG",
-      "ID": "SISTERS MOTOR LODGE",
-      "PROPERTY ADDRESS": "511 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 419,
+      "category": "Lodging",
+      "id": "SISTERS MOTOR LODGE",
+      "Property Address": "511 W CASCADE AVE"
     },
     {
-      "CODE": 422,
-      "NAME": "RETAIL",
-      "ID": "SISTERS OLIVE & NUT COMPANY",
-      "PROPERTY ADDRESS": "271 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 422,
+      "category": "Retail",
+      "id": "SISTERS OLIVE & NUT COMPANY",
+      "Property Address": "271 W CASCADE AVE"
     },
     {
-      "CODE": 436,
-      "NAME": "RES",
-      "ID": "SNO CAP ICE CREAM",
-      "PROPERTY ADDRESS": "380 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 436,
+      "category": "Food and Drink",
+      "id": "SNO CAP ICE CREAM",
+      "Property Address": "380 W CASCADE AVE",
       "position": [
         44.29159163484625,
         -121.55364460824656
       ]
     },
     {
-      "CODE": 454,
-      "NAME": "RETAIL",
-      "ID": "YOUR $12 STORE",
-      "PROPERTY ADDRESS": "121 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 454,
+      "category": "Retail",
+      "id": "YOUR $12 STORE",
+      "Property Address": "121 W CASCADE AVE"
     },
     {
-      "CODE": 499,
-      "NAME": "RETAIL",
-      "ID": "MACKENZIE CREEK TRADING CO.",
-      "PROPERTY ADDRESS": "290 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 499,
+      "category": "Retail",
+      "id": "MACKENZIE CREEK TRADING CO.",
+      "Property Address": "290 W CASCADE AVE"
     },
     {
-      "CODE": 549,
-      "NAME": "LODG",
-      "ID": "FIVE PINE LODGE AND SPA",
-      "PROPERTY ADDRESS": "1021 DESPERADO TRAIL",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 549,
+      "category": "Lodging",
+      "id": "FIVE PINE LODGE AND SPA",
+      "Property Address": "1021 DESPERADO TRAIL",
       "position": [
         44.285891712872534,
         -121.53615682585888
       ]
     },
     {
-      "CODE": 625,
-      "NAME": "RETAIL",
-      "ID": "ALPACA BY DESIGN",
-      "PROPERTY ADDRESS": "140 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 625,
+      "category": "Retail",
+      "id": "ALPACA BY DESIGN",
+      "Property Address": "140 W CASCADE AVE"
     },
     {
-      "CODE": 627,
-      "NAME": "RES",
-      "ID": "THREE CREEEKS BREWING CO.",
-      "PROPERTY ADDRESS": "721 DESPERADO CT",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 627,
+      "category": "Food and Drink",
+      "id": "THREE CREEEKS BREWING CO.",
+      "Property Address": "721 DESPERADO CT",
       "position": [
         44.285271586287344,
         -121.53482970502058
       ]
     },
     {
-      "CODE": 628,
-      "NAME": "RETAIL",
-      "ID": "SAGE ANTIQUES",
-      "PROPERTY ADDRESS": "161 S ELM",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 628,
+      "category": "Retail",
+      "id": "SAGE ANTIQUES",
+      "Property Address": "161 S ELM"
     },
     {
-      "CODE": 640,
-      "NAME": "RETAIL",
-      "ID": "HERITAGE U.S.A.",
-      "PROPERTY ADDRESS": "253 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 640,
+      "category": "Retail",
+      "id": "HERITAGE U.S.A.",
+      "Property Address": "253 E HOOD AVE"
     },
     {
-      "CODE": 682,
-      "NAME": "RES",
-      "ID": "RANCHO VIEJO",
-      "PROPERTY ADDRESS": "150 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 682,
+      "category": "Food and Drink",
+      "id": "RANCHO VIEJO",
+      "Property Address": "150 E CASCADE AVE",
       "position": [
         44.29150432324856,
         -121.54941073502869
       ]
     },
     {
-      "CODE": 689,
-      "NAME": "RETAIL",
-      "ID": "BI-MART ",
-      "PROPERTY ADDRESS": "445 W HWY 20",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 689,
+      "category": "Retail",
+      "id": "BI-MART ",
+      "Property Address": "445 W HWY 20",
       "position": [
         44.29413015637242,
         -121.56037350385031
       ]
     },
     {
-      "CODE": 695,
-      "NAME": "RETAIL",
-      "ID": "LIFE LOVE YOGA",
-      "PROPERTY ADDRESS": "VARIOUS",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 695,
+      "category": "Retail",
+      "id": "LIFE LOVE YOGA",
+      "Property Address": "VARIOUS"
     },
     {
-      "CODE": 707,
-      "NAME": "RETAIL",
-      "ID": "OFFICE EXPRESS",
-      "PROPERTY ADDRESS": "160 S OAK ST",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 707,
+      "category": "Retail",
+      "id": "OFFICE EXPFood and DrinkS",
+      "Property Address": "160 S OAK ST"
     },
     {
-      "CODE": 717,
-      "NAME": "RES",
-      "ID": "SISTERS, MARTOLLIS OF",
-      "PROPERTY ADDRESS": "220 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 717,
+      "category": "Food and Drink",
+      "id": "SISTERS, MARTOLLIS OF",
+      "Property Address": "220 W CASCADE AVE"
     },
     {
-      "CODE": 733,
-      "NAME": "RETAIL",
-      "ID": "BLAZIN' SADDLES LLC",
-      "PROPERTY ADDRESS": "413 W HOOD AVE A",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 733,
+      "category": "Retail",
+      "id": "BLAZIN' SADDLES LLC",
+      "Property Address": "413 W HOOD AVE A"
     },
     {
-      "CODE": 735,
-      "NAME": "LODG",
-      "ID": "SISTERS INN & SUITES",
-      "PROPERTY ADDRESS": "605 N. ARROWLEAF TRAIL",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 735,
+      "category": "Lodging",
+      "id": "SISTERS INN & SUITES",
+      "Property Address": "605 N. ARROWLEAF TRAIL"
     },
     {
-      "CODE": 748,
-      "NAME": "RETAIL",
-      "ID": "3 SISTERS FUEL STOP",
-      "PROPERTY ADDRESS": "210 E. CASCADE AVE.",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 748,
+      "category": "Retail",
+      "id": "3 SISTERS FUEL STOP",
+      "Property Address": "210 E. CASCADE AVE.",
       "position": [
         44.291539949714284,
         -121.5484422529003
       ]
     },
     {
-      "CODE": 752,
-      "NAME": "RETAIL",
-      "ID": "SIGNS OF SISTERS",
-      "PROPERTY ADDRESS": "PO BOX 429",
-      "CITY LIMIT\r": "OUTSIDE\r"
+      "code": 752,
+      "category": "Retail",
+      "id": "SIGNS OF SISTERS",
+      "Property Address": "PO BOX 429"
     },
     {
-      "CODE": 773,
-      "NAME": "RETAIL",
-      "ID": "OPEN RANGE",
-      "PROPERTY ADDRESS": "220 W. CASCADE ST",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 773,
+      "category": "Retail",
+      "id": "OPEN RANGE",
+      "Property Address": "220 W. CASCADE ST"
     },
     {
-      "CODE": 776,
-      "NAME": "RETAIL",
-      "ID": "BALD EAGLE MUSIC",
-      "PROPERTY ADDRESS": "101 N MAIN AVE B",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 776,
+      "category": "Retail",
+      "id": "BALD EAGLE MUSIC",
+      "Property Address": "101 N MAIN AVE B"
     },
     {
-      "CODE": 791,
-      "NAME": "RES",
-      "ID": "HARDTAILS BAR & GRILL",
-      "PROPERTY ADDRESS": "175 N. LARCH STREET",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 791,
+      "category": "Food and Drink",
+      "id": "HARDTAILS BAR & GRILL",
+      "Property Address": "175 N. LARCH STREET"
     },
     {
-      "CODE": 811,
-      "NAME": "RES",
-      "ID": "TK HARBICK INC. DBA TAKODA'S",
-      "PROPERTY ADDRESS": "425 HWY 20 W.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 811,
+      "category": "Food and Drink",
+      "id": "TK HARBICK INC. DBA TAKODA'S",
+      "Property Address": "425 HWY 20 W."
     },
     {
-      "CODE": 813,
-      "NAME": "RETAIL",
-      "ID": "SISTERS HAB FOR HUM - RESTORE",
-      "PROPERTY ADDRESS": "254 W. ADAMS",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 813,
+      "category": "Retail",
+      "id": "SISTERS HAB FOR HUM - Food and DrinkTORE",
+      "Property Address": "254 W. ADAMS"
     },
     {
-      "CODE": 829,
-      "NAME": "RES",
-      "ID": "TACOS EL COMAL",
-      "PROPERTY ADDRESS": "411 W. CASCADE AVE.",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 829,
+      "category": "Food and Drink",
+      "id": "TACOS EL COMAL",
+      "Property Address": "411 W. CASCADE AVE.",
       "position": [
         44.2910841724938,
         -121.55412654802282
       ]
     },
     {
-      "CODE": 840,
-      "NAME": "RES",
-      "ID": "LJB, INC. DBA SUBWAY",
-      "PROPERTY ADDRESS": "620 N ARROWLEAF TRAIL",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 840,
+      "category": "Food and Drink",
+      "id": "LJB, INC. DBA SUBWAY",
+      "Property Address": "620 N ARROWLEAF TRAIL"
     },
     {
-      "CODE": 848,
-      "NAME": "RETAIL",
-      "ID": "JILL NEAL ENTERPRISES LLC",
-      "PROPERTY ADDRESS": "222 S ASH ST 11",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 848,
+      "category": "Retail",
+      "id": "JILL NEAL EntertainmentERPRISES LLC",
+      "Property Address": "222 S ASH ST 11"
     },
     {
-      "CODE": 851,
-      "NAME": "RETAIL",
-      "ID": "SISTERS 76",
-      "PROPERTY ADDRESS": "591 E HWY 20",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 851,
+      "category": "Retail",
+      "id": "SISTERS 76",
+      "Property Address": "591 E HWY 20",
       "position": [
         44.29017308565393,
         -121.5442784702322
       ]
     },
     {
-      "CODE": 860,
-      "NAME": "RES",
-      "ID": "THE PORCH",
-      "PROPERTY ADDRESS": "243 N ELM",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 860,
+      "category": "Food and Drink",
+      "id": "THE PORCH",
+      "Property Address": "243 N ELM"
     },
     {
-      "CODE": 925,
-      "NAME": "RETAIL",
-      "ID": "BLUE BURRO IMPORTS",
-      "PROPERTY ADDRESS": "170 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 925,
+      "category": "Retail",
+      "id": "BLUE BURRO IMPORTS",
+      "Property Address": "170 W CASCADE AVE"
     },
     {
-      "CODE": 934,
-      "NAME": "RES",
-      "ID": "JUNES ASIAN KITCHEN",
-      "PROPERTY ADDRESS": "291 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 934,
+      "category": "Food and Drink",
+      "id": "JUNES ASIAN KITCHEN",
+      "Property Address": "291 E CASCADE AVE"
     },
     {
-      "CODE": 961,
-      "NAME": "RETAIL",
-      "ID": "THE COLLECTION GALLERY",
-      "PROPERTY ADDRESS": "353 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 961,
+      "category": "Retail",
+      "id": "THE COLLECTION GALLERY",
+      "Property Address": "353 W HOOD AVE"
     },
     {
-      "CODE": 992,
-      "NAME": "RETAIL",
-      "ID": "HOOD AVENUE ART",
-      "PROPERTY ADDRESS": "353 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 992,
+      "category": "Retail",
+      "id": "HOOD AVENUE ART",
+      "Property Address": "353 W HOOD AVE"
     },
     {
-      "CODE": 1086,
-      "NAME": "RETAIL",
-      "ID": "GRIZZLY RIDGE UPCYCLE",
-      "PROPERTY ADDRESS": "123 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1086,
+      "category": "Retail",
+      "id": "GRIZZLY RidGE UPCYCLE",
+      "Property Address": "123 E HOOD AVE"
     },
     {
-      "CODE": 1091,
-      "NAME": "RES",
-      "ID": "SPIRITS",
-      "PROPERTY ADDRESS": "261 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1091,
+      "category": "Food and Drink",
+      "id": "SPIRITS",
+      "Property Address": "261 W CASCADE AVE"
     },
     {
-      "CODE": 1092,
-      "NAME": "RETAIL",
-      "ID": "WANDER + NW AND KIDS",
-      "PROPERTY ADDRESS": "200 W CASCADE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1092,
+      "category": "Retail",
+      "id": "WANDER + NW AND KidS",
+      "Property Address": "200 W CASCADE"
     },
     {
-      "CODE": 1101,
-      "NAME": "RES",
-      "ID": "HOP & BREW",
-      "PROPERTY ADDRESS": "523 E HWY 20",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1101,
+      "category": "Food and Drink",
+      "id": "HOP & BREW",
+      "Property Address": "523 E HWY 20",
       "position": [
         44.290211495299296,
         -121.54467992761019
       ]
     },
     {
-      "CODE": 1113,
-      "NAME": "LODG",
-      "ID": "PRICELINE.COM",
-      "PROPERTY ADDRESS": "800 CONNECTICUT AVE",
-      "CITY LIMIT\r": "OUTSIDE\r"
+      "code": 1113,
+      "category": "Lodging",
+      "id": "PRICELINE.COM",
+      "Property Address": "800 CONNECTICUT AVE"
     },
     {
-      "CODE": 1117,
-      "NAME": "RES",
-      "ID": "SUTTLE TEA",
-      "PROPERTY ADDRESS": "450 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1117,
+      "category": "Food and Drink",
+      "id": "SUTTLE TEA",
+      "Property Address": "450 E CASCADE AVE"
     },
     {
-      "CODE": 1127,
-      "NAME": "LODG",
-      "ID": "SCANDIA SISTERS",
-      "PROPERTY ADDRESS": "1100 E HWY 20",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1127,
+      "category": "Lodging",
+      "id": "SCANDIA SISTERS",
+      "Property Address": "1100 E HWY 20"
     },
     {
-      "CODE": 1128,
-      "NAME": "RETAIL",
-      "ID": "DIXIE'S",
-      "PROPERTY ADDRESS": "100 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1128,
+      "category": "Retail",
+      "id": "DIXIE'S",
+      "Property Address": "100 E CASCADE AVE"
     },
     {
-      "CODE": 1130,
-      "NAME": "RETAIL",
-      "ID": "STEIGMAN, INC DBA-FAVEUR",
-      "PROPERTY ADDRESS": "150 W CASCADE 100",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1130,
+      "category": "Retail",
+      "id": "STEIGMAN, INC DBA-FAVEUR",
+      "Property Address": "150 W CASCADE 100"
     },
     {
-      "CODE": 1131,
-      "NAME": "LODG",
-      "ID": "SISTERS BUNKHOUSE",
-      "PROPERTY ADDRESS": "114 N OAK STREET",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1131,
+      "category": "Lodging",
+      "id": "SISTERS BUNKHOUSE",
+      "Property Address": "114 N OAK STREET",
       "position": [
         44.291598674800376,
         -121.55222712999574
       ]
     },
     {
-      "CODE": 1157,
-      "NAME": "RES",
-      "ID": "SISTERS SALOON & RANCH GRILL",
-      "PROPERTY ADDRESS": "190 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1157,
+      "category": "Food and Drink",
+      "id": "SISTERS SALOON & RANCH GRILL",
+      "Property Address": "190 E CASCADE AVE",
       "position": [
         44.29149247538556,
         -121.54879193344978
       ]
     },
     {
-      "CODE": 1159,
-      "NAME": "RETAIL",
-      "ID": "RAVEN MAKES GALLERY",
-      "PROPERTY ADDRESS": "182 E HOOD AVE.",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1159,
+      "category": "Retail",
+      "id": "RAVEN MAKES GALLERY",
+      "Property Address": "182 E HOOD AVE."
     },
     {
-      "CODE": 1171,
-      "NAME": "RES",
-      "ID": "R SPOT TAKEOUT",
-      "PROPERTY ADDRESS": "101 W MAIN A",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1171,
+      "category": "Food and Drink",
+      "id": "R SPOT TAKEOUT",
+      "Property Address": "101 W MAIN A",
       "position": [
         44.291870856034365,
         -121.55015470338807
       ]
     },
     {
-      "CODE": 1180,
-      "NAME": "RES",
-      "ID": "SISTER'S MEAT AND SMOKEHOUSE",
-      "PROPERTY ADDRESS": "110 S SPRUCE ST",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1180,
+      "category": "Food and Drink",
+      "id": "SISTER'S MEAT AND SMOKEHOUSE",
+      "Property Address": "110 S SPRUCE ST",
       "position": [
         44.29106548507492,
         -121.54728945499154
       ]
     },
     {
-      "CODE": 1214,
-      "NAME": "RES",
-      "ID": "GRACIE'S RESTAURANT",
-      "PROPERTY ADDRESS": "370 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1214,
+      "category": "Food and Drink",
+      "id": "GRACIE'S Food and DrinkTAURANT",
+      "Property Address": "370 E CASCADE AVE"
     },
     {
-      "CODE": 1220,
-      "NAME": "RETAIL",
-      "ID": "SISTERS CASCADE",
-      "PROPERTY ADDRESS": "150 W CASCADE AVE B",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1220,
+      "category": "Retail",
+      "id": "SISTERS CASCADE",
+      "Property Address": "150 W CASCADE AVE B"
     },
     {
-      "CODE": 1228,
-      "NAME": "RETAIL",
-      "ID": "SISTERS BAKERY",
-      "PROPERTY ADDRESS": "251 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1228,
+      "category": "Retail",
+      "id": "SISTERS BAKERY",
+      "Property Address": "251 E CASCADE AVE",
       "position": [
         44.29127064226994,
         -121.5480360623738
       ]
     },
     {
-      "CODE": 1229,
-      "NAME": "RETAIL",
-      "ID": "NATURE'S BLING",
-      "PROPERTY ADDRESS": "183 E HOOD AVE 300",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1229,
+      "category": "Retail",
+      "id": "NATURE'S BLING",
+      "Property Address": "183 E HOOD AVE 300"
     },
     {
-      "CODE": 1231,
-      "NAME": "RETAIL",
-      "ID": "HIKE-N-PEAK",
-      "PROPERTY ADDRESS": "103 E HOOD AVE A",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1231,
+      "category": "Retail",
+      "id": "HIKE-N-PEAK",
+      "Property Address": "103 E HOOD AVE A"
     },
     {
-      "CODE": 1256,
-      "NAME": "RES",
-      "ID": "EG CIMFAR, INC",
-      "PROPERTY ADDRESS": "497 W HWY 20",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1256,
+      "category": "Food and Drink",
+      "id": "EG CIMFAR, INC",
+      "Property Address": "497 W HWY 20"
     },
     {
-      "CODE": 1289,
-      "NAME": "RES",
-      "ID": "SPOONS IN SISTERS",
-      "PROPERTY ADDRESS": "281 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1289,
+      "category": "Food and Drink",
+      "id": "SPOONS IN SISTERS",
+      "Property Address": "281 W CASCADE AVE",
       "position": [
         44.29122197844158,
         -121.55187358177385
       ]
     },
     {
-      "CODE": 1297,
-      "NAME": "RES",
-      "ID": "BOONE DOG PIZZA",
-      "PROPERTY ADDRESS": "223 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1297,
+      "category": "Food and Drink",
+      "id": "BOONE DOG PIZZA",
+      "Property Address": "223 E HOOD AVE"
     },
     {
-      "CODE": 1322,
-      "NAME": "RES",
-      "ID": "BOX OF RAIN",
-      "PROPERTY ADDRESS": "302 E MAIN AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1322,
+      "category": "Food and Drink",
+      "id": "BOX OF RAIN",
+      "Property Address": "302 E MAIN AVE"
     },
     {
-      "CODE": 1344,
-      "NAME": "RETAIL",
-      "ID": "GYPSY WIND CLOTHING",
-      "PROPERTY ADDRESS": "183 E HOOD AVE 100",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1344,
+      "category": "Retail",
+      "id": "GYPSY WIND CLOTHING",
+      "Property Address": "183 E HOOD AVE 100"
     },
     {
-      "CODE": 1381,
-      "NAME": "RES",
-      "ID": "THE GALLERY RESTAURANT & BAR",
-      "PROPERTY ADDRESS": "171 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1381,
+      "category": "Food and Drink",
+      "id": "THE GALLERY RESTAURANT & BAR",
+      "Property Address": "171 W CASCADE AVE"
     },
     {
-      "CODE": 1386,
-      "NAME": "RETAIL",
-      "ID": "PAULINA SPRINGS BOOKS ",
-      "PROPERTY ADDRESS": "252 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1386,
+      "category": "Retail",
+      "id": "PAULINA SPRINGS BOOKS ",
+      "Property Address": "252 W HOOD AVE",
       "position": [
         44.2906484282047,
         -121.55183907858593
       ]
     },
     {
-      "CODE": 1404,
-      "NAME": "ENTER",
-      "ID": "CASCADE LASER TAG",
-      "PROPERTY ADDRESS": "465 W HWY 20",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 420,
+      "category": "Entertainment",
+      "id": "SISTERS MOVIE HOUSE",
+      "Property Address": "720 S Desperado Ct",
+      "position": [
+        44.28522868570841,
+        -121.53444371963269
+      ]
+    },
+    {
+      "code": 1404,
+      "category": "Entertainment",
+      "id": "CASCADE LASER TAG",
+      "Property Address": "465 W HWY 20",
       "position": [
         44.29455163237317,
         -121.55996294971715
       ]
     },
     {
-      "CODE": 1407,
-      "NAME": "RETAIL",
-      "ID": "AQUA HOT TUBS",
-      "PROPERTY ADDRESS": "413 W HOOD AVE D",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1407,
+      "category": "Retail",
+      "id": "AQUA HOT TUBS",
+      "Property Address": "413 W HOOD AVE D"
     },
     {
-      "CODE": 1415,
-      "NAME": "RES",
-      "ID": "FIKA SISTERS",
-      "PROPERTY ADDRESS": "201 E SUN RANCH DR",
-      "CITY LIMIT\r": "INSIDE\r",
+      "code": 1415,
+      "category": "Food and Drink",
+      "id": "FIKA SISTERS",
+      "Property Address": "201 E SUN RANCH DR",
       "position": [
         44.29825002349834,
         -121.54800625669392
       ]
     },
     {
-      "CODE": 1426,
-      "NAME": "RES",
-      "ID": "GELATO G SPOT FOODS/CATERING",
-      "PROPERTY ADDRESS": "223 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1426,
+      "category": "Food and Drink",
+      "id": "GELATO G SPOT FOODS/CATERING",
+      "Property Address": "223 E HOOD AVE"
     },
     {
-      "CODE": 1433,
-      "NAME": "RETAIL",
-      "ID": "ANTLER ARTS, INC",
-      "PROPERTY ADDRESS": "311 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1433,
+      "category": "Retail",
+      "id": "ANTLER ARTS, INC",
+      "Property Address": "311 E CASCADE AVE"
     },
     {
-      "CODE": 1440,
-      "NAME": "LODG",
-      "ID": "TROUT CREEK LODGING",
-      "PROPERTY ADDRESS": "1026 W RAILWAY",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1440,
+      "category": "Lodging",
+      "id": "TROUT CREEK Lodging",
+      "Property Address": "1026 W RAILWAY"
     },
     {
-      "CODE": 1444,
-      "NAME": "RES",
-      "ID": "CENTRAL PHILLY, INC",
-      "PROPERTY ADDRESS": "352 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1444,
+      "category": "Food and Drink",
+      "id": "CEntertainmentRAL PHILLY, INC",
+      "Property Address": "352 E HOOD AVE"
     },
     {
-      "CODE": 1445,
-      "NAME": "RETAIL",
-      "ID": "PAINTED LADY ANTIQUES",
-      "PROPERTY ADDRESS": "141 E CASCADE AVE 104",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1445,
+      "category": "Retail",
+      "id": "PAINTED LADY ANTIQUES",
+      "Property Address": "141 E CASCADE AVE 104"
     },
     {
-      "CODE": 1461,
-      "NAME": "RETAIL",
-      "ID": "KABUM COFFEE INTERNATIONAL L3",
-      "PROPERTY ADDRESS": "300 E ASPENWOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1461,
+      "category": "Retail",
+      "id": "KABUM COFFEE INTERNATIONAL L3",
+      "Property Address": "300 E ASPENWOOD AVE"
     },
     {
-      "CODE": 1463,
-      "NAME": "RETAIL",
-      "ID": "METALS BY BRYAN LEE BROWN, LL",
-      "PROPERTY ADDRESS": "220 S ASH AVE 8",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1463,
+      "category": "Retail",
+      "id": "METALS BY BRYAN LEE BROWN, LL",
+      "Property Address": "220 S ASH AVE 8"
     },
     {
-      "CODE": 1466,
-      "NAME": "RES",
-      "ID": "SISTERS CASCADE SWEET SHOPPE,",
-      "PROPERTY ADDRESS": "170 W CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1466,
+      "category": "Food and Drink",
+      "id": "SISTERS CASCADE SWEET SHOPPE,",
+      "Property Address": "170 W CASCADE AVE"
     },
     {
-      "CODE": 1502,
-      "NAME": "LODG",
-      "ID": "SISTERS BED AND BREAKFAST",
-      "PROPERTY ADDRESS": "385 E JEFFERSON AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1502,
+      "category": "Lodging",
+      "id": "SISTERS BED AND BREAKFAST",
+      "Property Address": "385 E JEFFERSON AVE"
     },
     {
-      "CODE": 1512,
-      "NAME": "RES",
-      "ID": "CARAVANA FARM FUSION",
-      "PROPERTY ADDRESS": "223 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1512,
+      "category": "Food and Drink",
+      "id": "CARAVANA FARM FUSION",
+      "Property Address": "223 E HOOD AVE"
     },
     {
-      "CODE": 1528,
-      "NAME": "LODG",
-      "ID": "VACATION IN SISTERS",
-      "PROPERTY ADDRESS": "291 S PINE MEADOW ST",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1528,
+      "category": "Lodging",
+      "id": "VACATION IN SISTERS",
+      "Property Address": "291 S PINE MEADOW ST"
     },
     {
-      "CODE": 1543,
-      "NAME": "RES",
-      "ID": "COCO LOCO TACO BAR",
-      "PROPERTY ADDRESS": "223 E HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1543,
+      "category": "Food and Drink",
+      "id": "COCO LOCO TACO BAR",
+      "Property Address": "223 E HOOD AVE"
     },
     {
-      "CODE": 1557,
-      "NAME": "RETAIL",
-      "ID": "DOLLAR GENERAL STORE #20532",
-      "PROPERTY ADDRESS": "915 W MCKINNEY BUTTE RD",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1557,
+      "category": "Retail",
+      "id": "DOLLAR GENERAL STORE #20532",
+      "Property Address": "915 W MCKINNEY BUTTE RD"
     },
     {
-      "CODE": 1570,
-      "NAME": "RETAIL",
-      "ID": "CANDY CORRAL",
-      "PROPERTY ADDRESS": "101 E CASCADE AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1570,
+      "category": "Retail",
+      "id": "CANDY CORRAL",
+      "Property Address": "101 E CASCADE AVE"
     },
     {
-      "CODE": 1571,
-      "NAME": "RETAIL",
-      "ID": "SOULSHINE & CO.",
-      "PROPERTY ADDRESS": "351 W HOOD AVE",
-      "CITY LIMIT\r": "INSIDE\r"
+      "code": 1571,
+      "category": "Retail",
+      "id": "SOULSHINE & CO.",
+      "Property Address": "351 W HOOD AVE"
     },
     {
-      "CODE": 1572,
-      "NAME": "RES",
-      "ID": "THE KITCHEN TABLE",
-      "PROPERTY ADDRESS": "251 E SUN RANCH DR A",
-      "CITY LIMIT\r": "INSIDE\r\n"
+      "code": 1572,
+      "category": "Food and Drink",
+      "id": "THE KITCHEN TABLE",
+      "Property Address": "251 E SUN RANCH DR A"
     }
   ]
 }

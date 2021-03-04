@@ -234,7 +234,7 @@ MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor)  WHERE a1.name
     // this is where we send a Cypher query to RedisGraph
     // General policy: use "" as query delimiters (because some values are possessive)
     let query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) `;
-    query += `MERGE (s:space{ name: "${data.selectedSpace.room}", spaceID: "${data.selectedSpace.id}" }) `;
+    query += `MERGE (s:space{ name: "${data.selectedSpace.name}", spaceID: "${data.selectedSpace.id}" }) `;
     query += `MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
     console.log(warn('Visit query:', printJson(query)));
     Graph.query(query)
