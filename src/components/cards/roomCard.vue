@@ -18,7 +18,7 @@
 
       <v-snackbar v-model="hasSaved" :timeout="2000" absolute bottom left>
         You have entered
-        {{ selectedSpace.room }}
+        {{ selectedSpace.name }}
       </v-snackbar>
 
       <!-- Favorites List -->
@@ -77,13 +77,13 @@
             </v-col>
           </v-row>
           <v-row no-gutters>
-            {{ categoryLabel }}:
+            {{ spaceLabel }}:
             <v-col cols="12">
               <v-autocomplete
                 v-model="selectedSpace"
                 :items="filteredSpaces"
                 :filter="customFilter"
-                item-text="room"
+                item-text="name"
                 item-value="id"
                 return-object
                 clearable
@@ -126,7 +126,7 @@
             @click="save"
           >
             Log visit:
-            {{ selectedSpace.room }}
+            {{ selectedSpace.name }}
           </v-btn>
         </template>
         <span>Send your visit to the server</span>
@@ -160,7 +160,7 @@
     <logsCard
       v-if="showLogs"
       :messages="messages"
-      :roomName="selectedSpace.room"
+      :roomName="selectedSpace.name"
     />
   </div>
 </template>
@@ -188,11 +188,6 @@ export default {
     GoogleMap,
   },
   computed: {
-    categoryLabel() {
-      console.log('selectedCategory', this.selectedCategory);
-      const label = this.categoryLabels[this.selectedCategory]?.label;
-      return `Then select a space from ${label} in  ${this.nsp}`;
-    },
     showFavorites() {
       return this.show == 0;
     },
@@ -211,7 +206,9 @@ export default {
     },
 
     categories() {
-      const x = [...new Set(data.filter((v) => v.NAME).map((v) => v.NAME))];
+      const x = [
+        ...new Set(data.filter((v) => v.category).map((v) => v.category)),
+      ];
       console.log(info('Categories:', x));
       return x;
     },
@@ -219,9 +216,9 @@ export default {
     spaces() {
       return data.map((v) => {
         return {
-          room: v.ID,
-          id: v.CODE,
-          category: v.NAME,
+          name: v.id,
+          id: v.code,
+          category: v.category,
           position: v.position,
         };
       });
@@ -230,6 +227,7 @@ export default {
 
   data() {
     return {
+      categoryLabel: '',
       places: [],
       spaceLabel: '',
       show: 0,
@@ -244,12 +242,12 @@ export default {
       dialog: false,
       favorite: -1,
       nsp: 'Sisters',
-      categoryLabels: [
-        { NAME: 'RES', label: 'Food and Drink' },
-        { NAME: 'RETAIL', label: 'Retail' },
-        { NAME: 'LODG', label: 'Lodging' },
-        { NAME: 'ENTER', label: 'Entertainment' },
-      ],
+      // categoryLabels: [
+      //   { Category: 'RES', label: 'Food and Drink' },
+      //   { Category: 'RETAIL', label: 'Retail' },
+      //   { Category: 'LODG', label: 'Lodging' },
+      //   { Category: 'ENTER', label: 'Entertainment' },
+      // ],
       filteredSpaces: [],
       categorySelected: '',
       selectedSpace: {},
@@ -265,7 +263,7 @@ export default {
     },
 
     customFilter(item, queryText) {
-      const textOne = item.room.toLowerCase();
+      const textOne = item.name.toLowerCase();
       const searchText = queryText.toLowerCase();
       const res = textOne.indexOf(searchText) > -1;
       return res;
@@ -273,7 +271,7 @@ export default {
 
     onAddedPlace(place) {
       this.selectedSpace = {
-        room: place.name,
+        name: place.name,
         id: place.place_id,
         category: '',
       };
@@ -290,14 +288,14 @@ export default {
         selectedSpace: this.selectedSpace,
         visitedOn: this.visitedOn,
       };
-      console.log(success('Logging visit:', q));
+      console.log(success('Logging visit:', printJson(q)));
       this.$emit('logVisit', q);
     },
   },
 
   watch: {
     favorite() {
-      this.selectedSpace.room = this.selectedFavorite;
+      this.selectedSpace.name = this.selectedFavorite;
     },
 
     selectedSpace(newVal) {
@@ -312,9 +310,7 @@ export default {
       );
       this.selectedSpace = {};
 
-      this.spaceLabel = `Select a space for ${
-        this.categoryLabels[this.selectedCategory].label
-      }`;
+      this.spaceLabel = `Then select a space for ${this.categorySelected} in ${this.nsp}`;
     },
   },
   async mounted() {
