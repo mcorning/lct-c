@@ -94,6 +94,7 @@
               <GoogleMap
                 :selectedSpace="selectedSpace"
                 :categorySelected="categorySelected"
+                @addedPlace="onAddedPlace"
               />
               <!-- Google Map -->
             </v-col>
@@ -263,6 +264,14 @@ export default {
       const searchText = queryText.toLowerCase();
       const res = textOne.indexOf(searchText) > -1;
       return res;
+    },
+
+    onAddedPlace(place) {
+      this.selectedSpace = {
+        room: place.name,
+        id: place.place_id,
+        category: '',
+      };
     },
 
     save() {

@@ -1,14 +1,18 @@
 <template>
-  <div>
-    <div>
-      <h2>Search and add a pin</h2>
-      <label>
-        <gmap-autocomplete @place_changed="setPlace"> </gmap-autocomplete>
-        <button @click="addMarker">Add</button>
-      </label>
-      <br />
-    </div>
-    <br />
+  <v-card class="pt-0">
+    <v-card-text>Search (and pin) a place in Sisters</v-card-text>
+    <v-card-text>
+      <gmap-autocomplete
+        @place_changed="setPlace"
+        style="width: 100%"
+        class="white--text"
+      >
+      </gmap-autocomplete>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="addMarker">Add</v-btn>
+      </v-card-actions>
+    </v-card-text>
     <gmap-map :center="center" :zoom="16" style="width: 100%; height: 400px">
       <gmap-marker
         :key="index"
@@ -17,7 +21,7 @@
         @click="center = m.position"
       ></gmap-marker>
     </gmap-map>
-  </div>
+  </v-card>
 </template>
 
 <script>
@@ -41,6 +45,7 @@ export default {
   methods: {
     setPlace(place) {
       this.currentPlace = place;
+      this.$emit('addedPlace', place);
     },
     addMarker() {
       if (this.currentPlace) {
