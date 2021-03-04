@@ -1,18 +1,5 @@
 <template>
-  <v-card class="pt-0">
-    <v-card-text>Search (and pin) a place in Sisters</v-card-text>
-    <v-card-text>
-      <gmap-autocomplete
-        @place_changed="setPlace"
-        style="width: 100%"
-        class="white--text"
-      >
-      </gmap-autocomplete>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn @click="addMarker">Add</v-btn>
-      </v-card-actions>
-    </v-card-text>
+  <div>
     <gmap-map :center="center" :zoom="16" style="width: 100%; height: 400px">
       <gmap-marker
         :key="index"
@@ -21,14 +8,32 @@
         @click="center = m.position"
       ></gmap-marker>
     </gmap-map>
-  </v-card>
+    <div class="white--text pl-3">
+      <gmap-autocomplete
+        @place_changed="setPlace"
+        style="width: 80%"
+        class="pr-3 pt-1"
+      >
+      </gmap-autocomplete>
+      <v-btn @click="addMarker">Pin</v-btn>
+    </div>
+  </div>
 </template>
 
 <script>
+import { info, printJson } from '../../utils/colors';
+
 import { defaultLocation } from '../../maps/mapconfig.json';
 console.log(defaultLocation);
+
 export default {
   name: 'GoogleMap',
+
+  props: {
+    selectedSpace: Object,
+    favoritePlaces: Array,
+  },
+
   data() {
     return {
       center: { lat: defaultLocation[0], lng: defaultLocation[1] },
@@ -40,6 +45,8 @@ export default {
 
   mounted() {
     this.geolocate();
+
+    this.addMarker();
   },
 
   methods: {
@@ -66,6 +73,21 @@ export default {
           lng: position.coords.longitude,
         };
       });
+    },
+  },
+
+  watch: {
+    selectedSpace(newVal) {
+      if (newVal.position) {
+        console.log(info(printJson(newVal)));
+        const { position } = newVal;
+        const marker = {
+          lat: position[0],
+          lng: position[1],
+        };
+        this.markers.push({ position: marker });
+        this.center = marker;
+      }
     },
   },
 };

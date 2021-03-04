@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-card class="overflow-hidden" color="primary lighten-2" dark :height="ht">
+    <v-card class="overflow-hidden" color="primary lighten-2">
       <v-dialog v-model="alert" max-width="450">
         <v-card dark color="warning darken-1" class="white--text">
           <h3 class="ma-5 pt-3">Are you sure you want to update the server?</h3>
@@ -18,10 +18,8 @@
 
       <v-snackbar v-model="hasSaved" :timeout="2000" absolute bottom left>
         You have entered
-        {{ selectedSpace }}
+        {{ selectedSpace.room }}
       </v-snackbar>
-
-      <mapCard v-if="showMap" />
 
       <!-- Favorites List -->
       <v-card tile v-if="showFavorites" :height="ht">
@@ -43,64 +41,59 @@
       </v-card>
 
       <!-- Spaces form -->
-      <v-card v-if="showSpaces" :height="ht">
-        <v-card-text>
-          Pick a {{ nsp }} public space category:
+      <v-card v-if="showSpaces">
+        <div class="px-3 pt-1 mb-1">
           <v-row no-gutters>
-            <v-col cols="4">
-              <v-row>
-                <v-col cols="12">
-                  <v-chip-group
-                    v-model="selectedCategory"
-                    mandatory
-                    color="secondary"
-                    dark
-                  >
-                    <v-chip filter>
-                      <v-icon>mdi-store</v-icon>
-                    </v-chip>
-                    <v-chip filter>
-                      <v-icon>mdi-silverware</v-icon>
-                    </v-chip>
-
-                    <v-chip filter>
-                      <v-icon>mdi-bed</v-icon>
-                    </v-chip>
-                    <v-chip filter>
-                      <v-icon>mdi-theater</v-icon>
-                    </v-chip>
-                  </v-chip-group>
-                </v-col>
-                <v-col cols="12">
-                  <v-row no-gutters>
-                    <v-col cols="12"> {{ categoryLabel }}: </v-col>
-                    <v-col cols="auto">
-                      <v-autocomplete
-                        v-model="selectedSpace"
-                        :items="filteredSpaces"
-                        :filter="customFilter"
-                        item-text="room"
-                        item-value="id"
-                        return-object
-                        clearable
-                      ></v-autocomplete>
-                    </v-col>
-                  </v-row>
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="8">
-              <!-- Google Map -->
+            <v-col cols="12">
               <GoogleMap
                 :selectedSpace="selectedSpace"
-                :categorySelected="categorySelected"
+                :favoritePlaces="places"
                 @addedPlace="onAddedPlace"
-              />
-              <!-- Google Map -->
+            /></v-col>
+          </v-row>
+          <v-divider class="mt-3"></v-divider>
+          <v-row no-gutters>
+            Or select a category
+            <v-col cols="12">
+              <v-chip-group
+                v-model="selectedCategory"
+                mandatory
+                color="primary"
+              >
+                <v-chip filter>
+                  <v-icon>mdi-store</v-icon>
+                </v-chip>
+                <v-chip filter>
+                  <v-icon>mdi-silverware</v-icon>
+                </v-chip>
+
+                <v-chip filter>
+                  <v-icon>mdi-bed</v-icon>
+                </v-chip>
+                <v-chip filter>
+                  <v-icon>mdi-theater</v-icon>
+                </v-chip>
+              </v-chip-group>
             </v-col>
           </v-row>
-        </v-card-text>
+          <v-row no-gutters>
+            {{ categoryLabel }}:
+            <v-col cols="12">
+              <v-autocomplete
+                v-model="selectedSpace"
+                :items="filteredSpaces"
+                :filter="customFilter"
+                item-text="room"
+                item-value="id"
+                return-object
+                clearable
+                class="pt-1"
+              ></v-autocomplete>
+            </v-col>
+          </v-row>
+        </div>
       </v-card>
+      <!-- Spaces form -->
 
       <!-- Getherings from button click -->
       <v-card v-if="showGatherings" :height="ht">
@@ -164,17 +157,22 @@
     </v-bottom-navigation>
 
     <!-- Your Logs -->
-    <logsCard v-if="showLogs" :messages="messages" :roomName="selectedSpace" />
+    <logsCard
+      v-if="showLogs"
+      :messages="messages"
+      :roomName="selectedSpace.room"
+    />
   </div>
 </template>
 
 <script>
+import { success, info, highlight, printJson } from '../../utils/colors';
+
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
-import mapCard from '@/components/cards/mapCard';
 import GoogleMap from '@/components/cards/GoogleMap';
 
-import { data } from '@/assets/data/sistersBusiness.json';
+import { data } from '@/maps/communityData.json';
 
 export default {
   props: {
@@ -186,15 +184,14 @@ export default {
   },
   components: {
     // warnRoomCard,
-    mapCard,
-    // visitorIdentityCard,
     logsCard,
     GoogleMap,
   },
   computed: {
     categoryLabel() {
+      console.log('selectedCategory', this.selectedCategory);
       const label = this.categoryLabels[this.selectedCategory]?.label;
-      return `Select a space from ${label}`;
+      return `Then select a space from ${label} in  ${this.nsp}`;
     },
     showFavorites() {
       return this.show == 0;
@@ -214,23 +211,31 @@ export default {
     },
 
     categories() {
-      return [...new Set(data.map((v) => v.NAME))];
+      const x = [...new Set(data.filter((v) => v.NAME).map((v) => v.NAME))];
+      console.log(info('Categories:', x));
+      return x;
     },
 
     spaces() {
       return data.map((v) => {
-        return { room: v.ID, id: v.CODE, category: v.NAME };
+        return {
+          room: v.ID,
+          id: v.CODE,
+          category: v.NAME,
+          position: v.position,
+        };
       });
     },
   },
 
   data() {
     return {
+      places: [],
       spaceLabel: '',
       show: 0,
       ht: '480px',
       value: 0,
-      selectedCategory: [],
+      selectedCategory: '',
       usePanels: false,
       alert: false,
       visitedOn: new Date().toLocaleDateString('en-US'),
@@ -247,7 +252,7 @@ export default {
       ],
       filteredSpaces: [],
       categorySelected: '',
-      selectedSpace: '',
+      selectedSpace: {},
       hasSaved: false,
       model: null,
     };
@@ -256,7 +261,7 @@ export default {
   methods: {
     cancel() {
       this.sheet = !this.sheet;
-      this.selectedSpace = '';
+      this.selectedSpace = {};
     },
 
     customFilter(item, queryText) {
@@ -272,6 +277,7 @@ export default {
         id: place.place_id,
         category: '',
       };
+      console.log(info('Added place', printJson(this.selectedSpace)));
     },
 
     save() {
@@ -284,25 +290,27 @@ export default {
         selectedSpace: this.selectedSpace,
         visitedOn: this.visitedOn,
       };
+      console.log(success('Logging visit:', q));
       this.$emit('logVisit', q);
     },
   },
 
   watch: {
     favorite() {
-      this.selectedSpace = this.selectedFavorite;
+      this.selectedSpace.room = this.selectedFavorite;
     },
 
     selectedSpace(newVal) {
-      console.log(newVal);
+      console.log(highlight(printJson(newVal)));
     },
 
-    selectedCategory() {
-      this.categorySelected = this.categories[this.selectedCategory];
+    selectedCategory(newVal) {
+      this.categorySelected = this.categories[newVal];
+      console.log('categorySelected', this.categorySelected);
       this.filteredSpaces = this.spaces.filter(
         (v) => v.category == this.categorySelected
       );
-      this.selectedSpace = '';
+      this.selectedSpace = {};
 
       this.spaceLabel = `Select a space for ${
         this.categoryLabels[this.selectedCategory].label
@@ -310,6 +318,7 @@ export default {
     },
   },
   async mounted() {
+    this.places = data.filter((v) => v.position);
     this.panelState = [0]; // open only the 0th element of expansion-panels
   },
 };

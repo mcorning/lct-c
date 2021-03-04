@@ -83,6 +83,8 @@ import crypto from 'crypto';
 const randomId = () => crypto.randomBytes(8).toString('hex');
 
 import * as easings from 'vuetify/es5/services/goto/easing-patterns';
+import { success, warn, info } from '../utils/colors.js';
+
 import Message from '@/models/Message';
 import diaryCard from '@/components/cards/diaryCard';
 
@@ -186,15 +188,16 @@ export default {
     },
 
     onExposureWarning() {
+      console.log(warn('emitting exposureWarning'));
       this.$emit('sendExposureWarning');
     },
 
     onLogVisit(data) {
-      console.log('Selected Space:', data);
+      console.log(success('Selected Space:', data));
       // cache the visit in Messages
       let msg = {
         visitor: this.nickname,
-        room: data,
+        room: data.room,
         message: 'Entered',
         sentTime: new Date().toISOString(),
       };
@@ -220,7 +223,7 @@ export default {
     // await Visitor.$fetch();
 
     this.overlay = false;
-    console.log('Visitor.vue mounted');
+    console.log(info('Visitor.vue mounted'));
   },
 };
 </script>
