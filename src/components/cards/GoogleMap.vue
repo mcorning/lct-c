@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import { defaultLocation } from '../../../jsconfig.json';
+import { defaultLocation } from '../../maps/mapconfig.json';
 console.log(defaultLocation);
 export default {
   name: 'GoogleMap',

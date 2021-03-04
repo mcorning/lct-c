@@ -6,7 +6,7 @@ import store from './store';
 import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 import VueLuxon from 'vue-luxon';
 import * as VueGoogleMaps from 'vue2-google-maps';
-import { googleMapsApiKey } from '../jsconfig.json';
+import { googleMapsApiKey } from './maps/mapconfig.json';
 
 Vue.use(VueGoogleMaps, {
   load: {
