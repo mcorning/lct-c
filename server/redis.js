@@ -6,11 +6,11 @@ const options = {
   port: 11939,
   password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
 };
-const PROD = 0;
-const nsp = PROD ? 'Sisters' : 'Test';
-const Graph = new RedisGraph(nsp, null, null, options);
+const { graphName } = require('./config.js');
+console.log('Graph:', graphName, 'Host:', host);
+const Graph = new RedisGraph(graphName, null, null, options);
 
-module.exports = { Graph, nsp, host };
+module.exports = { Graph, graphName, host };
 
 // if we store these output Cypher commands in a text file, we can bulk import them into Redis
 // run this command in the terminal (outside of redis-cli)
