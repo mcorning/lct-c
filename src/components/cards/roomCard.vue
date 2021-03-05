@@ -242,12 +242,6 @@ export default {
       dialog: false,
       favorite: -1,
       nsp: 'Sisters',
-      // categoryLabels: [
-      //   { Category: 'RES', label: 'Food and Drink' },
-      //   { Category: 'RETAIL', label: 'Retail' },
-      //   { Category: 'LODG', label: 'Lodging' },
-      //   { Category: 'ENTER', label: 'Entertainment' },
-      // ],
       filteredSpaces: [],
       categorySelected: '',
       selectedSpace: {},

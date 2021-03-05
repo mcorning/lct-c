@@ -4,7 +4,7 @@
       <v-row align="center" justify="space-between" no-gutters dense>
         <v-col cols="6">
           <span
-            >{{ daysBack == 0 ? "Today" : "All" }} {{ entered }} visits
+            >{{ daysBack == 0 ? 'Today' : 'All' }} {{ entered }} visits
           </span></v-col
         >
         <v-col cols="6">
@@ -53,9 +53,7 @@
         </template>
 
         <template v-slot:item.action="{ item }">
-          <v-icon @click="deleteMessage(item.id)">
-            mdi-delete
-          </v-icon>
+          <v-icon @click="deleteMessage(item.id)"> mdi-delete </v-icon>
         </template>
       </v-data-table>
       <div v-if="allVisits && messages.length" class="text-center">
@@ -68,17 +66,19 @@
 </template>
 
 <script>
-// import moment from 'moment';
+const {
+  isToday,
+  isBetween,
+  formatVisitedDate,
+} = require('../../utils/luxonHelpers');
 
-import helpers from "@/mixins/helpers.js";
-
-import Message from "@/models/Message";
+import Message from '@/models/Message';
 
 export default {
   props: {
     roomName: {
       type: String,
-      default: "",
+      default: '',
     },
     log: { type: Function },
   },
@@ -95,18 +95,17 @@ export default {
       const self = this;
 
       let allVisits = this.messages.filter((v) =>
-        this.isBetween(v.sentTime, this.daysBack)
+        isBetween(v.sentTime, this.daysBack)
       );
       if (this.daysBack == 0) {
         if (self.roomName) {
           let roomVisits = this.messages.filter(
-            (v) =>
-              self.roomName == v.room && this.isToday(v.sentTime, this.daysBack)
+            (v) => self.roomName == v.room && isToday(v.sentTime, this.daysBack)
           );
           return roomVisits;
         } else {
           let roomVisits = this.messages.filter((v) =>
-            this.isToday(v.sentTime, this.daysBack)
+            isToday(v.sentTime, this.daysBack)
           );
           return roomVisits;
         }
@@ -115,53 +114,53 @@ export default {
     },
 
     entered() {
-      return this.visits.filter((v) => v.message == "Entered").length;
+      return this.visits.filter((v) => v.message == 'Entered').length;
     },
 
     departed() {
-      return this.visits.filter((v) => v.message == "Departed").length;
+      return this.visits.filter((v) => v.message == 'Departed').length;
     },
   },
 
   data: () => ({
-    search: "",
+    search: '',
     daysBack: 14,
-    today: "YYYY-MM-DD",
-    visitFormat: "HH:mm ddd, MMM DD",
+    today: 'YYYY-MM-DD',
+    visitFormat: 'HH:mm ddd, MMM DD',
 
     loaded: false,
     messageHeaders: [
-      { text: "Sent  ", value: "sentTime" },
-      { text: "Room", value: "room" },
-      { text: "Message", value: "message" },
-      { text: "Visitor", value: "visitor" },
-      { text: "Delete", value: "action" },
+      { text: 'Sent  ', value: 'sentTime' },
+      { text: 'Room', value: 'room' },
+      { text: 'Message', value: 'message' },
+      { text: 'Visitor', value: 'visitor' },
+      { text: 'Delete', value: 'action' },
     ],
   }),
   methods: {
     getIcon(message) {
       switch (message.toLowerCase()) {
-        case "alerted":
-          return "mdi-alert";
-        case "warned by":
-          return "mdi-account-alert";
-        case "opened":
-        case "entered":
-          return "mdi-door-open";
+        case 'alerted':
+          return 'mdi-alert';
+        case 'warned by':
+          return 'mdi-account-alert';
+        case 'opened':
+        case 'entered':
+          return 'mdi-door-open';
         default:
-          return "mdi-door-closed";
+          return 'mdi-door-closed';
       }
     },
     getColor(message) {
       switch (message.toLowerCase()) {
-        case "alerted":
-          return "error";
-        case "warned by":
-          return "warning";
-        case "entered":
-          return "primary";
+        case 'alerted':
+          return 'error';
+        case 'warned by':
+          return 'warning';
+        case 'entered':
+          return 'primary';
         default:
-          return "secondary";
+          return 'secondary';
       }
     },
 
@@ -181,12 +180,10 @@ export default {
     },
 
     visitedDate(date) {
-      // calling the helpers' method
-      return this.formatVisitedDate(date);
+      // calling the luxonHelpers' method
+      return formatVisitedDate(date);
     },
   },
-
-  mixins: [helpers],
 
   async mounted() {
     await Message.$fetch();

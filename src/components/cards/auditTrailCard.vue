@@ -42,7 +42,8 @@
 </template>
 
 <script>
-import helpers from "@/mixins/helpers.js";
+import helpers from '@/mixins/helpers.js';
+const { formatVisitedDate } = require('../../utils/luxonHelpers');
 
 export default {
   props: {
@@ -52,27 +53,26 @@ export default {
   },
   data() {
     return {
-      search: "",
-      visitFormat: "HH:mm on ddd, MMM DD",
+      search: '',
 
       rating: 3,
 
       logHeaders: [
-        { text: "Message", value: "message" },
-        { text: "Type", value: "type" },
-        { text: "Sent  ", value: "sentTime" },
+        { text: 'Message', value: 'message' },
+        { text: 'Type', value: 'type' },
+        { text: 'Sent  ', value: 'sentTime' },
       ],
     };
   },
   methods: {
     getTextColor(type) {
-      return type == "alert" ? "red--text" : "";
+      return type == 'alert' ? 'red--text' : '';
     },
     getIconColor(type) {
-      return type == "alert" ? "red" : "gray";
+      return type == 'alert' ? 'red' : 'gray';
     },
     visitedDate(date) {
-      return this.formatVisitedDate(date);
+      return formatVisitedDate(date);
     },
   },
 
