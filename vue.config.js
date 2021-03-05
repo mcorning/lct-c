@@ -26,5 +26,5 @@ module.exports = {
     },
   },
 
-  outputDir: path.resolve(__dirname, './server/dist'),
+  outputDir: path.resolve(__dirname, './srv/dist'),
 };

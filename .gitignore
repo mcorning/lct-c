@@ -25,3 +25,4 @@ pnpm-debug.log*
 package-lock.json
 imago/
 src/maps/mapconfig.json
+srv/dist
