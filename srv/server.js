@@ -47,7 +47,7 @@ const path = require('path');
 const port = process.env.PORT || 8080;
 const hostname = port == 8080 ? 'localhost' : process.env.hostname;
 
-const dirPath = path.join(__dirname, '../dist');
+const dirPath = path.join(__dirname, './dist');
 console.log(dirPath);
 app.use(serveStatic(dirPath));
 
