@@ -1,0 +1,45 @@
+# Managing LCT-C on Heroku
+
+See tutorial for other details and explanations: <https://medium.com/binarcode/deploying-vue-apps-to-heroku-the-right-way-26b11c1ae5cd>
+
+## In development
+
+Fork mcorning/lct-c repo
+
+> Do not store keys or sensitive data in your LCT config files (see below)
+
+Make changes to unsensitive config data
+Make code changes as necessary
+Push changes to master (or main)
+
+## On Heroku
+
+1. Sign up for Heroku.com
+2. Create a new app (lct-c)
+
+### Settings
+
+1. create config settings for app
+
+   * MAP_API_KEY = [the key generated for your google cloud project]
+   * REDIS_HOST= [url to redis server that includes redisgraph module]
+   * REDIS_PWD= [your redis password]
+
+### Deploy
+
+1. Connect app to your github repo
+2. Enable Automatic Deploys
+3. Deploy Branch (if necessary)
+4. Open app (button top right corner)
+
+## Issues
+
+If your build fails, the Deploy page (or the build log details page) will help you figure out the problem.
+
+> Pay attention to the config file challenge noted above.
+
+If your app fails to start, you can view the heroku log files from the VS Code Terminal with:
+
+```node
+heroku logs --tail -a lct-c
+```
