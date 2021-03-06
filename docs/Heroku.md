@@ -53,8 +53,17 @@ If the app starts and can see the socket.io server, only then will you push chan
 2. Enable Automatic Deploys
 3. Deploy Branch (if necessary)
 4. Build can take several minutes...
+5. You will see the following checks if all goes well:
+   1. Recieve code from Github
+   2. Build master
+   3. Release phase
+   4. Deploy to Heroku
 
-> You can start the app with Open app button (top right corner)
+>Your app was successfully deployed
+
+You may still see a runtime error. See Issues below.
+
+You can start the app with Open app button (top right corner)
 
 ## Issues
 
