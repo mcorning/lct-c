@@ -1,6 +1,10 @@
 # Managing LCT-C on Heroku
 
-See tutorial for other details and explanations: <https://medium.com/binarcode/deploying-vue-apps-to-heroku-the-right-way-26b11c1ae5cd>
+This guide is for getting LCT-C Vue app to run under Heroku.
+
+> For the app to work, LCT-C must be able to reach the LCT-C-Server. We cover these details under separate cover.
+
+See Vue Deploy tutorial for other details and explanations: <https://medium.com/binarcode/deploying-vue-apps-to-heroku-the-right-way-26b11c1ae5cd>
 
 ## In development
 
@@ -9,8 +13,26 @@ Fork mcorning/lct-c repo
 > Do not store keys or sensitive data in your LCT config files (see below)
 
 Make changes to unsensitive config data
-Make code changes as necessary
-Push changes to master (or main)
+Make code changes as necessary for your community or organization
+
+### Test First
+
+Before deploying to Heroku, simultate how the client and server apps will work from there:
+
+1. Start the lct-c-server locally
+   1. From the `start-server` under the `server\package.json` NPM Explorer node
+   2. Or from the Terminal:
+      1. cd /server
+      2. `node index.js`
+2. Start the LCT-C Vue app:
+   1. Using the `start` script under the `package.json` NPM Explorer node
+   2. Or from the terminal
+      1. cd to project root folder (where the package.json sits)
+      2. enter `node ./srv/server.js`
+
+> Note we use `index.js` for the main module under the `server` folder, and we use `server.js` for the main node in the `srv` folder to run the Vue app as a nodejs app.
+
+If the app starts and can see the socket.io server, only then will you push changes to master (or main)
 
 ## On Heroku
 
@@ -45,3 +67,4 @@ If your app fails to start, you can view the heroku log files from the VS Code T
 ```node
 heroku logs --tail -a lct-c
 ```
+
