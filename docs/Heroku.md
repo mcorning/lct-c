@@ -30,7 +30,9 @@ Push changes to master (or main)
 1. Connect app to your github repo
 2. Enable Automatic Deploys
 3. Deploy Branch (if necessary)
-4. Open app (button top right corner)
+4. Build can take several minutes...
+
+> You can start the app with Open app button (top right corner)
 
 ## Issues
 
