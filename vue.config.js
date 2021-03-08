@@ -1,5 +1,3 @@
-const path = require('path');
-
 module.exports = {
   lintOnSave: process.env.NODE_ENV !== 'production',
   transpileDependencies: ['vuetify'],
@@ -17,14 +15,15 @@ module.exports = {
     },
     start_url: '/',
   },
-  devServer: {
-    proxy: {
-      '^/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-    },
-  },
-
-  outputDir: path.resolve(__dirname, './srv/dist'),
+  // for Heroku
+  // devServer: {
+  //   proxy: {
+  //     "^/api": {
+  //       target: "http://localhost:3000",
+  //       changeOrigin: true,
+  //     },
+  //   },
+  // },
+  // const path = require('path');
+  // outputDir: path.resolve(__dirname, "./srv/dist"),
 };

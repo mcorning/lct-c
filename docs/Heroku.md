@@ -63,11 +63,11 @@ If the app starts and can see the socket.io server, only then will you push chan
 
 You may still see a runtime error. See Issues below.
 
-You can start the app with Open app button (top right corner)
+You can start the app with `Open app` button (top right corner)
 
 ## Issues
 
-If your build fails, the Deploy page (or the build log details page) will help you figure out the problem.
+If your build fails, the `Deploy` page (or the build log details page) will help you figure out the problem.
 
 > Pay attention to the config file challenge noted above.
 
@@ -77,3 +77,6 @@ If your app fails to start, you can view the heroku log files from the VS Code T
 heroku logs --tail -a lct-c
 ```
 
+## Support
+
+Contact LCT-C lead dev mailto:mcorning@soteriaInstitute.org  for help. or appeal to the LCT-C Dev Community.

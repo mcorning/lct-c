@@ -24,3 +24,6 @@ pnpm-debug.log*
 *.sln
 *.sw?
 package-lock.json
+
+# key holder
+src/hidden.json

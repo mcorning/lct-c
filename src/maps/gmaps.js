@@ -1,5 +1,8 @@
-const API_KEY = 'AIzaSyAWOXz3PT_-im4V-NG3JLQ6AOwiW5aboa0';
-//const API_KEY = 'AIzaSyDpi8WsM3Aggn2EGhEdf3BtBluILkx75w0';
+// const API_KEY = 'AIzaSyAWOXz3PT_-im4V-NG3JLQ6AOwiW5aboa0';
+// const API_KEY = 'AIzaSyDpi8WsM3Aggn2EGhEdf3BtBluILkx75w0';
+const API_KEY = 'AIzaSyAqFt_muQ9S-c6Emgc2gVeT9hoKcvyckQo';
+import { MAP_API_KEY } from '../hidden.json';
+console.log(MAP_API_KEY, API_KEY);
 
 const CALLBACK_NAME = 'gmapsInit';
 
@@ -31,7 +34,7 @@ export default function gmapsInit() {
   const script = document.createElement('script');
   script.async = true;
   script.defer = true;
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&callback=${CALLBACK_NAME}`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${MAP_API_KEY}&callback=${CALLBACK_NAME}`;
   script.onerror = rejectInitPromise;
   document.querySelector('body').appendChild(script);
 
