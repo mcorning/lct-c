@@ -109,24 +109,25 @@
 
     <v-app-bar app bottom dense color="primary" dark>
       <v-row align="center" dense justify="space-between" no-gutters>
-        <v-col>
-          <soteria-icon />
+        <v-col cols="2" class="text-left">
           <a
             class="white--text"
             href="https://soteriainstitute.org/safe-in-sisters/"
             target="_blank"
             rel="noopener"
             style="text-decoration: none"
-            >Soteria</a
           >
+            <soteria-icon />
+          </a>
         </v-col>
-        <v-col class="text-center">
+        <v-col class="text-left">
+          <small>UID: {{ userID }} </small>
+        </v-col>
+        <v-col class="text-center" cols="2">
           <small>Ver: {{ build }} </small>
         </v-col>
-        <v-col class="text-center">
-          <small>ID: {{ userID }} </small>
-        </v-col>
-        <v-col class="text-right">
+
+        <v-col class="text-right" cols="1">
           <v-btn text @click="showLogs = !showLogs">
             <v-icon>mdi-console</v-icon>
           </v-btn>

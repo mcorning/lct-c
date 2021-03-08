@@ -7,7 +7,6 @@ const options = {
   password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
 };
 const { graphName } = require('./config.js');
-console.log('Graph:', graphName, 'Host:', host);
 const Graph = new RedisGraph(graphName, null, null, options);
 
 module.exports = { Graph, graphName, host };
