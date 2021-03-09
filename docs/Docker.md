@@ -12,7 +12,7 @@ Go to a Terminal and enter:
 
 if you see this error in the build log:
 === Fetching app code
-=!= Your app does not include a heroku.yml build manifest. To deploy your app, either create a heroku.yml: https://devcenter.heroku.com/articles/build-docker-images-heroku-yml
+=!= Your app does not include a heroku.yml build manifest. To deploy your app, either create a heroku.yml: https://devcenter.heroku.com/articles/build-docker-images-heroku-ml
 Or change your stack by running: 'heroku stack:set heroku-20'
 
 

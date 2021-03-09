@@ -124,6 +124,9 @@
           <small>UID: {{ userID }} </small>
         </v-col>
         <v-col class="text-center" cols="2">
+          <small> {{ graphName }} </small>
+        </v-col>
+        <v-col class="text-center" cols="2">
           <small>Ver: {{ build }} </small>
         </v-col>
 
@@ -138,15 +141,17 @@
 </template>
 
 <script>
-import Visitor from './components/Visitor';
-import Welcome from './components/Welcome';
-import update from '@/mixins/update.js';
-import helpers from '@/mixins/helpers.js';
-import Chat from './components/Chat';
-import socket from './socket';
+import Visitor from "./components/Visitor";
+import Welcome from "./components/Welcome";
+import Chat from "./components/Chat";
+
+import socket from "./socket";
+import { error } from "./utils/colors";
+import update from "@/mixins/update.js";
+import helpers from "@/mixins/helpers.js";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     Chat,
     Visitor,
@@ -157,27 +162,28 @@ export default {
       return this.$store.getters.appVersion;
     },
     alertColor() {
-      return this.alertPending ? 'orange darken-2' : 'red darken-1';
+      return this.alertPending ? "orange darken-2" : "red darken-1";
     },
   },
   data() {
     return {
-      alertText: '',
+      graphName: "",
+      alertText: "",
       alertMe: false,
       exposureAlert: false,
       alertPending: false,
-      query: '',
+      query: "",
       showLogs: false,
       drawer: false,
       showUsers: true,
-      cols: '',
+      cols: "",
       connectionStatus: false,
-      nsp: 'Sisters',
+      nsp: "Sisters",
       overlay: true,
       usernameAlreadySelected: false,
-      sid: '',
-      userID: 'Not connected',
-      username: '',
+      sid: "",
+      userID: "Not connected",
+      username: "",
     };
   },
   methods: {
@@ -199,14 +205,14 @@ export default {
         selectedSpace: data.selectedSpace,
         visitedOn: data.visitedOn,
       };
-      console.log('Query data:', query);
+      console.log("Query data:", query);
 
-      socket.emit('logVisit', query, (results) => console.log(results));
+      socket.emit("logVisit", query, (results) => console.log(results));
     },
 
     onSendExposureWarning() {
-      socket.emit('exposureWarning', this.username, (results) =>
-        console.log('exposureWarning results:', results)
+      socket.emit("exposureWarning", this.username, (results) =>
+        console.log("exposureWarning results:", results)
       );
     },
 
@@ -230,7 +236,7 @@ export default {
 
   //#region Lifecycle Hooks
   created() {
-    const sessionID = localStorage.getItem('sessionID');
+    const sessionID = localStorage.getItem("sessionID");
 
     if (sessionID) {
       this.usernameAlreadySelected = true;
@@ -240,35 +246,37 @@ export default {
       socket.connect();
     }
 
-    socket.on('connect', () => {
+    socket.on("connect", () => {
       // this.onConnectionStatusChanged(true);
       // this.uid = socket.userID;
-      socket.emit('comm check on socket', socket.id, (ack) => {
+      socket.emit("comm check on socket", socket.id, (ack) => {
         console.log(ack);
       });
     });
 
-    socket.on('session', ({ sessionID, userID, username }) => {
+    socket.on("session", ({ sessionID, userID, username, graphName }) => {
       // attach the session ID to the next reconnection attempts
       socket.auth = { sessionID };
       // store it in the localStorage
-      localStorage.setItem('sessionID', sessionID);
+      localStorage.setItem("sessionID", sessionID);
       // save the ID of the user
       // TODO isn't userID already assigned in middleware?
       socket.userID = userID;
       // this.sid = sessionID;
       this.username = username;
       this.userID = userID;
+      this.graphName = graphName;
     });
 
-    socket.on('connect_error', (err) => {
-      if (err.message === 'invalid username') {
+    socket.on("connect_error", (err) => {
+      if (err.message === "invalid username") {
         this.usernameAlreadySelected = false;
         // this.sid = '';
       }
+      console.log(error(err));
     });
 
-    socket.on('exposureAlert', (alert, ack) => {
+    socket.on("exposureAlert", (alert, ack) => {
       this.exposureAlert = true;
       this.alertText = alert;
       if (ack) {
@@ -276,11 +284,11 @@ export default {
       }
     });
 
-    socket.on('alertPending', () => {
+    socket.on("alertPending", () => {
       this.alertPending = true;
     });
 
-    socket.on('private message', ({ content, from, to }) => {
+    socket.on("private message", ({ content, from, to }) => {
       if (this.users) {
         for (let i = 0; i < this.users.length; i++) {
           const user = this.users[i];
@@ -301,12 +309,12 @@ export default {
   },
 
   destroyed() {
-    socket.off('connect_error');
+    socket.off("connect_error");
   },
 
   async mounted() {
     this.overlay = false;
-    console.log('Visitor.vue mounted');
+    console.log("Visitor.vue mounted");
   },
   //#endregion
 };
@@ -319,7 +327,7 @@ body {
 
 @font-face {
   font-family: Lato;
-  src: url('/fonts/Lato-Regular.ttf');
+  src: url("/fonts/Lato-Regular.ttf");
 }
 
 #app {
