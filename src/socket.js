@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
+const PORT = process.env.PORT || 3000;
 
-const URL = 'http://localhost:3000';
+const URL = `http://localhost:${PORT}`;
 const socket = io(URL, { autoConnect: false });
 
 socket.onAny((event, ...args) => {
