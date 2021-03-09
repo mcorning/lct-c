@@ -2,27 +2,27 @@
 // dotenv.config();
 // console.log(process.env.MAP_API_KEY);
 
-import Vue from "vue";
-import App from "./App.vue";
-import vuetify from "./plugins/vuetify";
-import VueLuxon from "vue-luxon";
+import Vue from 'vue';
+import App from './App.vue';
+import vuetify from './plugins/vuetify';
+import VueLuxon from 'vue-luxon';
 
-import "./registerServiceWorker";
-import store from "./store";
-import SoteriaIcon from "./components/svg/safeInSistersLogo.vue";
+import './registerServiceWorker';
+import store from './store';
+import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 
-import * as VueGoogleMaps from "vue2-google-maps";
-import { MAP_API_KEY } from "../hidden.json";
-
+import * as VueGoogleMaps from 'vue2-google-maps';
+import { MAP_API_KEY } from '../hidden.json';
+console.log(MAP_API_KEY);
 Vue.use(VueGoogleMaps, {
   load: {
     key: MAP_API_KEY,
-    libraries: "places", //necessary for places input
+    libraries: 'places', //necessary for places input
   },
 });
 Vue.use(VueLuxon);
 
-Vue.component("soteria-icon", SoteriaIcon);
+Vue.component('soteria-icon', SoteriaIcon);
 
 Vue.config.productionTip = false;
 
@@ -30,4 +30,4 @@ new Vue({
   vuetify,
   store,
   render: (h) => h(App),
-}).$mount("#app");
+}).$mount('#app');

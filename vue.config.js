@@ -5,7 +5,7 @@ module.exports = {
     devtool: 'source-map',
   },
   pwa: {
-    name: 'LCT-B',
+    name: 'LCT-C',
     short_name: 'Visitor',
     themeColor: '#673AB7',
     msTileColor: '#673AB7',
@@ -15,7 +15,7 @@ module.exports = {
     },
     start_url: '/',
   },
-  // for Heroku
+  // for Heroku (w/o containers (which we are now using))
   // devServer: {
   //   proxy: {
   //     "^/api": {
