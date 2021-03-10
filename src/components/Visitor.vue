@@ -56,7 +56,7 @@
           :auditor="auditor"
           @logVisit="onLogVisit"
         />
-      </v-col>
+      </v-col> 
     </v-row>
 
     <!-- likert -->
@@ -64,8 +64,10 @@
       <v-col>
         <v-card class="overflow-hidden">
           <v-card-subtitle class="text-center pa-0">
-            How are we doing on the Visitor experience?</v-card-subtitle
-          >
+            <a :href="feedbackMail"
+              >How are we doing on the Visitor experience?</a
+            >
+          </v-card-subtitle>
           <v-rating
             v-model="rating"
             background-color="primary lighten-2"
@@ -107,6 +109,11 @@ export default {
   },
 
   computed: {
+    feedbackMail() {
+      const feedbackMail = `mailto://mcorning@soteriaInstitute.org?subject=${this.rating} star feedback`;
+      return feedbackMail;
+    },
+
     favorites() {
       const favs = Message.query()
         .orderBy('sentTime')
@@ -169,6 +176,8 @@ export default {
   }),
 
   methods: {
+    emailDev() {},
+
     acknowledgeAlert() {
       this.dialog = false;
 

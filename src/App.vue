@@ -5,12 +5,19 @@
     </v-overlay>
 
     <v-app-bar app color="primary" dense dark>
-      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <!-- <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon> -->
       <v-navigation-drawer v-model="drawer" app>
         <Chat :nsp="nsp" :query="query" />
       </v-navigation-drawer>
 
       <v-row align="center" no-gutters>
+        <v-col
+          ><v-img
+            src="../src/assets/lct-c2QR.jpeg"
+            width="36"
+            height="36"
+          ></v-img
+        ></v-col>
         <v-spacer></v-spacer>
         <v-col cols="auto" class="text-right"
           ><v-card-title>Local Contact Tracing </v-card-title>

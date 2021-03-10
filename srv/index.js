@@ -1,23 +1,24 @@
-const express = require("express");
-const socketIO = require("socket.io");
-const serveStatic = require("serve-static");
-const crypto = require("crypto");
-const randomId = () => crypto.randomBytes(8).toString("hex");
+const express = require('express');
+const socketIO = require('socket.io');
+const serveStatic = require('serve-static');
+const crypto = require('crypto');
+const randomId = () => crypto.randomBytes(8).toString('hex');
 console.log(randomId());
-const { InMemorySessionStore } = require("./sessionStore");
+const { InMemorySessionStore } = require('./sessionStore');
 const sessionStore = new InMemorySessionStore();
+const cache = new Map();
 
-const path = require("path");
+const path = require('path');
 
-const { printJson, warn, info, success } = require("../src/utils/colors.js");
+const { printJson, warn, info, success } = require('../src/utils/colors.js');
 
-const { Graph, graphName, nsp, host } = require("./redis");
+const { Graph, graphName, nsp, host } = require('./redis');
 console.log(graphName, nsp, host);
 
 const PORT = process.env.PORT || 3000;
 // const INDEX = "/index.html";
 
-const dirPath = path.join(__dirname, "./dist");
+const dirPath = path.join(__dirname, './dist');
 console.log(dirPath);
 
 const server = express()
@@ -35,7 +36,7 @@ io.use((socket, next) => {
       socket.sessionID = sessionID;
       socket.userID = session.userID;
       socket.username = session.username;
-      console.groupCollapsed("Handshake: New party");
+      console.groupCollapsed('Handshake: New party');
       console.log(warn(`LEAVING io.use() with  ${sessionID}'s session data.`));
       return next();
     }
@@ -43,30 +44,30 @@ io.use((socket, next) => {
 
   const username = socket.handshake.auth.username;
   if (!username) {
-    return next(new Error("invalid username"));
+    return next(new Error('invalid username'));
   }
-  console.log("\n", info(new Date().toLocaleString()));
-  console.groupCollapsed("Handshake: Known party");
-  console.log("Assigning new sessionID and userID for", username);
+  console.log('\n', info(new Date().toLocaleString()));
+  console.groupCollapsed('Handshake: Known party');
+  console.log('Assigning new sessionID and userID for', username);
   socket.sessionID = randomId(); // these values gets attached to the socket so the client knows which session has their data and messages
   socket.userID = randomId();
   socket.username = username; // username is fixed
 
-  console.log(success("Leaving io.use()"));
+  console.log(success('Leaving io.use()'));
   next();
 });
 
-io.on("connection", (socket) => {
-  console.log("Client connected on socket ", socket.id);
+io.on('connection', (socket) => {
+  console.log('Client connected on socket ', socket.id);
   // persist session
   sessionStore.saveSession(socket.sessionID, {
     userID: socket.userID,
     username: socket.username,
     connected: true,
   });
-  console.log("Returning session data to client");
+  console.log('Returning session data to client');
   // emit session details
-  socket.emit("session", {
+  socket.emit('session', {
     sessionID: socket.sessionID,
     userID: socket.userID,
     username: socket.username,
@@ -86,18 +87,18 @@ io.on("connection", (socket) => {
     });
   });
 
-  console.groupCollapsed("Online users:");
+  console.groupCollapsed('Online users:');
   console.log(printJson(users));
-  socket.emit("users", users);
+  socket.emit('users', users);
   console.groupEnd();
 
   // notify existing users
-  socket.broadcast.emit("user connected", {
+  socket.broadcast.emit('user connected', {
     userID: socket.userID,
     username: socket.username,
     connected: true,
   });
-  console.log("Leaving io.on(connect)");
+  console.log('Leaving io.on(connect)');
   console.groupEnd();
 
   // other handlers
@@ -117,14 +118,14 @@ io.on("connection", (socket) => {
   //     console.log(sessionID, userID, username, graphName);
   //   });
 
-  socket.on("exposureWarning", (subject, ack) => {
-    socket.broadcast.emit("alertPending", socket.userID);
+  socket.on('exposureWarning', (subject, ack) => {
+    socket.broadcast.emit('alertPending', socket.userID);
 
     // General policy: use "" as query delimiters (because some values are possessive)
     let query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) `;
     query += `WHERE a1.name = "${subject}" AND a2.name <> "${subject}" `;
     query += `RETURN a2.userID`;
-    console.log(success("Visit query:", printJson(query)));
+    console.log(success('Visit query:', printJson(query)));
 
     Graph.query(query)
       .then((results) => {
@@ -135,7 +136,7 @@ io.on("connection", (socket) => {
           }
           return;
         }
-        const msg = "Please get tested. Quarantine, if necessary.";
+        const msg = 'Please get tested. Quarantine, if necessary.';
 
         const alerts = results._results.flatMap((v) => v._values);
         alerts.forEach((to) => {
@@ -144,14 +145,14 @@ io.on("connection", (socket) => {
             .then((matchingSockets) => {
               if (matchingSockets.size === 0) {
                 cache.add(to);
-                console.log("Cache:", printJson(cache));
+                console.log('Cache:', printJson(cache));
               } else {
-                console.log("Alerting:", to);
+                console.log('Alerting:', to);
                 socket.in(to).emit(
-                  "exposureAlert",
+                  'exposureAlert',
                   msg,
                   ack((res) => {
-                    console.log(success(res, "confirms"));
+                    console.log(success(res, 'confirms'));
                   })
                 );
               }
@@ -168,13 +169,13 @@ io.on("connection", (socket) => {
         );
       });
   });
-  socket.on("logVisit", (data, ack) => {
+  socket.on('logVisit', (data, ack) => {
     // this is where we send a Cypher query to RedisGraph
     // General policy: use "" as query delimiters (because some values are possessive)
     let query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) `;
     query += `MERGE (s:space{ name: "${data.selectedSpace.name}", spaceID: "${data.selectedSpace.id}" }) `;
     query += `MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
-    console.log(warn("Visit query:", printJson(query)));
+    console.log(warn('Visit query:', printJson(query)));
     Graph.query(query)
       .then((results) => {
         const stats = results._statistics._raw;
@@ -191,12 +192,12 @@ io.on("connection", (socket) => {
       });
   });
 
-  socket.on("disconnect", async () => {
+  socket.on('disconnect', async () => {
     const matchingSockets = await io.in(socket.userID).allSockets();
     const isDisconnected = matchingSockets.size === 0;
     if (isDisconnected) {
       // notify other users
-      socket.broadcast.emit("user disconnected", socket.userID);
+      socket.broadcast.emit('user disconnected', socket.userID);
       // update the connection status of the session
       sessionStore.saveSession(socket.sessionID, {
         userID: socket.userID,
@@ -204,7 +205,7 @@ io.on("connection", (socket) => {
         connected: false,
       });
     }
-    console.groupCollapsed("users after disconnect");
+    console.groupCollapsed('users after disconnect');
     console.log(users);
     console.groupEnd();
   });
