@@ -14,8 +14,8 @@
         <v-col
           ><v-img
             src="../src/assets/lct-c2QR.jpeg"
-            width="36"
-            height="36"
+            width="48"
+            height="48"
           ></v-img
         ></v-col>
         <v-spacer></v-spacer>
