@@ -48,11 +48,12 @@
         <!-- LCT-B interacts with RedisGraph server, instead (where the ID of the room is all that's necessary for the graph.). -->
         <roomCard
           ref="roomSelect"
+          :easing="easing"
           :favorites="favorites"
-          :log="log"
           :messages="messages"
           :nickname="nickname"
           :showLogs="showLogs"
+          :auditor="auditor"
           @logVisit="onLogVisit"
         />
       </v-col>
@@ -97,6 +98,7 @@ export default {
     showLogs: Boolean,
     nickname: String,
     userID: String,
+    auditor: Object,
   },
 
   components: {
@@ -179,16 +181,10 @@ export default {
       });
     },
 
-    log(msg, type = 'information') {
-      this.cons.push({
-        sentTime: new Date().toUTCString(),
-        type: type,
-        message: msg,
-      });
-    },
-
     onExposureWarning() {
       console.log(warn('emitting exposureWarning'));
+      this.auditor.logEntry(`emitting exposureWarning`);
+
       this.$emit('sendExposureWarning');
     },
 
@@ -202,6 +198,7 @@ export default {
         sentTime: new Date().toISOString(),
       };
       this.messages = msg;
+
       // notify App.vue so it can send event to server
       this.$emit('visitorLoggedVisit', data);
     },

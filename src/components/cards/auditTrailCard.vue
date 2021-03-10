@@ -12,7 +12,7 @@
     <v-data-table
       :search="search"
       :headers="logHeaders"
-      :items="cons"
+      :items="logEntries"
       multi-sort
       must-sort
       :sort-by="['sentTime', 'type']"
@@ -47,12 +47,11 @@ const { formatVisitedDate } = require('../../utils/luxonHelpers');
 
 export default {
   props: {
-    cons: {
-      type: Array,
-    },
+    auditor: Object,
   },
   data() {
     return {
+      logEntries: [],
       search: '',
 
       rating: 3,
@@ -78,6 +77,16 @@ export default {
 
   mixins: [helpers],
 
-  mounted() {},
+  mounted() {
+    this.logEntries = this.auditor.findAllLogEntries();
+    console.log(this.logEntries);
+    if (this.$refs.audit) {
+      this.$vuetify.goTo(this.$refs.audit, {
+        duration: 300,
+        offset: 0,
+        easing: this.easing,
+      });
+    }
+  },
 };
 </script>

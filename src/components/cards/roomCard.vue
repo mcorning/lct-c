@@ -159,7 +159,9 @@
     <!-- Your Logs -->
     <logsCard
       v-if="showLogs"
+      :easing="easing"
       :messages="messages"
+      :auditor="auditor"
       :roomName="selectedSpace.name"
     />
   </div>
@@ -176,11 +178,12 @@ import { data } from '@/maps/communityData.json';
 
 export default {
   props: {
+    easing: String,
     favorites: Array,
-    log: Function,
     messages: Array,
     nickname: String,
     showLogs: Boolean,
+    auditor: Object,
   },
   components: {
     // warnRoomCard,

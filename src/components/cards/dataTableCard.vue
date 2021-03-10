@@ -81,6 +81,7 @@ export default {
       default: '',
     },
     log: { type: Function },
+    auditor: Object,
   },
   computed: {
     allVisits() {
