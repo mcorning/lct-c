@@ -19,15 +19,20 @@ These instructions will show you how to push Containers running in VSCode to the
 It's easier and faster to push the lct-c master branch to heroku. This will ensure the code base, itself, is the same for dev and prod.
 
 From the Terminal:
->$ git push heroku master
+>$ git push heroku master:master
+
+see https://devcenter.heroku.com/articles/duplicate-build-version
 
 This will:
 
 * fetch the code to Heroku, and
 * Build the Container with
-  * server/Dockerfile
   * /Dockerfile
+
+Or you could use this link:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 Now you can see the changes on
 
-<https://lct-c.herokuapp.com>
+<https://lct.c2.herokuapp.com>
