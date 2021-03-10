@@ -1,7 +1,7 @@
 .DS_Store
 node_modules
 srv/dist
-/server/dist
+server
 imago/
 
 
@@ -27,4 +27,4 @@ package-lock.json
 
 # key holder
 src/hidden.json
-dist
+
