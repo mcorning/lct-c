@@ -1,19 +1,21 @@
+const path = require("path");
+
 module.exports = {
-  lintOnSave: process.env.NODE_ENV !== 'production',
-  transpileDependencies: ['vuetify'],
+  lintOnSave: process.env.NODE_ENV !== "production",
+  transpileDependencies: ["vuetify"],
   configureWebpack: {
-    devtool: 'source-map',
+    devtool: "source-map",
   },
   pwa: {
-    name: 'LCT-C',
-    short_name: 'Visitor',
-    themeColor: '#673AB7',
-    msTileColor: '#673AB7',
-    appleMobileWebAppCache: 'yes',
+    name: "LCT-C",
+    short_name: "Visitor",
+    themeColor: "#673AB7",
+    msTileColor: "#673AB7",
+    appleMobileWebAppCache: "yes",
     manifestOptions: {
-      background_color: '#673AB7',
+      background_color: "#673AB7",
     },
-    start_url: '/',
+    start_url: "/",
   },
   // for Heroku (w/o containers (which we are now using))
   // devServer: {
@@ -24,6 +26,5 @@ module.exports = {
   //     },
   //   },
   // },
-  // const path = require('path');
-  // outputDir: path.resolve(__dirname, "./srv/dist"),
+  outputDir: path.resolve(__dirname, "./srv/dist"),
 };
