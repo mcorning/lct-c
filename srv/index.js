@@ -16,20 +16,18 @@ const { Graph, graphName, nsp, host } = require('./redis');
 console.log(graphName, nsp, host);
 
 const PORT = process.env.PORT || 3000;
-// const INDEX = "/index.html";
 
 const dirPath = path.join(__dirname, './dist');
 console.log(dirPath);
 
 const server = express()
-  //   .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
   .use(serveStatic(dirPath))
   .listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`));
 
 const io = socketIO(server);
 
 io.use((socket, next) => {
-  const sessionID = socket.handshake.auth.sessionID; // where does client get the sessionID?
+  const sessionID = socket.handshake.auth.sessionID; // where gets sessionId handling socket.emit('session')
   if (sessionID) {
     const session = sessionStore.findSession(sessionID);
     if (session) {
@@ -90,6 +88,9 @@ io.on('connection', (socket) => {
   console.groupCollapsed('Online users:');
   console.log(printJson(users));
   socket.emit('users', users);
+  let onlineUsers = users.length;
+  console.log('onlineUsers: ', onlineUsers);
+  socket.emit('users online', onlineUsers);
   console.groupEnd();
 
   // notify existing users

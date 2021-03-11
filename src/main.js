@@ -13,7 +13,7 @@ import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 
 import * as VueGoogleMaps from 'vue2-google-maps';
 import { MAP_API_KEY } from '../hidden.json';
-console.log(MAP_API_KEY);
+
 Vue.use(VueGoogleMaps, {
   load: {
     key: MAP_API_KEY,

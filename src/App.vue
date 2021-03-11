@@ -6,9 +6,9 @@
 
     <v-app-bar app color="primary" dense dark>
       <!-- <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon> -->
-      <v-navigation-drawer v-model="drawer" app>
+      <!-- <v-navigation-drawer v-model="drawer" app>
         <Chat :nsp="nsp" :query="query" />
-      </v-navigation-drawer>
+      </v-navigation-drawer> -->
 
       <v-row align="center" no-gutters>
         <v-col
@@ -129,13 +129,29 @@
           </a>
         </v-col>
         <v-col class="text-left">
-          <small>UID: {{ userID }} </small>
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <small text top v-bind="attrs" v-on="on">{{ userID }} </small>
+            </template>
+            <span>Your unique userId for the server</span>
+          </v-tooltip>
         </v-col>
         <v-col class="text-center" cols="2">
-          <small> {{ graphName }} </small>
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <small text v-bind="attrs" v-on="on">{{ build }} </small>
+            </template>
+            <span>Version of LCT-C</span></v-tooltip
+          >
         </v-col>
-        <v-col class="text-center" cols="2">
-          <small>Ver: {{ build }} </small>
+        <v-col class="text-center" cols="2"> </v-col>
+        <v-col class="text-right" cols="2">
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <small text top v-bind="attrs" v-on="on">{{ userCount }} </small>
+            </template>
+            <span>Total number of LCT-C users</span>
+          </v-tooltip>
         </v-col>
 
         <v-col class="text-right" cols="1">
@@ -154,7 +170,7 @@ const randomId = () => crypto.randomBytes(8).toString('hex');
 
 import Visitor from './components/Visitor';
 import Welcome from './components/Welcome';
-import Chat from './components/Chat';
+// import Chat from './components/Chat';
 
 import socket from './socket';
 import { error, printJson } from './utils/colors';
@@ -186,7 +202,7 @@ class Auditor {
 export default {
   name: 'App',
   components: {
-    Chat,
+    // Chat,
     Visitor,
     Welcome,
   },
@@ -327,6 +343,12 @@ export default {
       this.alertPending = true;
     });
 
+    socket.on('users online', (userCount) => {
+      this.auditor.logEntry(`Current total LCT-C2 user count: ${userCount}`);
+
+      this.userCount = userCount;
+    });
+
     socket.on('private message', ({ content, from, to }) => {
       if (this.users) {
         for (let i = 0; i < this.users.length; i++) {
@@ -347,8 +369,19 @@ export default {
     });
   },
 
+  // anything that takes this control out of memory (e.g., v-if that turns false) will trigger this event
   destroyed() {
-    socket.off('connect_error');
+    // should we turn off session and connect_error?
+    // what is the genaral rule for destroyed()?
+    socket.off('alertPending');
+    socket.off('connect');
+    socket.off('disconnect');
+    socket.off('exposureAlert');
+    socket.off('users');
+    socket.off('user connected');
+    socket.off('users online');
+    socket.off('user disconnected');
+    socket.off('private message');
   },
 
   async mounted() {
