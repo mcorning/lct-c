@@ -9,9 +9,8 @@
       ></gmap-marker>
     </gmap-map>
     <div class="white--text py-3">
-      <gmap-autocomplete @place_changed="setPlace" style="width: 80%">
+      <gmap-autocomplete @place_changed="setPlace" style="width: 80%; border">
       </gmap-autocomplete>
-      <!-- <v-btn @click="addMarker">Pin</v-btn> -->
     </div>
   </div>
 </template>

@@ -102,23 +102,6 @@ io.on('connection', (socket) => {
   console.log('Leaving io.on(connect)');
   console.groupEnd();
 
-  // other handlers
-
-  //   socket.on("session", ({ sessionID, userID, username, graphName }) => {
-  //     // attach the session ID to the next reconnection attempts
-  //     socket.auth = { sessionID };
-  //     // store it in the localStorage
-  //     localStorage.setItem("sessionID", sessionID);
-  //     // save the ID of the user
-  //     // TODO isn't userID already assigned in middleware?
-  //     socket.userID = userID;
-  //     // this.sid = sessionID;
-  //     // this.username = username;
-  //     // this.userID = userID;
-  //     // this.graphName = graphName;
-  //     console.log(sessionID, userID, username, graphName);
-  //   });
-
   socket.on('exposureWarning', (subject, ack) => {
     socket.broadcast.emit('alertPending', socket.userID);
 

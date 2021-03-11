@@ -44,8 +44,6 @@
     <!-- roomCard -->
     <v-row no-gutters>
       <v-col>
-        <!-- LCT-B does not interact with Rooms on the node Server.  -->
-        <!-- LCT-B interacts with RedisGraph server, instead (where the ID of the room is all that's necessary for the graph.). -->
         <roomCard
           ref="roomSelect"
           :easing="easing"
@@ -56,7 +54,7 @@
           :auditor="auditor"
           @logVisit="onLogVisit"
         />
-      </v-col> 
+      </v-col>
     </v-row>
 
     <!-- likert -->
@@ -110,7 +108,7 @@ export default {
 
   computed: {
     feedbackMail() {
-      const feedbackMail = `mailto://mcorning@soteriaInstitute.org?subject=${this.rating} star feedback`;
+      const feedbackMail = `mailto:mcorning@soteriaInstitute.org?subject=${this.rating} star feedback`;
       return feedbackMail;
     },
 

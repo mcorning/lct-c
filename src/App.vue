@@ -112,12 +112,17 @@
             @visitorLoggedVisit="onVisitorLoggedVisit"
           />
         </v-col>
+        <!-- Logged Visit confirmation -->
+        <v-snackbar v-model="hasSaved" :timeout="4000" bottom left>
+          You have entered
+          {{ selectedSpace.name }}
+        </v-snackbar>
       </v-row>
     </v-main>
 
     <v-app-bar app bottom dense color="primary" dark>
       <v-row align="center" dense justify="space-between" no-gutters>
-        <v-col cols="2" class="text-left">
+        <v-col class="text-left">
           <a
             class="white--text"
             href="https://soteriainstitute.org/safe-in-sisters/"
@@ -125,15 +130,30 @@
             rel="noopener"
             style="text-decoration: none"
           >
-            <soteria-icon />
+            <!-- <soteria-icon /> -->
+            <small>Soteria</small>
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <small text top v-bind="attrs" v-on="on">Soteria</small>
+              </template>
+              <span>LCT Admin for your community</span>
+            </v-tooltip>
           </a>
         </v-col>
-        <v-col class="text-left" cols="2">
+        <v-col class="text-left" cols="auto">
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
               <small text top v-bind="attrs" v-on="on">{{ userID }} </small>
             </template>
             <span>Your unique userId for the server</span>
+          </v-tooltip>
+        </v-col>
+        <v-col class="text-right" cols="1">
+          <v-tooltip top>
+            <template v-slot:activator="{ on, attrs }">
+              <small text top v-bind="attrs" v-on="on">{{ userCount }} </small>
+            </template>
+            <span>Total number of LCT-C users</span>
           </v-tooltip>
         </v-col>
         <v-col class="text-right" cols="2">
@@ -144,13 +164,13 @@
             <span>Version of LCT-C</span></v-tooltip
           >
         </v-col>
-        <v-col class="text-right" cols="1">
+        <v-col class="text-right" cols="2">
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
-              <small text top v-bind="attrs" v-on="on">{{ userCount }} </small>
+              <small text v-bind="attrs" v-on="on">{{ graphName }} </small>
             </template>
-            <span>Total number of LCT-C users</span>
-          </v-tooltip>
+            <span>Name of exposure alert graph </span></v-tooltip
+          >
         </v-col>
 
         <v-col class="text-right" cols="1">
@@ -215,6 +235,9 @@ export default {
   },
   data() {
     return {
+      userCount: 0,
+      selectedSpace: '',
+      hasSaved: false,
       auditor: new Auditor(),
       graphName: '',
       alertText: '',
@@ -248,6 +271,7 @@ export default {
     },
 
     onVisitorLoggedVisit(data) {
+      this.selectedSpace = data.selectedSpace;
       const query = {
         username: this.username,
         userID: socket.userID,
@@ -256,9 +280,10 @@ export default {
       };
       this.auditor.logEntry(`Query data: ${printJson(query)}`);
 
-      socket.emit('logVisit', query, (results) =>
-        this.auditor.logEntry(`Log Visit Results: ${printJson(results)}`)
-      );
+      socket.emit('logVisit', query, (results) => {
+        this.auditor.logEntry(`Log Visit Results: ${printJson(results)}`);
+        this.hasSaved = true;
+      });
     },
 
     onSendExposureWarning() {
@@ -326,7 +351,7 @@ export default {
         this.usernameAlreadySelected = false;
       }
       console.log(error(err));
-      this.auditor.logEntry(err);
+      this.auditor.logEntry(err.message);
     });
 
     socket.on('exposureAlert', (alert, ack) => {

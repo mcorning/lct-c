@@ -16,12 +16,11 @@
         </v-card>
       </v-dialog>
 
-      <v-snackbar v-model="hasSaved" :timeout="2000" absolute bottom left>
-        You have entered
-        {{ selectedSpace.name }}
-      </v-snackbar>
-
       <!-- Favorites List -->
+      <v-card tile v-if="showCalendar" :height="ht">
+        <calendarCard :avgStay="avgStay" :place="selectedSpace.name" />
+      </v-card>
+
       <v-card tile v-if="showFavorites" :height="ht">
         <v-card-text>
           <v-list dense shaped max-width="300">
@@ -51,7 +50,7 @@
                 @addedPlace="onAddedPlace"
             /></v-col>
           </v-row>
-          <v-divider class="mt-3"></v-divider>
+          <v-divider class="my-2"></v-divider>
           <v-row no-gutters>
             Or select a category
             <v-col cols="12">
@@ -95,7 +94,7 @@
       </v-card>
       <!-- Spaces form -->
 
-      <!-- Getherings from button click -->
+      <!-- Getherings form button click -->
       <v-card v-if="showGatherings" :height="ht">
         <v-card-title>Identify the gathering</v-card-title>
         <v-card-text>
@@ -113,10 +112,13 @@
         </v-card-text>
       </v-card>
     </v-card>
+
+    <!-- Log buttton -->
     <v-card>
       <v-tooltip left>
         <template v-slot:activator="{ on, attrs }">
           <v-btn
+            :disabled="!selectedSpace.name"
             color="primary lighten-1"
             block
             tile
@@ -125,13 +127,15 @@
             v-on="on"
             @click="save"
           >
-            Log visit:
+            {{ logLabel }}
             {{ selectedSpace.name }}
           </v-btn>
         </template>
         <span>Send your visit to the server</span>
       </v-tooltip>
+      <v-divider></v-divider>
     </v-card>
+
     <v-bottom-navigation
       :value="value"
       color="secondary"
@@ -142,14 +146,15 @@
         <span>Recent</span>
         <v-icon>mdi-heart</v-icon>
       </v-btn>
-      <v-btn @click="show = 2">
+
+      <v-btn @click="show = 1">
         <span>Spaces</span>
         <v-icon>mdi-map-marker</v-icon>
       </v-btn>
-      <!-- <v-btn @click="show = 2">
-        <span>Nearby</span>
-        <v-icon>mdi-home</v-icon>
-      </v-btn> -->
+      <v-btn @click="show = 2">
+        <span>Calendar</span>
+        <v-icon>mdi-calendar</v-icon>
+      </v-btn>
       <v-btn @click="show = 3">
         <span>Gathering</span>
         <v-icon>mdi-account-group</v-icon>
@@ -173,6 +178,7 @@ import { success, info, highlight, printJson } from '../../utils/colors';
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
 import GoogleMap from '@/components/cards/GoogleMap';
+import calendarCard from '@/components/cards/calendarCard';
 
 import { data } from '@/maps/communityData.json';
 
@@ -189,15 +195,20 @@ export default {
     // warnRoomCard,
     logsCard,
     GoogleMap,
+    calendarCard,
   },
   computed: {
+    logLabel() {
+      return this.selectedSpace.name ? 'Log visit:' : 'Select a place';
+    },
+
     showFavorites() {
       return this.show == 0;
     },
-    showMap() {
+    showSpaces() {
       return this.show == 1;
     },
-    showSpaces() {
+    showCalendar() {
       return this.show == 2;
     },
     showGatherings() {
@@ -230,6 +241,8 @@ export default {
 
   data() {
     return {
+      // TODO make avgStay configurable by admin or user
+      avgStay: 3600000,
       categoryLabel: '',
       places: [],
       spaceLabel: '',
@@ -248,7 +261,6 @@ export default {
       filteredSpaces: [],
       categorySelected: '',
       selectedSpace: {},
-      hasSaved: false,
       model: null,
     };
   },
@@ -287,7 +299,6 @@ export default {
       };
       console.log(success('Logging visit:', printJson(q)));
       this.$emit('logVisit', q);
-      this.hasSaved = true;
     },
   },
 
