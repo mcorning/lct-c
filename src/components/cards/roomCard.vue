@@ -127,7 +127,7 @@
             v-on="on"
             @click="save"
           >
-            {{ logLabel }}
+            {{ logLabel() }}
             {{ selectedSpace.name }}
           </v-btn>
         </template>
@@ -198,10 +198,6 @@ export default {
     calendarCard,
   },
   computed: {
-    logLabel() {
-      return this.selectedSpace.name ? 'Log visit:' : 'Select a place';
-    },
-
     showFavorites() {
       return this.show == 0;
     },
@@ -266,6 +262,9 @@ export default {
   },
 
   methods: {
+    logLabel() {
+      return this.selectedSpace.name ? 'Log visit:' : 'Select a place';
+    },
     cancel() {
       this.sheet = !this.sheet;
       this.selectedSpace = {};
