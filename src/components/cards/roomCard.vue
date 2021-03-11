@@ -287,6 +287,7 @@ export default {
       };
       console.log(success('Logging visit:', printJson(q)));
       this.$emit('logVisit', q);
+      this.hasSaved = true;
     },
   },
 

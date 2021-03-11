@@ -128,7 +128,7 @@
             <soteria-icon />
           </a>
         </v-col>
-        <v-col class="text-left">
+        <v-col class="text-left" cols="2">
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
               <small text top v-bind="attrs" v-on="on">{{ userID }} </small>
@@ -136,7 +136,7 @@
             <span>Your unique userId for the server</span>
           </v-tooltip>
         </v-col>
-        <v-col class="text-center" cols="2">
+        <v-col class="text-right" cols="2">
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
               <small text v-bind="attrs" v-on="on">{{ build }} </small>
@@ -144,8 +144,7 @@
             <span>Version of LCT-C</span></v-tooltip
           >
         </v-col>
-        <v-col class="text-center" cols="2"> </v-col>
-        <v-col class="text-right" cols="2">
+        <v-col class="text-right" cols="1">
           <v-tooltip top>
             <template v-slot:activator="{ on, attrs }">
               <small text top v-bind="attrs" v-on="on">{{ userCount }} </small>
