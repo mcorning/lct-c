@@ -3,9 +3,7 @@
     <v-col>
       <v-sheet height="64">
         <v-toolbar flat>
-          <v-btn outlined class="mr-4" color="grey darken-2" @click="setToday">
-            Today
-          </v-btn>
+          <v-icon medium @click="setToday"> mdi-calendar-today </v-icon>
           <v-btn fab text small color="grey darken-2" @click="prev">
             <v-icon small> mdi-chevron-left </v-icon>
           </v-btn>
@@ -24,29 +22,43 @@
               </v-btn>
             </template>
             <v-list>
-              <v-list-item @click="type = 'day'">
+              <v-list-item @click="changeType('day')">
                 <v-list-item-title>Day</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="type = 'week'">
+              <v-list-item @click="changeType('4day')">
+                <v-list-item-title>4 days</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="changeType('week')">
                 <v-list-item-title>Week</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="type = 'month'">
+              <v-list-item @click="changeType('month')">
                 <v-list-item-title>Month</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="type = '4day'">
-                <v-list-item-title>4 days</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
         </v-toolbar>
       </v-sheet>
-
+      <v-snackbar
+        v-model="snackBar"
+        :timeout="4000"
+        color="secondary"
+        multi-line
+        top
+        vertical
+      >
+        {{ feedbackMessage }}
+        <template v-slot:action="{ attrs }">
+          <v-btn color="white" text v-bind="attrs" @click="snackBar = false">
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
       <v-sheet height="400">
         <v-calendar
           ref="calendar"
           v-model="focus"
           color="primary"
-          type="4day"
+          :type="type"
           :events="visits"
           :event-ripple="false"
           @mousedown:event="startDrag"
@@ -57,7 +69,6 @@
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
-          @change="updateRange"
         >
           <template v-slot:event="{ event, timed, eventSummary }">
             <div class="v-event-draggable" v-html="eventSummary()"></div>
@@ -76,16 +87,17 @@
         >
           <v-card color="grey lighten-4" min-width="300px" flat>
             <v-card-title>Selected Visit</v-card-title>
+            <v-card-subtitle v-html="selectedEvent.visit"></v-card-subtitle>
             <v-card-text>
-              <span> {{ getLoggedState() }}</span>
-              Only delete a visit if you have not logged it to the server.
+              Visit <span> {{ getLoggedState() }}</span
+              >. Only delete a visit if you have not logged it to the server.
             </v-card-text>
             <v-card-actions>
+              <v-btn text color="primary" @click="logVisit"> Log </v-btn>
+              <v-spacer></v-spacer>
               <v-btn text color="primary" @click="selectedOpen = false">
                 Cancel
-                <v-spacer></v-spacer>
               </v-btn>
-              <v-btn text color="primary" @click="logVisit"> Log </v-btn>
               <v-btn text color="primary" @click="deleteVisit"> Delete </v-btn>
             </v-card-actions>
           </v-card>
@@ -96,20 +108,25 @@
 </template>
 
 <script>
-// const { getVisitDate } = require('../../utils/luxonHelpers');
+import { getCurrentMilitaryTime } from '../../utils/luxonHelpers';
+import { success, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
   props: {
-    place: String,
+    selectedSpaceName: String,
     avgStay: Number,
   },
 
   computed: {},
 
   data: () => ({
+    visit: {},
+    place: '',
+    type: 'day',
+    snackBar: false,
+    feedbackMessage: '',
     focus: '',
-    type: 'month',
     typeToLabel: {
       month: 'Month',
       week: 'Week',
@@ -127,7 +144,8 @@ export default {
     createStart: null,
     extendOriginal: null,
     //#endregion
-
+    names: ['Fika', 'Bimart', 'Mid-Oregon'],
+    colors: ['red', 'yellow', 'green'],
     visits: [
       // renable these elements if you need to start over
       //   {
@@ -147,23 +165,18 @@ export default {
     ],
   }),
   methods: {
-    addVisit() {
-      if (this.place) {
-        //YYYY-MM-DD hh:mm
-        let tms = Date.now(); //getVisitDate();
-        console.log(tms);
-        this.startTime(tms);
-      }
-    },
-
     logVisit() {
       this.selectedOpen = false;
+      this.selectedEvent.details.logged = true;
+      console.log(success('Logging visit:', printJson(this.selectedEvent)));
+      this.$emit('logVisit', this.selectedEvent);
     },
 
     getLoggedState() {
-      return this.selectedEvent.details?.logged
+      let x = this.selectedEvent.details?.logged
         ? 'Logged to server'
         : 'Not logged to server';
+      return x;
     },
 
     arrayRemove(arr, value) {
@@ -178,6 +191,11 @@ export default {
     },
 
     //#region Active Calendar
+    changeType(type) {
+      this.type = type;
+      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+    },
+
     viewDay({ date }) {
       this.focus = date;
       this.type = 'day';
@@ -187,6 +205,7 @@ export default {
     },
     setToday() {
       this.focus = '';
+      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
     },
     prev() {
       this.$refs.calendar.prev();
@@ -212,9 +231,7 @@ export default {
 
       nativeEvent.stopPropagation();
     },
-    updateRange({ start, end }) {
-      console.log(start, end);
-    },
+
     //#endregion Active Calendar
 
     //#region  Drag and Drop
@@ -232,7 +249,7 @@ export default {
         const start = this.dragEvent.start;
 
         this.dragTime = mouse - start;
-      } else {
+      } else if (this.place) {
         this.createStart = this.roundTime(mouse);
         this.createEvent = {
           name: this.place,
@@ -242,8 +259,9 @@ export default {
           timed: true,
           details: { logged: false },
         };
-
-        this.visits.push(this.createEvent);
+        this.visit = this.createEvent;
+        this.visits.push(this.visit);
+        this.place = '';
       }
     },
     extendBottom(event) {
@@ -285,9 +303,9 @@ export default {
         if (this.extendOriginal) {
           this.createEvent.end = this.extendOriginal;
         } else {
-          const i = this.events.indexOf(this.createEvent);
+          const i = this.visits.indexOf(this.createEvent);
           if (i !== -1) {
-            this.events.splice(i, 1);
+            this.visits.splice(i, 1);
           }
         }
       }
@@ -325,9 +343,14 @@ export default {
     },
   },
   mounted() {
+    this.place = this.selectedSpaceName;
     this.visits = JSON.parse(localStorage.getItem('visits'));
     this.$refs.calendar.checkChange();
-    // this.addVisit();
+    this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+    if (this.place) {
+      this.feedbackMessage = 'Select a time slot to add a Visit';
+      this.snackBar = true;
+    }
   },
   destroyed() {
     let self = this;

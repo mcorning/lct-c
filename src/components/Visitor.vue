@@ -52,7 +52,7 @@
           :nickname="nickname"
           :showLogs="showLogs"
           :auditor="auditor"
-          @logVisit="onLogVisit"
+          @roomLoggedVisit="onRoomLoggedVisit"
         />
       </v-col>
     </v-row>
@@ -195,19 +195,19 @@ export default {
       this.$emit('sendExposureWarning');
     },
 
-    onLogVisit(data) {
-      console.log(success('Selected Space:', printJson(data)));
+    onRoomLoggedVisit(visit) {
+      console.log(success('Visit:', printJson(visit)));
       // cache the visit in Messages
       let msg = {
         visitor: this.nickname,
-        room: data.selectedSpace.name,
+        room: visit.name,
         message: 'Entered',
         sentTime: new Date().toISOString(),
       };
       this.messages = msg;
 
       // notify App.vue so it can send event to server
-      this.$emit('visitorLoggedVisit', data);
+      this.$emit('visitorLoggedVisit', visit);
     },
   },
 

@@ -28,9 +28,14 @@ const formatVisitedDate = (date) => {
   let x = DateTime.fromISO(date).toFormat(visitFormat);
   return x;
 };
+
 const getVisitDate = () => {
   let x = DateTime.now().toFormat(calendarFormat);
   return x;
+};
+
+const getCurrentMilitaryTime = () => {
+  return DateTime.now().toLocaleString(DateTime.TIME_24_SIMPLE);
 };
 
 module.exports = {
@@ -40,4 +45,5 @@ module.exports = {
   isBetween,
   formatVisitedDate,
   getVisitDate,
+  getCurrentMilitaryTime,
 };

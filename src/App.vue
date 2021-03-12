@@ -270,15 +270,15 @@ export default {
       socket.connect();
     },
 
-    onVisitorLoggedVisit(data) {
-      this.selectedSpace = data.selectedSpace;
+    onVisitorLoggedVisit(visit) {
+      this.selectedSpace = visit;
       const query = {
         username: this.username,
         userID: socket.userID,
-        selectedSpace: data.selectedSpace,
-        visitedOn: data.visitedOn,
+        selectedSpace: visit.name,
+        visitedOn: visit.start,
       };
-      this.auditor.logEntry(`Query data: ${printJson(query)}`);
+      this.auditor.logEntry(`Visit query: ${printJson(query)}`);
 
       socket.emit('logVisit', query, (results) => {
         this.auditor.logEntry(`Log Visit Results: ${printJson(results)}`);

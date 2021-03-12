@@ -28,3 +28,5 @@ package-lock.json
 # key holder
 src/hidden.json
 
+src/components/cards/calendarCard-john.vue
+src/components/cards/calendarSlot.vue

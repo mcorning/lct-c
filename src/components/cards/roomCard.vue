@@ -1,24 +1,13 @@
 <template>
   <div>
     <v-card class="overflow-hidden" color="primary lighten-2">
-      <v-dialog v-model="alert" max-width="450">
-        <v-card dark color="warning darken-1" class="white--text">
-          <h3 class="ma-5 pt-3">Are you sure you want to update the server?</h3>
-          <v-card-text class="white--text"
-            >You cannot put this toothpaste back in the tube...</v-card-text
-          >
-          <v-card-actions>
-            <v-btn color="black" text @click="saveMe">I'm sure</v-btn>
-            <v-spacer></v-spacer>
-
-            <v-btn color="black" text @click="alert = false">Never mind</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
       <!-- Favorites List -->
       <v-card tile v-if="showCalendar" :height="ht">
-        <calendarCard :avgStay="avgStay" :place="selectedSpace.name" />
+        <calendarCard
+          :avgStay="avgStay"
+          :selectedSpaceName="selectedSpace.name"
+          @logVisit="onLogVisit"
+        />
       </v-card>
 
       <v-card tile v-if="showFavorites" :height="ht">
@@ -111,29 +100,6 @@
           </v-row>
         </v-card-text>
       </v-card>
-    </v-card>
-
-    <!-- Log buttton -->
-    <v-card>
-      <v-tooltip left>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            :disabled="!selectedSpace.name"
-            color="primary lighten-1"
-            block
-            tile
-            large
-            v-bind="attrs"
-            v-on="on"
-            @click="save"
-          >
-            {{ logLabel() }}
-            {{ selectedSpace.name }}
-          </v-btn>
-        </template>
-        <span>Send your visit to the server</span>
-      </v-tooltip>
-      <v-divider></v-divider>
     </v-card>
 
     <v-bottom-navigation
@@ -284,26 +250,19 @@ export default {
         category: '',
       };
       console.log(info('Added place', printJson(this.selectedSpace)));
+      this.show = 2;
     },
 
-    save() {
-      this.alert = true;
-    },
-
-    saveMe() {
-      this.alert = false;
-      const q = {
-        selectedSpace: this.selectedSpace,
-        visitedOn: this.visitedOn,
-      };
-      console.log(success('Logging visit:', printJson(q)));
-      this.$emit('logVisit', q);
+    onLogVisit(data) {
+      console.log(success('Logging visit:', printJson(data)));
+      this.$emit('roomLoggedVisit', data);
     },
   },
 
   watch: {
     favorite() {
       this.selectedSpace.name = this.selectedFavorite;
+      this.show = 2;
     },
 
     selectedSpace(newVal) {
