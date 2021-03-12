@@ -90,15 +90,30 @@
             <v-card-subtitle v-html="selectedEvent.visit"></v-card-subtitle>
             <v-card-text>
               Visit <span> {{ getLoggedState() }}</span
-              >. Only delete a visit if you have not logged it to the server.
+              >. You can only delete an unlogged visit. You cannot delete data
+              from the server.
             </v-card-text>
             <v-card-actions>
-              <v-btn text color="primary" @click="logVisit"> Log </v-btn>
+              <v-btn
+                text
+                color="primary"
+                @click="logVisit"
+                :disabled="isLogged"
+              >
+                Log
+              </v-btn>
               <v-spacer></v-spacer>
               <v-btn text color="primary" @click="selectedOpen = false">
                 Cancel
               </v-btn>
-              <v-btn text color="primary" @click="deleteVisit"> Delete </v-btn>
+              <v-btn
+                text
+                color="primary"
+                @click="deleteVisit"
+                :disabled="isLogged"
+              >
+                Delete
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-menu>
@@ -118,7 +133,12 @@ export default {
     avgStay: Number,
   },
 
-  computed: {},
+  computed: {
+    isLogged() {
+      const d = this.selectedEvent.details?.logged;
+      return d;
+    },
+  },
 
   data: () => ({
     visit: {},
@@ -167,15 +187,20 @@ export default {
   methods: {
     logVisit() {
       this.selectedOpen = false;
-      this.selectedEvent.details.logged = true;
-      console.log(success('Logging visit:', printJson(this.selectedEvent)));
-      this.$emit('logVisit', this.selectedEvent);
+      this.visit.details = { logged: true };
+      this.visit.color = 'primary';
+      this.selectedEvent.details = { logged: true };
+      this.selectedEvent.color = 'primary';
+      console.log(success('Logging visit:', printJson(this.visit)));
+      this.saveVisits();
+      this.$emit('logVisit', this.visit);
     },
 
     getLoggedState() {
-      let x = this.selectedEvent.details?.logged
-        ? 'Logged to server'
-        : 'Not logged to server';
+      console.log(printJson(this.selectedEvent));
+      let x = this.isLogged
+        ? 'was logged to server'
+        : 'is not logged to server yet';
       return x;
     },
 
@@ -261,7 +286,9 @@ export default {
         };
         this.visit = this.createEvent;
         this.visits.push(this.visit);
+        this.saveVisits();
         this.place = '';
+        this.selectedOpen = true;
       }
     },
     extendBottom(event) {
@@ -341,10 +368,21 @@ export default {
     rndElement(arr) {
       return arr[this.rnd(0, arr.length - 1)];
     },
+
+    saveVisits() {
+      let visits = JSON.stringify(this.visits);
+      console.log(visits);
+      localStorage.setItem('visits', visits);
+    },
   },
+
+  watch: {},
+
   mounted() {
     this.place = this.selectedSpaceName;
-    this.visits = JSON.parse(localStorage.getItem('visits'));
+    const v = localStorage.getItem('visits');
+    this.visits = v ? JSON.parse(v) : [];
+    console.log(this.visits);
     this.$refs.calendar.checkChange();
     this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
     if (this.place) {
@@ -353,10 +391,7 @@ export default {
     }
   },
   destroyed() {
-    let self = this;
-    let visits = JSON.stringify(self.visits);
-    console.log(visits);
-    localStorage.setItem('visits', visits);
+    this.saveVisits();
   },
 };
 </script>
