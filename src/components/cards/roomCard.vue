@@ -282,6 +282,8 @@ export default {
   },
   async mounted() {
     this.places = data.filter((v) => v.position);
+    this.selectedSpace = {};
+    this.favorite = -1;
     this.panelState = [0]; // open only the 0th element of expansion-panels
   },
 };

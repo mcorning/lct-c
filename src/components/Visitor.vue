@@ -112,7 +112,15 @@ export default {
       return feedbackMail;
     },
 
+    visits() {
+      return JSON.parse(localStorage.getItem('visits'));
+    },
+
     favorites() {
+      return [...new Set(this.visits.map((v) => v.name))];
+    },
+
+    favoriteMessages() {
       const favs = Message.query()
         .orderBy('sentTime')
         .get()
@@ -120,6 +128,7 @@ export default {
       const favSet = new Set(favs);
       return [...favSet];
     },
+
     messages: {
       get() {
         return Message.all();

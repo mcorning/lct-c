@@ -1,14 +1,15 @@
 <template>
   <v-row class="fill-height">
     <v-col>
+      <!-- calendar controls -->
       <v-sheet height="64">
         <v-toolbar flat>
           <v-icon medium @click="setToday"> mdi-calendar-today </v-icon>
           <v-btn fab text small color="grey darken-2" @click="prev">
-            <v-icon small> mdi-chevron-left </v-icon>
+            <v-icon> mdi-chevron-left </v-icon>
           </v-btn>
           <v-btn fab text small color="grey darken-2" @click="next">
-            <v-icon small> mdi-chevron-right </v-icon>
+            <v-icon> mdi-chevron-right </v-icon>
           </v-btn>
           <v-toolbar-title v-if="$refs.calendar">
             {{ $refs.calendar.title }}
@@ -38,13 +39,15 @@
           </v-menu>
         </v-toolbar>
       </v-sheet>
+
+      <!-- Log, Delete, Cancel form -->
       <v-snackbar
         v-model="snackBar"
         :timeout="4000"
-        color="secondary"
-        multi-line
-        top
-        vertical
+        color="primary"
+        dark
+        bottom
+        absolute
       >
         {{ feedbackMessage }}
         <template v-slot:action="{ attrs }">
@@ -53,7 +56,9 @@
           </v-btn>
         </template>
       </v-snackbar>
-      <v-sheet height="400">
+
+      <!-- calendar -->
+      <v-sheet>
         <v-calendar
           ref="calendar"
           v-model="focus"
@@ -84,14 +89,14 @@
           :close-on-content-click="false"
           :activator="selectedElement"
           offset-x
+          offset-y
         >
-          <v-card color="grey lighten-4" min-width="300px" flat>
-            <v-card-title>Selected Visit</v-card-title>
-            <v-card-subtitle v-html="selectedEvent.visit"></v-card-subtitle>
+          <v-card max-width=" 400px" color="grey lighten-4" flat>
+            <v-card-title> {{ selectedEvent.name }}</v-card-title>
+            <v-card-subtitle>Visit {{ getLoggedState() }}.</v-card-subtitle>
             <v-card-text>
-              Visit <span> {{ getLoggedState() }}</span
-              >. You can only delete an unlogged visit. You cannot delete data
-              from the server.
+              You can only delete an unlogged visit. You cannot delete data from
+              the server.
             </v-card-text>
             <v-card-actions>
               <v-btn
@@ -103,9 +108,7 @@
                 Log
               </v-btn>
               <v-spacer></v-spacer>
-              <v-btn text color="primary" @click="selectedOpen = false">
-                Cancel
-              </v-btn>
+
               <v-btn
                 text
                 color="primary"
@@ -113,6 +116,9 @@
                 :disabled="isLogged"
               >
                 Delete
+              </v-btn>
+              <v-btn text color="primary" @click="selectedOpen = false">
+                Cancel
               </v-btn>
             </v-card-actions>
           </v-card>
@@ -167,7 +173,7 @@ export default {
     names: ['Fika', 'Bimart', 'Mid-Oregon'],
     colors: ['red', 'yellow', 'green'],
     visits: [
-      // renable these elements if you need to start over
+      // reenable these elements if you need to start over
       //   {
       //     name: 'Exposure Warning',
       //     start: 1615463100000,
@@ -238,6 +244,7 @@ export default {
     next() {
       this.$refs.calendar.next();
     },
+
     showEvent({ nativeEvent, event }) {
       const open = () => {
         this.selectedEvent = event;
@@ -288,6 +295,8 @@ export default {
         this.visits.push(this.visit);
         this.saveVisits();
         this.place = '';
+        this.feedbackMessage = `Click event to log to the server`;
+        this.snackBar = true;
         this.selectedOpen = true;
       }
     },
@@ -384,9 +393,10 @@ export default {
     this.visits = v ? JSON.parse(v) : [];
     console.log(this.visits);
     this.$refs.calendar.checkChange();
+    console.log(getCurrentMilitaryTime());
     this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
     if (this.place) {
-      this.feedbackMessage = 'Select a time slot to add a Visit';
+      this.feedbackMessage = `Click a time to visit ${this.place}:`;
       this.snackBar = true;
     }
   },
