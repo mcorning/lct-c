@@ -11,13 +11,28 @@
       </v-navigation-drawer> -->
 
       <v-row align="center" no-gutters>
-        <v-col
-          ><v-img
-            src="../src/assets/lct-c2QR.jpeg"
-            width="48"
-            height="48"
-          ></v-img
-        ></v-col>
+        <v-col>
+          <v-tooltip left>
+            <template v-slot:activator="{ on, attrs }">
+              <a
+                class="white--text"
+                href="https://soteriainstitute.org/safe-in-sisters/"
+                target="_blank"
+                rel="noopener"
+                style="text-decoration: none"
+              >
+                <v-img
+                  src="../src/assets/lct-c2QR.jpeg"
+                  width="48"
+                  height="48"
+                  v-bind="attrs"
+                  v-on="on"
+                ></v-img
+              ></a>
+            </template>
+            <span>Share LCT-C quickly</span></v-tooltip
+          >
+        </v-col>
         <v-spacer></v-spacer>
         <v-col cols="auto" class="text-right"
           ><v-card-title>Local Contact Tracing </v-card-title>
@@ -120,66 +135,52 @@
       </v-row>
     </v-main>
 
-    <v-app-bar app bottom dense color="primary" dark>
-      <v-row align="center" dense justify="space-between" no-gutters>
-        <v-col class="text-left">
-          <a
-            class="white--text"
-            href="https://soteriainstitute.org/safe-in-sisters/"
-            target="_blank"
-            rel="noopener"
-            style="text-decoration: none"
-          >
-            <!-- <soteria-icon /> -->
-            <small>Soteria</small>
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <small text top v-bind="attrs" v-on="on">Soteria</small>
-              </template>
-              <span>LCT Admin for your community</span>
-            </v-tooltip>
-          </a>
-        </v-col>
-        <v-col class="text-left" cols="auto">
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <small text top v-bind="attrs" v-on="on">{{ userID }} </small>
-            </template>
-            <span>Your unique userId for the server</span>
-          </v-tooltip>
-        </v-col>
-        <v-col class="text-right" cols="1">
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <small text top v-bind="attrs" v-on="on">{{ userCount }} </small>
-            </template>
-            <span>Total number of LCT-C users</span>
-          </v-tooltip>
-        </v-col>
-        <v-col class="text-right" cols="2">
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <small text v-bind="attrs" v-on="on">{{ build }} </small>
-            </template>
-            <span>Version of LCT-C</span></v-tooltip
-          >
-        </v-col>
-        <v-col class="text-right" cols="2">
-          <v-tooltip top>
-            <template v-slot:activator="{ on, attrs }">
-              <small text v-bind="attrs" v-on="on">{{ graphName }} </small>
-            </template>
-            <span>Name of exposure alert graph </span></v-tooltip
-          >
-        </v-col>
+    <v-system-bar app bottom dense color="primary" dark>
+      <v-spacer></v-spacer>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <small class="pr-3" text v-bind="attrs" v-on="on">{{ build }} </small>
+        </template>
+        <span>Version of LCT-C</span></v-tooltip
+      >
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon class="pr-3" v-bind="attrs" v-on="on"
+            >{{ connectIcon }}
+          </v-icon>
+        </template>
+        <span
+          >Your unique userId: {{ userID ? userID : 'is unavailable' }}</span
+        >
+      </v-tooltip>
 
-        <v-col class="text-right" cols="1">
-          <v-btn text @click="showLogs = !showLogs">
-            <v-icon>mdi-console</v-icon>
-          </v-btn>
-        </v-col>
-      </v-row>
-    </v-app-bar>
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon class="pr-3" v-bind="attrs" v-on="on"
+            >{{ userCount }}
+          </v-icon>
+        </template>
+        <span>Total number of LCT-C users</span>
+      </v-tooltip>
+
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon class="pr-3" v-bind="attrs" v-on="on">mdi-graphql </v-icon>
+        </template>
+        <span
+          >Name of exposure alert graph:
+          {{ graphName ? graphName : 'is not available' }}
+        </span></v-tooltip
+      >
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon v-bind="attrs" v-on="on" @click="showLogs = !showLogs"
+            >mdi-console</v-icon
+          >
+        </template>
+        <span>Review Audit Trail </span></v-tooltip
+      >
+    </v-system-bar>
   </v-app>
 </template>
 
@@ -226,6 +227,10 @@ export default {
     Welcome,
   },
   computed: {
+    connectIcon() {
+      return this.userID ? 'mdi-lan-connect' : 'mdi-lan-disconnect';
+    },
+
     build() {
       return this.$store.getters.appVersion;
     },
@@ -254,7 +259,7 @@ export default {
       overlay: true,
       usernameAlreadySelected: false,
       sid: '',
-      userID: 'Not connected',
+      userID: '',
       username: '',
     };
   },
