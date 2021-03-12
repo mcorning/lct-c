@@ -47,7 +47,7 @@
         <roomCard
           ref="roomSelect"
           :easing="easing"
-          :favorites="favorites"
+          :favoritesX="favorites"
           :messages="messages"
           :nickname="nickname"
           :showLogs="showLogs"

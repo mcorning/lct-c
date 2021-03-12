@@ -58,7 +58,8 @@
       </v-snackbar>
 
       <!-- calendar -->
-      <v-sheet>
+      <!-- do not change the calendar sheet's height. if you do, you will lose scrollToTime, and you will lose hours on the calendar -->
+      <v-sheet height="400">
         <v-calendar
           ref="calendar"
           v-model="focus"
@@ -379,9 +380,12 @@ export default {
     },
 
     saveVisits() {
-      let visits = JSON.stringify(this.visits);
-      console.log(visits);
-      localStorage.setItem('visits', visits);
+      // do not store blank visits (it will mess up the calendar with a null ref exception)
+      this.visits = this.arrayRemove(this.visits, '');
+
+      let visitStr = JSON.stringify(this.visits);
+      console.log(visitStr);
+      localStorage.setItem('visits', visitStr);
     },
   },
 
@@ -392,7 +396,6 @@ export default {
     const v = localStorage.getItem('visits');
     this.visits = v ? JSON.parse(v) : [];
     console.log(this.visits);
-    this.$refs.calendar.checkChange();
     console.log(getCurrentMilitaryTime());
     this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
     if (this.place) {

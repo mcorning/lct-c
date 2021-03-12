@@ -151,7 +151,7 @@ import { data } from '@/maps/communityData.json';
 export default {
   props: {
     easing: String,
-    favorites: Array,
+    favoritesX: Array,
     messages: Array,
     nickname: String,
     showLogs: Boolean,
@@ -164,6 +164,14 @@ export default {
     calendarCard,
   },
   computed: {
+    visits() {
+      return JSON.parse(localStorage.getItem('visits'));
+    },
+
+    favorites() {
+      return [...new Set(this.visits.map((v) => v.name))];
+    },
+
     showFavorites() {
       return this.show == 0;
     },
@@ -262,7 +270,9 @@ export default {
   watch: {
     favorite() {
       this.selectedSpace.name = this.selectedFavorite;
-      this.show = 2;
+      if (this.selectedSpace.name) {
+        this.show = 2;
+      }
     },
 
     selectedSpace(newVal) {
