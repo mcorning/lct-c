@@ -1,10 +1,50 @@
 <template>
   <v-row class="fill-height">
     <v-col>
+      <v-sheet height="64">
+        <v-toolbar flat>
+          <v-btn outlined class="mr-4" color="grey darken-2" @click="setToday">
+            Today
+          </v-btn>
+          <v-btn fab text small color="grey darken-2" @click="prev">
+            <v-icon small> mdi-chevron-left </v-icon>
+          </v-btn>
+          <v-btn fab text small color="grey darken-2" @click="next">
+            <v-icon small> mdi-chevron-right </v-icon>
+          </v-btn>
+          <v-toolbar-title v-if="$refs.calendar">
+            {{ $refs.calendar.title }}
+          </v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-menu bottom right>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn outlined color="grey darken-2" v-bind="attrs" v-on="on">
+                <span>{{ typeToLabel[type] }}</span>
+                <v-icon right> mdi-menu-down </v-icon>
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item @click="type = 'day'">
+                <v-list-item-title>Day</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="type = 'week'">
+                <v-list-item-title>Week</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="type = 'month'">
+                <v-list-item-title>Month</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="type = '4day'">
+                <v-list-item-title>4 days</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-toolbar>
+      </v-sheet>
+
       <v-sheet height="400">
         <v-calendar
           ref="calendar"
-          v-model="value"
+          v-model="focus"
           color="primary"
           type="4day"
           :events="visits"
@@ -14,6 +54,10 @@
           @mousemove:time="mouseMove"
           @mouseup:time="endDrag"
           @mouseleave.native="cancelDrag"
+          @click:event="showEvent"
+          @click:more="viewDay"
+          @click:date="viewDay"
+          @change="updateRange"
         >
           <template v-slot:event="{ event, timed, eventSummary }">
             <div class="v-event-draggable" v-html="eventSummary()"></div>
@@ -24,12 +68,36 @@
             ></div>
           </template>
         </v-calendar>
+        <v-menu
+          v-model="selectedOpen"
+          :close-on-content-click="false"
+          :activator="selectedElement"
+          offset-x
+        >
+          <v-card color="grey lighten-4" min-width="300px" flat>
+            <v-card-title>Selected Visit</v-card-title>
+            <v-card-text>
+              <span> {{ getLoggedState() }}</span>
+              Only delete a visit if you have not logged it to the server.
+            </v-card-text>
+            <v-card-actions>
+              <v-btn text color="primary" @click="selectedOpen = false">
+                Cancel
+                <v-spacer></v-spacer>
+              </v-btn>
+              <v-btn text color="primary" @click="logVisit"> Log </v-btn>
+              <v-btn text color="primary" @click="deleteVisit"> Delete </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-menu>
       </v-sheet>
     </v-col>
   </v-row>
 </template>
 
 <script>
+// const { getVisitDate } = require('../../utils/luxonHelpers');
+
 export default {
   name: 'VisitLog',
   props: {
@@ -37,30 +105,119 @@ export default {
     avgStay: Number,
   },
 
+  computed: {},
+
   data: () => ({
-    value: '',
+    focus: '',
+    type: 'month',
+    typeToLabel: {
+      month: 'Month',
+      week: 'Week',
+      day: 'Day',
+      '4day': '4 Days',
+    },
+    selectedEvent: {},
+    selectedElement: null,
+    selectedOpen: false,
+
+    //#region  drag and drop
     dragEvent: null,
     dragStart: null,
     createEvent: null,
     createStart: null,
     extendOriginal: null,
-    // TODO visits will come from localForage
+    //#endregion
+
     visits: [
-      {
-        name: 'Exposure Warning',
-        start: 1615463100000,
-        timed: false,
-        color: 'orange',
-      },
-      {
-        name: 'Fika Sisters',
-        start: 1615542300000,
-        timed: true,
-        color: 'green',
-      },
+      // renable these elements if you need to start over
+      //   {
+      //     name: 'Exposure Warning',
+      //     start: 1615463100000,
+      //     timed: false,
+      //     color: 'orange',
+      //     details:{logged:true},
+      //   },
+      //   {
+      //     name: 'Fika Sisters',
+      //     start: 1615542300000,
+      //     timed: true,
+      //     color: 'green',
+      //     details:{logged:true},
+      //   },
     ],
   }),
   methods: {
+    addVisit() {
+      if (this.place) {
+        //YYYY-MM-DD hh:mm
+        let tms = Date.now(); //getVisitDate();
+        console.log(tms);
+        this.startTime(tms);
+      }
+    },
+
+    logVisit() {
+      this.selectedOpen = false;
+    },
+
+    getLoggedState() {
+      return this.selectedEvent.details?.logged
+        ? 'Logged to server'
+        : 'Not logged to server';
+    },
+
+    arrayRemove(arr, value) {
+      return arr.filter((ele) => {
+        return ele != value;
+      });
+    },
+
+    deleteVisit() {
+      this.visits = this.arrayRemove(this.visits, this.selectedEvent);
+      this.selectedOpen = false;
+    },
+
+    //#region Active Calendar
+    viewDay({ date }) {
+      this.focus = date;
+      this.type = 'day';
+    },
+    getEventColor(event) {
+      return event.color;
+    },
+    setToday() {
+      this.focus = '';
+    },
+    prev() {
+      this.$refs.calendar.prev();
+    },
+    next() {
+      this.$refs.calendar.next();
+    },
+    showEvent({ nativeEvent, event }) {
+      const open = () => {
+        this.selectedEvent = event;
+        this.selectedElement = nativeEvent.target;
+        setTimeout(() => {
+          this.selectedOpen = true;
+        }, 10);
+      };
+
+      if (this.selectedOpen) {
+        this.selectedOpen = false;
+        setTimeout(open, 10);
+      } else {
+        open();
+      }
+
+      nativeEvent.stopPropagation();
+    },
+    updateRange({ start, end }) {
+      console.log(start, end);
+    },
+    //#endregion Active Calendar
+
+    //#region  Drag and Drop
     startDrag({ event, timed }) {
       if (event && timed) {
         this.dragEvent = event;
@@ -79,15 +236,14 @@ export default {
         this.createStart = this.roundTime(mouse);
         this.createEvent = {
           name: this.place,
-          color: 'green',
+          color: 'secondary',
           start: this.createStart,
           end: this.createStart + this.avgStay,
           timed: true,
+          details: { logged: false },
         };
 
         this.visits.push(this.createEvent);
-        let last = this.visits[this.visits.length - 1];
-        console.log(last.start, last.end);
       }
     },
     extendBottom(event) {
@@ -141,6 +297,8 @@ export default {
       this.dragTime = null;
       this.dragEvent = null;
     },
+    //#endregion Drag and Drop
+
     roundTime(time, down = true) {
       const roundTo = 15; // minutes
       const roundDownTime = roundTo * 60 * 1000;
@@ -168,6 +326,8 @@ export default {
   },
   mounted() {
     this.visits = JSON.parse(localStorage.getItem('visits'));
+    this.$refs.calendar.checkChange();
+    // this.addVisit();
   },
   destroyed() {
     let self = this;

@@ -1,5 +1,6 @@
 const { DateTime, Interval } = require('luxon');
 const visitFormat = 'HH:mm ccc, DD';
+const calendarFormat = 'yyyy-LL-dd hh:mm';
 
 const getNow = () => {
   // using Luxon Presets
@@ -27,5 +28,16 @@ const formatVisitedDate = (date) => {
   let x = DateTime.fromISO(date).toFormat(visitFormat);
   return x;
 };
+const getVisitDate = () => {
+  let x = DateTime.now().toFormat(calendarFormat);
+  return x;
+};
 
-module.exports = { getNow, getNowAsIso, isToday, isBetween, formatVisitedDate };
+module.exports = {
+  getNow,
+  getNowAsIso,
+  isToday,
+  isBetween,
+  formatVisitedDate,
+  getVisitDate,
+};
