@@ -126,9 +126,8 @@ io.on('connection', (socket) => {
   // socket.on('exposureWarning')
   // major function:
   //  1) broadcasts message to all users (online only?) when a case of covid is found in the community
-  //  2) server queries redisGraph for anyone connected to the positive case (ignoring the immunity some might have
+  //  2) server queries redisGraph for anyone connected to the positive case (ignoring the immunity some might have)
   //  3) returns the number of possible exposures to positive case
-  //  4)
   socket.on('exposureWarning', async (subject, ack) => {
     let everybody = await io.allSockets();
     console.log('All Online sockets:', printJson([...everybody]));
@@ -198,9 +197,10 @@ function getLogQuery(data) {
   return query;
 }
 
+// this query gets called for each exposed visit date for a given subject
 function getExposureQuery(subject) {
   // in full development we should query on userID and leave userName out of the graph altogether
-  let query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) `;
+  let query = `MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) `;
   query += `WHERE a1.name = "${subject}" AND a2.name <> "${subject}" `;
   query += `RETURN a2.userID`;
   return query;
