@@ -151,7 +151,7 @@ import { data } from '@/maps/communityData.json';
 export default {
   props: {
     easing: String,
-    favoritesX: Array,
+    favorites: Array,
     messages: Array,
     nickname: String,
     showLogs: Boolean,
@@ -168,9 +168,9 @@ export default {
       return JSON.parse(localStorage.getItem('visits'));
     },
 
-    favorites() {
-      return [...new Set(this.visits.map((v) => v.name))];
-    },
+    // favorites() {
+    //   return [...new Set(this.visits.map((v) => v.name))];
+    // },
 
     showFavorites() {
       return this.show == 0;
@@ -236,6 +236,10 @@ export default {
   },
 
   methods: {
+    getVisits() {
+      this.visits = JSON.parse(localStorage.getItem('visits'));
+    },
+
     logLabel() {
       return this.selectedSpace.name ? 'Log visit:' : 'Select a place';
     },
@@ -272,6 +276,12 @@ export default {
       this.selectedSpace.name = this.selectedFavorite;
       if (this.selectedSpace.name) {
         this.show = 2;
+      }
+    },
+
+    show(newVal, oldVal) {
+      if (oldVal === 2) {
+        this.getVisits();
       }
     },
 

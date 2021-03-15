@@ -20,7 +20,7 @@
               @blur="onSubmit()"
             ></v-text-field
           ></v-card-text>
-
+          <v-card-text>{{ welcomeMessage }}</v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-dialog v-model="dialog" persistent max-width="400px">
@@ -64,6 +64,17 @@
 export default {
   name: 'Welcome',
 
+  computed: {
+    sessionID() {
+      return localStorage.getItem('sessionID');
+    },
+
+    welcomeMessage() {
+      return `Welcome ${
+        this.sessionID ? 'back' : ''
+      } to Local Contact Tracing ${this.sessionID}`;
+    },
+  },
   data() {
     return {
       dialog: false,
@@ -82,7 +93,10 @@ export default {
     onGo() {
       this.dialog = false;
 
-      this.$emit('input', this.username);
+      this.$emit('input', {
+        username: this.username,
+        sessionID: this.sessionID,
+      });
     },
   },
 

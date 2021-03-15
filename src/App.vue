@@ -240,6 +240,7 @@ export default {
   },
   data() {
     return {
+      sessionID: '',
       userCount: 0,
       selectedSpace: '',
       hasSaved: false,
@@ -268,10 +269,10 @@ export default {
       this.connectionStatus = val;
     },
 
-    onUsernameSelection(username) {
+    onUsernameSelection({ username, sessionID }) {
       this.usernameAlreadySelected = true;
       this.username = username;
-      socket.auth = { username };
+      socket.auth = { username, sessionID };
       socket.connect();
     },
 
@@ -306,6 +307,12 @@ export default {
   mixins: [update, helpers],
 
   watch: {
+    usernameAlreadySelected(n, o) {
+      console.log('old', o);
+      console.log('new', n);
+      console.log(this.sessionID);
+    },
+
     // in case we timeout on an async function
     overlay(val) {
       val &&
@@ -317,24 +324,19 @@ export default {
 
   //#region Lifecycle Hooks
   created() {
-    const sessionID = localStorage.getItem('sessionID');
+    this.sessionID = localStorage.getItem('sessionID');
+    this.username = localStorage.getItem('username');
 
-    if (sessionID) {
+    if (this.sessionID) {
       this.usernameAlreadySelected = true;
       // this.sid = sessionID;
-      socket.auth = { sessionID };
+      socket.auth = { sessionID: this.sessionID, username: this.username };
       // if server finds a session we will connect
       socket.connect();
     }
 
     socket.on('connect', () => {
-      // this.onConnectionStatusChanged(true);
-      // this.uid = socket.userID;
       this.auditor.logEntry(`Socket ${socket.id} connected`);
-
-      socket.emit('comm check on socket', socket.id, (ack) => {
-        console.log(ack);
-      });
     });
 
     socket.on('session', ({ sessionID, userID, username, graphName }) => {
@@ -352,10 +354,9 @@ export default {
     });
 
     socket.on('connect_error', (err) => {
-      if (err.message === 'invalid username') {
-        this.usernameAlreadySelected = false;
-      }
-      console.log(error(err));
+      this.usernameAlreadySelected = err.message != 'No username';
+
+      console.log(error(err.message));
       this.auditor.logEntry(err.message);
     });
 

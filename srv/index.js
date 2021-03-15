@@ -4,8 +4,9 @@ const serveStatic = require('serve-static');
 const crypto = require('crypto');
 const randomId = () => crypto.randomBytes(8).toString('hex');
 console.log(randomId());
-const { InMemorySessionStore } = require('./sessionStore');
-const sessionStore = new InMemorySessionStore();
+
+const store = require('store2');
+
 const cache = new Map();
 
 const path = require('path');
@@ -27,73 +28,92 @@ const server = express()
 const io = socketIO(server);
 
 io.use((socket, next) => {
-  const sessionID = socket.handshake.auth.sessionID; // where gets sessionId handling socket.emit('session')
+  const { sessionID, userID, username } = socket.handshake.auth;
+  console.log(sessionID, userID, username);
+
+  // if first connection, prompt client for a username
+  if (!username) {
+    return next(new Error('No username'));
+  }
+
+  // else see if we have a session for the username
   if (sessionID) {
-    const session = sessionStore.findSession(sessionID);
+    const session = store(sessionID);
+    console.log('Saved session?', session);
+
+    // if we have seen this session before, ensure the client uses the same
+    // userID and username used in the last session
     if (session) {
       socket.sessionID = sessionID;
       socket.userID = session.userID;
       socket.username = session.username;
-      console.groupCollapsed('Handshake: New party');
+      console.groupCollapsed('Handshake: Known party');
       console.log(warn(`LEAVING io.use() with  ${sessionID}'s session data.`));
       return next();
     }
   }
 
-  const username = socket.handshake.auth.username;
-  if (!username) {
-    return next(new Error('invalid username'));
-  }
+  // otherwise, setup the new user...
   console.log('\n', info(new Date().toLocaleString()));
   console.groupCollapsed('Handshake: Known party');
   console.log('Assigning new sessionID and userID for', username);
+
+  //...with a userID, and a sessionID
   socket.sessionID = randomId(); // these values gets attached to the socket so the client knows which session has their data and messages
   socket.userID = randomId();
-  socket.username = username; // username is fixed
+
+  socket.username = username; // username is fixed by client
 
   console.log(success('Leaving io.use()'));
+  // handle the connection, storing and returning the session data to client for storage.
   next();
 });
 
 io.on('connection', (socket) => {
+  //#region Handling connections
   console.log('Client connected on socket ', socket.id);
-  // persist session
-  sessionStore.saveSession(socket.sessionID, {
+  store(socket.sessionID, {
     userID: socket.userID,
     username: socket.username,
     connected: true,
   });
+  console.log(
+    `Sessions after adding ${socket.sessionID}`,
+    store(socket.sessionID)
+  );
+
   console.log('Returning session data to client');
-  // emit session details
+
+  // emit session details so the client can store the session in localStorage
   socket.emit('session', {
     sessionID: socket.sessionID,
     userID: socket.userID,
     username: socket.username,
-    graphName: graphName,
+    graphName: graphName, // track the graphName so we know where messages from client end up in redisGraph
   });
-  console.log(`socket ${socket.id} joining ${socket.username}'s room`);
+  console.log(
+    `socket ${socket.id} joining ${socket.username}'s room with userID ${socket.userID}`
+  );
+
   // join the "userID" room
+  // we send alerts using the userID stored in redisGraph for visitors
   socket.join(socket.userID);
 
   // fetch existing users
-  const users = [];
-  sessionStore.findAllSessions().forEach((session) => {
-    users.push({
-      userID: session.userID,
-      username: session.username,
-      connected: session.connected,
-    });
-  });
+  const users = [...Object.entries(store())];
+  // send users back to client so they know how widespread LCT usage is
+  // (the more users are active, the safer the community)
+  socket.emit('users', users);
 
   console.groupCollapsed('Online users:');
   console.log(printJson(users));
-  socket.emit('users', users);
+
   let onlineUsers = users.length;
   console.log('onlineUsers: ', onlineUsers);
-  socket.emit('users online', onlineUsers);
+
   console.groupEnd();
 
-  // notify existing users
+  // notify existing users (this is only important if use has opted in to LCT Private Messaging)
   socket.broadcast.emit('user connected', {
     userID: socket.userID,
     username: socket.username,
@@ -101,51 +121,25 @@ io.on('connection', (socket) => {
   });
   console.log('Leaving io.on(connect)');
   console.groupEnd();
+  //#endregion io.on('connect')
 
-  socket.on('exposureWarning', (subject, ack) => {
+  // socket.on('exposureWarning')
+  // major function:
+  //  1) broadcasts message to all users (online only?) when a case of covid is found in the community
+  //  2) server queries redisGraph for anyone connected to the positive case (ignoring the immunity some might have
+  //  3) returns the number of possible exposures to positive case
+  //  4)
+  socket.on('exposureWarning', async (subject, ack) => {
+    let everybody = await io.allSockets();
+    console.log('All Online sockets:', printJson([...everybody]));
+
     socket.broadcast.emit('alertPending', socket.userID);
-
     // General policy: use "" as query delimiters (because some values are possessive)
-    let query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) `;
-    query += `WHERE a1.name = "${subject}" AND a2.name <> "${subject}" `;
-    query += `RETURN a2.userID`;
+    let query = getExposureQuery(subject);
     console.log(success('Visit query:', printJson(query)));
-
     Graph.query(query)
-      .then((results) => {
-        const ret = `Alerting ${results._resultsCount} other visitors.`;
-        if (results._resultsCount == 0) {
-          if (ack) {
-            ack(ret);
-          }
-          return;
-        }
-        const msg = 'Please get tested. Quarantine, if necessary.';
-
-        const alerts = results._results.flatMap((v) => v._values);
-        alerts.forEach((to) => {
-          io.in(socket.userID)
-            .allSockets()
-            .then((matchingSockets) => {
-              if (matchingSockets.size === 0) {
-                cache.add(to);
-                console.log('Cache:', printJson(cache));
-              } else {
-                console.log('Alerting:', to);
-                socket.in(to).emit(
-                  'exposureAlert',
-                  msg,
-                  ack((res) => {
-                    console.log(success(res, 'confirms'));
-                  })
-                );
-              }
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        });
-      })
+      .then((results) => ackWarning(results, ack))
+      .then((results) => alertOthers(socket, results, ack))
       .catch((error) => {
         console.log(error);
         console.log(
@@ -153,13 +147,11 @@ io.on('connection', (socket) => {
         );
       });
   });
+
   socket.on('logVisit', (data, ack) => {
     // this is where we send a Cypher query to RedisGraph
     // General policy: use "" as query delimiters (because some values are possessive)
-    let query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) `;
-    query += `MERGE (s:space{ name: "${data.selectedSpace.name}", spaceID: "${data.selectedSpace.id}" }) `;
-    query += `MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
-    console.log(warn('Visit query:', printJson(query)));
+    let query = getLogQuery(data);
     Graph.query(query)
       .then((results) => {
         const stats = results._statistics._raw;
@@ -183,11 +175,13 @@ io.on('connection', (socket) => {
       // notify other users
       socket.broadcast.emit('user disconnected', socket.userID);
       // update the connection status of the session
-      sessionStore.saveSession(socket.sessionID, {
+
+      store(socket.sessionID, {
         userID: socket.userID,
         username: socket.username,
         connected: false,
       });
+      console.log(`Sessions after adding ${socket.sessionID}`, store());
     }
     console.groupCollapsed('users after disconnect');
     console.log(users);
@@ -195,4 +189,57 @@ io.on('connection', (socket) => {
   });
 });
 
-// setInterval(() => io.emit("time", new Date().toTimeString()), 1000);
+function getLogQuery(data) {
+  // visitedOn is a simple text string today. soon it will be the Date time value (from which we can derive the Date and Time of the visit. we should add the avgStay value so we can divine duration)
+  let query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) `;
+  query += `MERGE (s:space{ name: "${data.selectedSpace.name}", spaceID: "${data.selectedSpace.id}" }) `;
+  query += `MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
+  console.log(warn('Visit query:', printJson(query)));
+  return query;
+}
+
+function getExposureQuery(subject) {
+  // in full development we should query on userID and leave userName out of the graph altogether
+  let query = `MATCH (a1:visitor)-[:visited]->(s:space)<-[:visited]-(a2:visitor) `;
+  query += `WHERE a1.name = "${subject}" AND a2.name <> "${subject}" `;
+  query += `RETURN a2.userID`;
+  return query;
+}
+
+const ackWarning = (results, ack) => {
+  const ret = `Alerting ${results._resultsCount} other visitors.`;
+  if (results._resultsCount == 0) {
+    if (ack) {
+      ack(ret);
+    }
+    return;
+  }
+  return results;
+};
+
+const alertOthers = (socket, results, ack) => {
+  const msg = 'Please get tested. Quarantine, if necessary.';
+  const alerts = results._results.flatMap((v) => v._values);
+  alerts.forEach((to) => {
+    io.in(socket.userID)
+      .allSockets()
+      .then((matchingSockets) => {
+        if (matchingSockets.size === 0) {
+          cache.set(to);
+          console.log('Cache:', printJson(cache));
+        } else {
+          console.log('Alerting:', to);
+          socket.in(to).emit(
+            'exposureAlert',
+            msg,
+            ack((res) => {
+              console.log(success(res, 'confirms'));
+            })
+          );
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
+};

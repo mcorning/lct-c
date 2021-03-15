@@ -1,5 +1,29 @@
 # LCT-C Debugging Guide
 
+LCT works through a node server that renders compiled Javascript built by Vue-CLI and sent the srv/dist folder.
+
+## tl;dr
+
+Start the debugger for index.js
+Start another debugger for Chrome on port 3000.
+
+If you change the Vue code, you need to rebuild before you can debug.
+
+## Configuration
+
+See the debug configuration file for details
+
+## Launch Debugger
+
+From the debug explorer:
+Choose `Launch index.js` from the debug dropdown
+Press `F5` or hit the *green* start button in the dropdown
+
+Then choose `3000 vuejs:chrome` option
+Press `F5` or hit the *green* start button in the dropdown
+
+## Port conflicts
+
 If you get an INUSE error on port 3000, you can confirm a running instance of node with this command in the Terminal:
 
 ```bash
@@ -9,17 +33,6 @@ netstat -ona | grep "3000"
 
 Sometimes, you can avoid this error by closing all browsers running LCT, then close the server.
 
-But his error comes and goes. Sorry.
-## VS Code
+But this error comes and goes. Sorry.
 
-Where and how you start a debugging session can make a difference to how you see debug output. If you use a Terminal View (see below), you will not see collapsed console groups; you will see all the data at once. This can be hard to follow with high data volume.
 
-You have several ways to launch LCT-C debugging sessions for Vue and Node simultaneously in VSCode.
-
-## Configuration
-
-## Launch Debugger
-
-### From Debug Extension
-
-### From Javascript Debug Terminal
