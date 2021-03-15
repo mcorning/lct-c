@@ -55,5 +55,5 @@ Exposed Visitors:
 MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Mphone' AND a2.name <> 'Mpnone' AND v.visitedOn='3/10/2021' RETURN a2.name, s.name
 useing DateTime:
 MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Tab hunter' AND a2.name <> 'Tab hunter' AND v.visitedOn='1615516200000' RETURN a2.name, s.name
-
+*/
 //#endregion
