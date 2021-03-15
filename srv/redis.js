@@ -22,6 +22,9 @@ module.exports = { Graph, graphName, host };
 See all NODES:
 MATCH n=() RETURN n
 
+See node by internal id:
+MATCH p=()-[*]->() RETURN [node IN nodes(p) WHERE id(node)=13]
+
 See all RELATIONSHIPs:
 MATCH p=()-[*]->() RETURN p
 
@@ -41,10 +44,16 @@ MATCH p=(visitor{name:'klm'})-[*]-() WHERE any(edge IN relationships(p) WHERE ed
 DELETE relationship:
 MATCH  (:visitor{name:"ssw"})-[r:visits]->(:room{id:1502}) DELETE r
 
-SET property on relationship:
+SET property on 
+node:
+MATCH  (s:space{name:"undefined"}) SET s.name="Fika Sisters"
+
+relationship:
 MATCH  (:room{name:"The Secret Room of the Ogre King"})-[c:contains]->(:monster{name:"Ralph the Ogre King"}) SET c.visible="0"
 
 Exposed Visitors:
-MATCH (a1:visitor)-[:visits]->(r:room)<-[:visits]-(a2:visitor) WHERE a1.name = 'mpc' AND a2.name <> 'mpc' RETURN a2.name, r.name
-*/
+MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Mphone' AND a2.name <> 'Mpnone' AND v.visitedOn='3/10/2021' RETURN a2.name, s.name
+useing DateTime:
+MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Tab hunter' AND a2.name <> 'Tab hunter' AND v.visitedOn='1615516200000' RETURN a2.name, s.name
+
 //#endregion
