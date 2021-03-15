@@ -113,7 +113,7 @@ export default {
     },
 
     visits() {
-      return JSON.parse(localStorage.getItem('visits')) || null;
+      return JSON.parse(localStorage.getItem('visits')) || [];
     },
 
     favorites() {
