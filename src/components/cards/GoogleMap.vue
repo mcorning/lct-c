@@ -8,10 +8,30 @@
         @click="center = m.position"
       ></gmap-marker>
     </gmap-map>
-    <div class="white--text py-3">
-      <gmap-autocomplete @place_changed="setPlace" style="width: 80%; border">
-      </gmap-autocomplete>
-    </div>
+
+    <gmap-autocomplete
+      @place_changed="setPlace"
+      style="width: 70%; border: orange; border-width: 2px; border-style: solid"
+    >
+    </gmap-autocomplete>
+
+    <v-tooltip top>
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          v-bind="attrs"
+          v-on="on"
+          color="success"
+          fab
+          medium
+          dark
+          class="ml-5"
+          @click="logVisit"
+        >
+          <v-icon>mdi-calendar</v-icon>
+        </v-btn>
+      </template>
+      <span>Send to calendar </span></v-tooltip
+    >
   </div>
 </template>
 
@@ -45,11 +65,15 @@ export default {
   },
 
   methods: {
+    logVisit() {
+      this.$emit('addedPlace', this.currentPlace);
+    },
+
     setPlace(place) {
       this.currentPlace = place;
       this.addMarker();
-      this.$emit('addedPlace', place);
     },
+
     addMarker() {
       if (this.currentPlace) {
         const marker = {
@@ -59,7 +83,6 @@ export default {
         this.markers.push({ position: marker });
         this.places.push(this.currentPlace);
         this.center = marker;
-        this.currentPlace = null;
       }
     },
     geolocate: function () {
@@ -73,6 +96,10 @@ export default {
   },
 
   watch: {
+    currentPlace(n, o) {
+      console.log('currentPlace new/old', n, o);
+    },
+
     selectedSpace(newVal) {
       if (newVal.position) {
         console.log(info(printJson(newVal)));

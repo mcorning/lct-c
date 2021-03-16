@@ -29,14 +29,14 @@ See all RELATIONSHIPs:
 MATCH p=()-[*]->() RETURN p
 
 See specified RELATIONSHIP
-MATCH  (a:visitor{id:1})-[:visits]->(:room) RETURN a.id, a.name
+MATCH  (v:visitor{id:1})-[:visited]->(:space) RETURN  v.id, v.name
 
 
 CREATE a RELATIONSHIP between MATCHed nodes:
 MATCH (a:visitor), (b:room) WHERE (a.name = "" AND b.name="" ) CREATE (a)-[:visits]->(b)
 
 
-Filter RELATIONSHIP based on its propertyL
+Filter RELATIONSHIP based on its property
 MATCH p=(visitor{name:'klm'})-[*]-() WHERE any(edge IN relationships(p) WHERE edge.date>=\"1/27\") RETURN p
 
 

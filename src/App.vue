@@ -136,13 +136,15 @@
     </v-main>
 
     <v-system-bar app bottom dense color="primary" dark>
-      <v-spacer></v-spacer>
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
-          <small class="pr-3" text v-bind="attrs" v-on="on">{{ build }} </small>
+          <small class="pr-3" text v-bind="attrs" v-on="on"
+            >LCT v.{{ build }}
+          </small>
         </template>
         <span>Version of LCT-C</span></v-tooltip
       >
+      <v-spacer></v-spacer>
       <v-tooltip top>
         <template v-slot:activator="{ on, attrs }">
           <v-icon class="pr-3" v-bind="attrs" v-on="on"
@@ -307,12 +309,6 @@ export default {
   mixins: [update, helpers],
 
   watch: {
-    usernameAlreadySelected(n, o) {
-      console.log('old', o);
-      console.log('new', n);
-      console.log(this.sessionID);
-    },
-
     // in case we timeout on an async function
     overlay(val) {
       val &&

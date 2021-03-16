@@ -22,6 +22,7 @@ Press `F5` or hit the *green* start button in the dropdown
 Then choose `3000 vuejs:chrome` option
 Press `F5` or hit the *green* start button in the dropdown
 
+> NOTE: To get symbols loaded, be sure all browsers running LCT are closed before starting the debugger for Chrome.
 ## Port conflicts
 
 If you get an INUSE error on port 3000, you can confirm a running instance of node with this command in the Terminal:

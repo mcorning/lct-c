@@ -149,7 +149,7 @@ io.on('connection', (socket) => {
 
   socket.on('logVisit', (data, ack) => {
     // this is where we send a Cypher query to RedisGraph
-    // General policy: use "" as query delimiters (because some values are possessive)
+
     let query = getLogQuery(data);
     Graph.query(query)
       .then((results) => {
@@ -188,11 +188,16 @@ io.on('connection', (socket) => {
   });
 });
 
+// Example query:
+// MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{visitedOn:'1615856400000'}]->(s)
 function getLogQuery(data) {
+  // const regexp = /'/gi;
+  // let cleanSpace = data.selectedSpace.replace(regexp, "\\'");
+  // data.selectedSpace = cleanSpace;
   // visitedOn is a simple text string today. soon it will be the Date time value (from which we can derive the Date and Time of the visit. we should add the avgStay value so we can divine duration)
-  let query = `MERGE (v:visitor{ name: "${data.username}", userID: "${data.userID}"}) `;
-  query += `MERGE (s:space{ name: "${data.selectedSpace.name}", spaceID: "${data.selectedSpace.id}" }) `;
-  query += `MERGE (v)-[r:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
+  let query = `MERGE (v:visitor{ name: "${data.username}", userID: '${data.userID}'}) `;
+  query += `MERGE (s:space{ name: "${data.selectedSpace}"}) `;
+  query += `MERGE (v)-[:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
   console.log(warn('Visit query:', printJson(query)));
   return query;
 }
