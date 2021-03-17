@@ -128,12 +128,37 @@ io.on('connection', (socket) => {
   //  1) broadcasts message to all users (online only?) when a case of covid is found in the community
   //  2) server queries redisGraph for anyone connected to the positive case (ignoring the immunity some might have)
   //  3) returns the number of possible exposures to positive case
-  socket.on('exposureWarning', async (subject, ack) => {
+  // moving code to redis.js
+  socket.on('exposureWarning0', async (subject, ack) => {
     let everybody = await io.allSockets();
     console.log('All Online sockets:', printJson([...everybody]));
 
     socket.broadcast.emit('alertPending', socket.userID);
     // General policy: use "" as query delimiters (because some values are possessive)
+    let query = getExposureQuery(subject);
+    console.log(success('Visit query:', printJson(query)));
+    Graph.query(query)
+      .then((results) => ackWarning(results, ack))
+      .then((results) => alertOthers(socket, results, ack))
+      .catch((error) => {
+        console.log(error);
+        console.log(
+          `Be sure there is a graph named "${nsp}" on the Redis server: ${host}`
+        );
+      });
+  });
+  socket.on('exposureWarning', async (subject, ack) => {
+    let everybody = await io.allSockets();
+    console.log('All Online sockets:', printJson([...everybody]));
+
+    socket.broadcast.emit('alertPending', socket.userID);
+
+    onExposureWarning(visitor).then((r) => {
+      r.forEach((element) => {
+        // alertVisitors(element).then((r) => console.log(r));
+      });
+    });
+
     let query = getExposureQuery(subject);
     console.log(success('Visit query:', printJson(query)));
     Graph.query(query)
