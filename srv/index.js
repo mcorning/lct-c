@@ -189,15 +189,15 @@ io.on('connection', (socket) => {
 });
 
 // Example query:
-// MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{visitedOn:'1615856400000'}]->(s)
+// MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{started:'1615856400000'}]->(s)
 function getLogQuery(data) {
   // const regexp = /'/gi;
   // let cleanSpace = data.selectedSpace.replace(regexp, "\\'");
   // data.selectedSpace = cleanSpace;
-  // visitedOn is a simple text string today. soon it will be the Date time value (from which we can derive the Date and Time of the visit. we should add the avgStay value so we can divine duration)
+  // started is a simple text string today. soon it will be the Date time value (from which we can derive the Date and Time of the visit. we should add the avgStay value so we can divine duration)
   let query = `MERGE (v:visitor{ name: "${data.username}", userID: '${data.userID}'}) `;
   query += `MERGE (s:space{ name: "${data.selectedSpace}"}) `;
-  query += `MERGE (v)-[:visited{visitedOn:'${data.visitedOn}'}]->(s)`;
+  query += `MERGE (v)-[:visited{started:${data.started}}]->(s)`;
   console.log(warn('Visit query:', printJson(query)));
   return query;
 }

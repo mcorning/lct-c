@@ -14,28 +14,29 @@ module.exports = { Graph, graphName, host };
 
 //#region Test Suite
 
-async function test(name, subject = false) {
+function test(name, subject = false) {
   let promise = new Promise(function (resolve) {
     Graph.query(
       `MATCH (a:visitor{name:'${name}'})-[v:visited]->(s:space)
-    RETURN a.name, s.name, id(s), v.visitedOn, id(v), id(s)`
+    RETURN a.name, id(a), s.name, id(s), v.started, id(v), id(s)`
     ).then((res) => {
       console.log(`\nTesting ${subject ? 'subject' : 'exposed'}:`);
 
-      const name = res._results[0]._values[0];
-      console.log(name, 'visits:');
+      const rec = res._results[0];
+      console.log(rec.get('id(a)'), rec.get('a.name'), 'visits:');
 
       while (res.hasNext()) {
         let record = res.next();
-        let date = new Date(record.get('v.visitedOn') / 1).toLocaleString();
+        let date = new Date(record.get('v.started') / 1).toLocaleString();
         let vid = record.get('id(v)');
         let sid = record.get('id(s)');
 
         console.log(
+          ' '.repeat(19),
           vid < 10 ? ' ' : '',
           vid,
           ' '.repeat(vid / 100),
-          record.get('v.visitedOn'),
+          record.get('v.started'),
           '=',
           date,
           ' '.repeat(25 - date.length),
@@ -59,7 +60,7 @@ function testWarning(subject) {
     Graph.query(
       `MATCH (a1:visitor{name:'${subject}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor) 
     WHERE a2.name <> a1.name 
-    RETURN a2.name, id(a2), s.name, id(s), v.visitedOn, id(v), v2.visitedOn, id(v2)`
+    RETURN a2.name, id(a2), s.name, id(s), v.started, id(v), v2.started, id(v2)`
     ).then((res) => {
       console.log(`\nTesting Exposure Warning from ${subject}:`);
       // console.log(
@@ -67,13 +68,13 @@ function testWarning(subject) {
       // );
       while (res.hasNext()) {
         let record = res.next();
-        let date = new Date(record.get('v2.visitedOn') / 1).toLocaleString();
+        let date = new Date(record.get('v2.started') / 1).toLocaleString();
 
         let aid = record.get('id(a2)');
         let vid = record.get('id(v2)');
         let sid = record.get('id(s)');
 
-        let visit = record.get('v2.visitedOn') + ' = ' + date;
+        let visit = record.get('v2.started') + ' = ' + date;
         let name = record.get('a2.name');
         let v = visit.length;
         console.log(
@@ -85,8 +86,10 @@ function testWarning(subject) {
 
           vid < 10 ? ' ' : '',
           vid,
-          visit,
-          ' '.repeat(40 - v),
+          record.get('v.started'),
+          '=',
+          date,
+          ' '.repeat(25 - date.length),
 
           sid < 10 ? ' ' : '',
           sid,
@@ -102,21 +105,15 @@ function testWarning(subject) {
 
   return promise;
 }
-test('Phone', true);
-testWarning('Phone').then((r) => {
+
+// execute tests
+const visitor = 'c23po';
+test(visitor, true);
+testWarning(visitor).then((r) => {
   r.forEach((element) => {
     test(element).then((r) => console.log(r));
   });
 });
-
-// await test('Phone');
-
-// test('c23po');
-// test('Mphone');
-// test('Ladydowling');
-// test('Tab hunter');
-// test('hero');
-// test('Coffee Girl');
 
 //#endregion
 
@@ -150,24 +147,27 @@ MATCH p=(visitor{name:'klm'})-[*]-() WHERE any(edge IN relationships(p) WHERE ed
 
 
 
-DELETE relationship:
-MATCH  (:visitor{name:"Tab hunter"})-[v:visited{visitedOn:'3/11/2021'}]->(:space) DELETE v
+DELETE 
+relationship:
+MATCH  (:visitor{name:"Tab hunter"})-[v:visited{started:'3/11/2021'}]->(:space) DELETE v
+property:
+MATCH (n { name: 'Jim' }) SET n.name = NULL
 
 SET property on: 
 node:
 MATCH  (s:space{name:"undefined"}) SET s.name="Fika Sisters"
-MATCH ()-[v:visited{visitedOn:"3/10/2021"}]->() SET v.visitedOn='1615515300000'
+MATCH ()-[v:visited{started:"3/10/2021"}]->() SET v.started='1615515300000'
 
 relationship:
 MATCH  (:room{name:"The Secret Room of the Ogre King"})-[c:contains]->(:monster{name:"Ralph the Ogre King"}) SET c.visible="0"
 
 Exposed Visitors:
 Spaces visited:
-MATCH  (:visitor{name:'Phone'})-[v:visited]->(s:space) RETURN  s.name, id(s), v.visitedOn
+MATCH  (:visitor{name:'Phone'})-[v:visited]->(s:space) RETURN  s.name, id(s), v.started
 
 
-MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Mphone' AND a2.name <> 'Mpnone' AND v.visitedOn='3/10/2021' RETURN a2.name, s.name
+MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Mphone' AND a2.name <> 'Mpnone' AND v.started='3/10/2021' RETURN a2.name, s.name
 useing DateTime:
-MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Tab hunter' AND a2.name <> 'Tab hunter' AND v.visitedOn='1615516200000' RETURN a2.name, s.name
+MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Tab hunter' AND a2.name <> 'Tab hunter' AND v.started='1615516200000' RETURN a2.name, s.name
 */
 //#endregion

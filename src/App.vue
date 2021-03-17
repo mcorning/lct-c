@@ -284,7 +284,7 @@ export default {
         username: this.username,
         userID: socket.userID,
         selectedSpace: visit.name,
-        visitedOn: visit.start,
+        started: visit.start,
       };
       this.auditor.logEntry(`Visit query: ${printJson(query)}`);
 
