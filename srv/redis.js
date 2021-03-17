@@ -12,58 +12,18 @@ const Graph = new RedisGraph(graphName, null, null, options);
 
 module.exports = { Graph, graphName, host };
 
-async function Test() {
-  async function testExposureAlerts(subject) {
-    await Graph.query(
-      `MATCH (a1:visitor{name:'${subject}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor) 
-    WHERE a2.name <> a1.name 
-    RETURN a2.name, id(a2), s.name, id(s), v.visitedOn, id(v), v2.visitedOn, id(v2)`
-    ).then((res) => {
-      console.log(`\nTesting Alerts from ${subject}:`);
-      // console.log(
-      //   '123456791123456789212345679012345678931234567901234567894123456795123456789612345678981234567899123456789100'
-      // );
-      while (res.hasNext()) {
-        let record = res.next();
-        let date = new Date(record.get('v2.visitedOn') / 1).toLocaleString();
+//#region Test Suite
 
-        let aid = record.get('id(a2)');
-        let vid = record.get('id(v2)');
-        let sid = record.get('id(s)');
-
-        let visit = record.get('v2.visitedOn') + ' = ' + date;
-        let name = record.get('a2.name');
-        let v = visit.length;
-        console.log(
-          aid < 10 ? ' ' : '',
-          aid,
-          ' '.repeat(3 - aid / 100),
-          name,
-          ' '.repeat(20 - name.length),
-
-          vid < 10 ? ' ' : '',
-          vid,
-          ' '.repeat(vid / 100),
-          visit,
-          ' '.repeat(45 - v),
-
-          sid < 10 ? ' ' : '',
-          sid,
-          record.get('s.name')
-        );
-      }
-    });
-  }
-
-  async function test(name) {
-    await Graph.query(
+async function test(name, subject = false) {
+  let promise = new Promise(function (resolve) {
+    Graph.query(
       `MATCH (a:visitor{name:'${name}'})-[v:visited]->(s:space)
     RETURN a.name, s.name, id(s), v.visitedOn, id(v), id(s)`
     ).then((res) => {
-      console.log('\nTesting subject:');
+      console.log(`\nTesting ${subject ? 'subject' : 'exposed'}:`);
 
       const name = res._results[0]._values[0];
-      console.log(name);
+      console.log(name, 'visits:');
 
       while (res.hasNext()) {
         let record = res.next();
@@ -85,20 +45,80 @@ async function Test() {
           record.get('s.name')
         );
       }
+      const visitors = [
+        ...new Set(res._results.map((v) => v._values).map((v) => v[0])),
+      ];
+      resolve(visitors);
     });
-  }
-  await testExposureAlerts('Phone');
-  await test('Phone');
-
-  test('c23po');
-  test('Mphone');
-  test('Ladydowling');
-  test('Tab hunter');
-  test('hero');
-  test('Coffee Girl');
+  });
+  return promise;
 }
 
-Test();
+function testWarning(subject) {
+  let promise = new Promise(function (resolve) {
+    Graph.query(
+      `MATCH (a1:visitor{name:'${subject}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor) 
+    WHERE a2.name <> a1.name 
+    RETURN a2.name, id(a2), s.name, id(s), v.visitedOn, id(v), v2.visitedOn, id(v2)`
+    ).then((res) => {
+      console.log(`\nTesting Exposure Warning from ${subject}:`);
+      // console.log(
+      //   '123456791123456789212345679012345678931234567901234567894123456795123456789612345678981234567899123456789100'
+      // );
+      while (res.hasNext()) {
+        let record = res.next();
+        let date = new Date(record.get('v2.visitedOn') / 1).toLocaleString();
+
+        let aid = record.get('id(a2)');
+        let vid = record.get('id(v2)');
+        let sid = record.get('id(s)');
+
+        let visit = record.get('v2.visitedOn') + ' = ' + date;
+        let name = record.get('a2.name');
+        let v = visit.length;
+        console.log(
+          aid < 10 ? ' ' : '',
+          aid,
+
+          name,
+          ' '.repeat(15 - name.length),
+
+          vid < 10 ? ' ' : '',
+          vid,
+          visit,
+          ' '.repeat(40 - v),
+
+          sid < 10 ? ' ' : '',
+          sid,
+          record.get('s.name')
+        );
+      }
+      const visitors = [
+        ...new Set(res._results.map((v) => v._values).map((v) => v[0])),
+      ];
+      resolve(visitors);
+    });
+  });
+
+  return promise;
+}
+test('Phone', true);
+testWarning('Phone').then((r) => {
+  r.forEach((element) => {
+    test(element).then((r) => console.log(r));
+  });
+});
+
+// await test('Phone');
+
+// test('c23po');
+// test('Mphone');
+// test('Ladydowling');
+// test('Tab hunter');
+// test('hero');
+// test('Coffee Girl');
+
+//#endregion
 
 // if we store these output Cypher commands in a text file, we can bulk import them into Redis
 // run this command in the terminal (outside of redis-cli)
