@@ -9,21 +9,20 @@ const options = {
 // const { graphName } = require('./config.js');
 const graphName = 'Sisters';
 const Graph = new RedisGraph(graphName, null, null, options);
+const DEBUG = 1;
 
-module.exports = { Graph, graphName, host };
+module.exports = { Graph, graphName, host, alertVisitors, onExposureWarning };
 
-//#region Test Suite
-
-function test(name, subject = false) {
+function alertVisitors(name, subject = false) {
   let promise = new Promise(function (resolve) {
     Graph.query(
       `MATCH (a:visitor{name:'${name}'})-[v:visited]->(s:space)
     RETURN a.name, id(a), s.name, id(s), v.started, id(v), id(s)`
     ).then((res) => {
-      console.log(`\nTesting ${subject ? 'subject' : 'exposed'}:`);
+      console.log(`\n${subject ? 'Patient Zero' : 'Exposed'}:`);
 
       const rec = res._results[0];
-      console.log(rec.get('id(a)'), rec.get('a.name'), 'visits:');
+      console.log(rec.get('id(a)'), rec.get('a.name'), 'visited:');
 
       while (res.hasNext()) {
         let record = res.next();
@@ -46,23 +45,24 @@ function test(name, subject = false) {
           record.get('s.name')
         );
       }
-      const visitors = [
+      const others = [
         ...new Set(res._results.map((v) => v._values).map((v) => v[0])),
       ];
-      resolve(visitors);
+      resolve(others);
     });
   });
   return promise;
 }
 
-function testWarning(subject) {
+function onExposureWarning(subject) {
   let promise = new Promise(function (resolve) {
     Graph.query(
       `MATCH (a1:visitor{name:'${subject}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor) 
     WHERE a2.name <> a1.name 
+    AND v2.started>=v.started
     RETURN a2.name, id(a2), s.name, id(s), v.started, id(v), v2.started, id(v2)`
     ).then((res) => {
-      console.log(`\nTesting Exposure Warning from ${subject}:`);
+      console.log(`\nVisits on or after exposure by ${subject}:`);
       // console.log(
       //   '123456791123456789212345679012345678931234567901234567894123456795123456789612345678981234567899123456789100'
       // );
@@ -106,17 +106,27 @@ function testWarning(subject) {
   return promise;
 }
 
-// execute tests
-const visitor = 'c23po';
-test(visitor, true);
-testWarning(visitor).then((r) => {
-  r.forEach((element) => {
-    test(element).then((r) => console.log(r));
+if (DEBUG) {
+  const visitors = [
+    'c23po',
+    'Coffee Girl',
+    'hero',
+    'Ladydowling',
+    'Mphone',
+    'Phone',
+    'Tab hunter',
+  ];
+  // execute tests
+  const visitor = visitors[5];
+  alertVisitors(visitor, true);
+  onExposureWarning(visitor).then((exposed) => {
+    exposed.forEach((name) => {
+      alertVisitors(name).then((ack) =>
+        console.log('Possible exposure(s)', ack)
+      );
+    });
   });
-});
-
-//#endregion
-
+}
 // if we store these output Cypher commands in a text file, we can bulk import them into Redis
 // run this command in the terminal (outside of redis-cli)
 // cat sistersCommands.txt | redis-cli --pipe
