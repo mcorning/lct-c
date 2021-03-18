@@ -1,4 +1,5 @@
 const { readFileSync, writeFileSync } = require('fs');
+const { printJson, warn, info, success } = require('../src/utils/colors.js');
 
 const filepath = __dirname + '/sessions.json';
 
@@ -26,15 +27,16 @@ const get = (sessionID) => {
   return data.get(sessionID);
 };
 
-const print = (session) => {
+const print = (session, heading = 'Sessions:') => {
+  console.log(data.size > 0 ? heading : 'No Sessions');
+
   if (session) {
-    console.log(JSON.stringify(session, null, 3));
+    console.log(printJson(session));
     return;
   }
-  console.log(data.size > 0 ? 'Sessions:' : 'No Sessions');
   data.forEach((session, sessionID) => {
     console.log('\t', sessionID);
-    console.log('\t', JSON.stringify(session, null, 3));
+    console.log(printJson(session));
   });
 };
 
@@ -57,13 +59,3 @@ module.exports = {
   print,
   save,
 };
-
-if (false) {
-  print();
-  set('session1', { userID: 'dieiigne', username: 'katy' });
-  set('session2', { userID: 'ddiorhng', username: 'michael' });
-  let x = get('session1');
-  print(x);
-  console.log('session2:', get('session2'));
-  print();
-}

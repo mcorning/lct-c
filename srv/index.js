@@ -3,7 +3,6 @@ const socketIO = require('socket.io');
 const serveStatic = require('serve-static');
 const crypto = require('crypto');
 const randomId = () => crypto.randomBytes(8).toString('hex');
-console.log(randomId());
 
 const store = require('./store');
 
@@ -18,15 +17,21 @@ const {
   graphName, // mapped to client nsp (aka namespace or community name)
   host,
   findExposedVisitors,
+  logVisit,
   onExposureWarning,
 } = require('./redis');
-console.log(graphName, host);
 
 const PORT = process.env.PORT || 3000;
 
 const dirPath = path.join(__dirname, './dist');
-console.log(dirPath);
-store.print();
+
+console.log(new Date().toLocaleString());
+console.log('social graph:', graphName);
+console.log('redis host:', host);
+console.log('pwd:', dirPath);
+// list past sessions (all should be connected:false)
+store.print(null, 'Past Sessions:');
+
 const server = express()
   .use(serveStatic(dirPath))
   .listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`));
@@ -36,9 +41,13 @@ const io = socketIO(server);
 io.use((socket, next) => {
   const { sessionID, userID, username } = socket.handshake.auth;
   console.log(
-    sessionID || 'No stored session',
-    userID || 'No userID',
-    username || 'No username'
+    warn(
+      sessionID || 'No stored session',
+      '\t',
+      userID || 'No userID',
+      '\t',
+      username || 'No username'
+    )
   );
 
   // if first connection, prompt client for a username
@@ -46,10 +55,10 @@ io.use((socket, next) => {
   //   return next(new Error('No username'));
   // }
 
-  // else see if we have a session for the username
+  // see if we have a session for the username
   if (sessionID) {
     const session = store.get(sessionID);
-    console.log('Saved session?', session);
+    store.print(session, 'Rehydrated session:');
 
     // if we have seen this session before, ensure the client uses the same
     // userID and username used in the last session
@@ -80,34 +89,35 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
+  const { id: socketID, sessionID, userID, username } = socket;
   //#region Handling connections
-  console.log('Client connected on socket ', socket.id);
-  store.set(socket.sessionID, {
-    userID: socket.userID,
-    username: socket.username,
+  console.log('Client connected on socket ', socketID);
+  store.set(sessionID, {
+    userID: userID,
+    username: username,
     connected: true,
   });
   console.log(
-    `Binding Session: ${socket.sessionID} to socket ${socket.id}:`,
-    store.print(socket.sessionID)
+    `Binding Session: ${sessionID} to socket ${socketID}:`,
+    store.print(sessionID)
   );
 
   console.log('Returning session data to client');
 
   // emit session details so the client can store the session in localStorage
   socket.emit('session', {
-    sessionID: socket.sessionID,
-    userID: socket.userID,
-    username: socket.username,
+    sessionID: sessionID,
+    userID: userID,
+    username: username,
     graphName: graphName, // track the graphName so we know where messages from client end up in redisGraph
   });
   console.log(
-    `socket ${socket.id} joining ${socket.username}'s room with userID ${socket.userID}`
+    `socket ${socketID} joining ${username}'s room with userID ${userID}`
   );
 
   // join the "userID" room
   // we send alerts using the userID stored in redisGraph for visitors
-  socket.join(socket.userID);
+  socket.join(userID);
 
   // fetch existing users
   const users = [...Object.entries(store.all())];
@@ -125,8 +135,8 @@ io.on('connection', (socket) => {
 
   // notify existing users (this is only important if use has opted in to LCT Private Messaging)
   socket.broadcast.emit('user connected', {
-    userID: socket.userID,
-    username: socket.username,
+    userID: userID,
+    username: username,
     connected: true,
   });
   console.log('Leaving io.on(connect)');
@@ -174,23 +184,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('logVisit', (data, ack) => {
-    // this is where we send a Cypher query to RedisGraph
-
-    let query = getLogQuery(data);
-    Graph.query(query)
-      .then((results) => {
-        const stats = results._statistics._raw;
-        console.log(`stats: ${printJson(stats)}`);
-        if (ack) {
-          ack(stats);
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-        console.log(
-          `Be sure there is a graph named "${graphName}" on the Redis server: ${host}`
-        );
-      });
+    logVisit(data, ack);
   });
 
   socket.on('disconnect', async () => {
@@ -206,27 +200,16 @@ io.on('connection', (socket) => {
         username: socket.username,
         connected: false,
       });
-      console.log(`Sessions after adding ${socket.sessionID}`, store.print());
+      console.log(`Sessions after disconnecting ${socket.sessionID}:`);
+      store.print();
     }
-    console.groupCollapsed('users after disconnect');
+    console.groupCollapsed(
+      `There are ${users.length} users after this disconnect`
+    );
     console.log(users);
     console.groupEnd();
   });
 });
-
-// Example query:
-// MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{started:'1615856400000'}]->(s)
-function getLogQuery(data) {
-  // const regexp = /'/gi;
-  // let cleanSpace = data.selectedSpace.replace(regexp, "\\'");
-  // data.selectedSpace = cleanSpace;
-  // started is a simple text string today. soon it will be the Date time value (from which we can derive the Date and Time of the visit. we should add the avgStay value so we can divine duration)
-  let query = `MERGE (v:visitor{ name: "${data.username}", userID: '${data.userID}'}) `;
-  query += `MERGE (s:space{ name: "${data.selectedSpace}"}) `;
-  query += `MERGE (v)-[:visited{started:${data.started}}]->(s)`;
-  console.log(warn('Visit query:', printJson(query)));
-  return query;
-}
 
 // this query gets called for each exposed visit date for a given subject
 // function getExposureQuery(subject) {
@@ -237,8 +220,8 @@ function getLogQuery(data) {
 
 //   let q = `MATCH (a1:visitor{name:'${subject}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor)
 //     WHERE a2.name <> a1.name
-//     AND v2.started>=v.started
-//     RETURN a2.userID`; //a2.name, id(a2), s.name, id(s), v.started, id(v), v2.started, id(v2)`;
+//     AND v2.start>=v.start
+//     RETURN a2.userID`; //a2.name, id(a2), s.name, id(s), v.start, id(v), v2.start, id(v2)`;
 
 //   return q;
 // }

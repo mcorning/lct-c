@@ -222,7 +222,6 @@ export default {
       selectedCategory: '',
       usePanels: false,
       alert: false,
-      started: new Date().toLocaleDateString('en-US'),
       panelState: [],
       sheet: false,
       dialog: false,
