@@ -1,7 +1,6 @@
 const { readFileSync, writeFileSync } = require('fs');
-const DEBUG = 0;
 
-const filepath = __dirname + DEBUG ? '/test.json' : '/sessions.json';
+const filepath = __dirname + '/sessions.json';
 
 const tryParse = () => {
   try {
@@ -19,7 +18,7 @@ const all = () => {
 };
 const clear = () => {
   data = new Map();
-  writeFileSync('sessions.json', '[[]]');
+  writeFileSync(filepath, '');
   return true;
 };
 
@@ -40,12 +39,14 @@ const print = (session) => {
 };
 
 const save = () => {
-  writeFileSync('sessions.json', JSON.stringify([...data]));
+  writeFileSync(filepath, JSON.stringify([...data]));
   return true;
 };
 
 const set = (sessionID, value) => {
-  return data.set(sessionID, value);
+  data.set(sessionID, value);
+  save();
+  return;
 };
 
 module.exports = {
@@ -57,13 +58,12 @@ module.exports = {
   save,
 };
 
-print();
-set('session1', { userID: 'dieiigne', username: 'katy' });
-set('session2', { userID: 'ddiorhng', username: 'michael' });
-let x = get('session1');
-print(x);
-console.log('session2:', get('session2'));
-print();
-if (!DEBUG) {
-  save();
+if (false) {
+  print();
+  set('session1', { userID: 'dieiigne', username: 'katy' });
+  set('session2', { userID: 'ddiorhng', username: 'michael' });
+  let x = get('session1');
+  print(x);
+  console.log('session2:', get('session2'));
+  print();
 }

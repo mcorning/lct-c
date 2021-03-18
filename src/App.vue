@@ -412,6 +412,7 @@ export default {
 
   async mounted() {
     this.overlay = false;
+    this.auditor.logEntry(`updateExists: ${this.updateExists}`);
     console.log('Visitor.vue mounted');
   },
   //#endregion

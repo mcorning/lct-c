@@ -42,9 +42,9 @@ io.use((socket, next) => {
   );
 
   // if first connection, prompt client for a username
-  if (!username) {
-    return next(new Error('No username'));
-  }
+  // if (!username) {
+  //   return next(new Error('No username'));
+  // }
 
   // else see if we have a session for the username
   if (sessionID) {
@@ -82,7 +82,7 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
   //#region Handling connections
   console.log('Client connected on socket ', socket.id);
-  store(socket.sessionID, {
+  store.set(socket.sessionID, {
     userID: socket.userID,
     username: socket.username,
     connected: true,
