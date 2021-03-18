@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const randomId = () => crypto.randomBytes(8).toString('hex');
 console.log(randomId());
 
-const store = require('store2');
+const store = require('./store');
 
 const cache = new Map();
 
@@ -13,14 +13,20 @@ const path = require('path');
 
 const { printJson, warn, info, success } = require('../src/utils/colors.js');
 
-const { Graph, graphName, nsp, host } = require('./redis');
-console.log(graphName, nsp, host);
+const {
+  Graph,
+  graphName, // mapped to client nsp (aka namespace or community name)
+  host,
+  findExposedVisitors,
+  onExposureWarning,
+} = require('./redis');
+console.log(graphName, host);
 
 const PORT = process.env.PORT || 3000;
 
 const dirPath = path.join(__dirname, './dist');
 console.log(dirPath);
-
+store.print();
 const server = express()
   .use(serveStatic(dirPath))
   .listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`));
@@ -29,7 +35,11 @@ const io = socketIO(server);
 
 io.use((socket, next) => {
   const { sessionID, userID, username } = socket.handshake.auth;
-  console.log(sessionID, userID, username);
+  console.log(
+    sessionID || 'No stored session',
+    userID || 'No userID',
+    username || 'No username'
+  );
 
   // if first connection, prompt client for a username
   if (!username) {
@@ -38,7 +48,7 @@ io.use((socket, next) => {
 
   // else see if we have a session for the username
   if (sessionID) {
-    const session = store(sessionID);
+    const session = store.get(sessionID);
     console.log('Saved session?', session);
 
     // if we have seen this session before, ensure the client uses the same
@@ -78,8 +88,8 @@ io.on('connection', (socket) => {
     connected: true,
   });
   console.log(
-    `Sessions after adding ${socket.sessionID}`,
-    store(socket.sessionID)
+    `Binding Session: ${socket.sessionID} to socket ${socket.id}:`,
+    store.print(socket.sessionID)
   );
 
   console.log('Returning session data to client');
@@ -100,7 +110,7 @@ io.on('connection', (socket) => {
   socket.join(socket.userID);
 
   // fetch existing users
-  const users = [...Object.entries(store())];
+  const users = [...Object.entries(store.all())];
   // send users back to client so they know how widespread LCT usage is
   // (the more users are active, the safer the community)
   socket.emit('users', users);
@@ -129,47 +139,38 @@ io.on('connection', (socket) => {
   //  2) server queries redisGraph for anyone connected to the positive case (ignoring the immunity some might have)
   //  3) returns the number of possible exposures to positive case
   // moving code to redis.js
-  socket.on('exposureWarning0', async (subject, ack) => {
+  // socket.on('exposureWarning1', async (subject, ack) => {
+  //   let everybody = await io.allSockets();
+  //   console.log('All Online sockets:', printJson([...everybody]));
+
+  //   socket.broadcast.emit('alertPending', socket.userID);
+  //   // General policy: use "" as query delimiters (because some values are possessive)
+  //   let query = getExposureQuery(subject);
+  //   console.log(success('Visit query:', printJson(query)));
+  //   Graph.query(query)
+  //     .then((results) => ackWarning(results, ack))
+  //     .then((results) => alertOthers(socket, results, ack))
+  //     .catch((error) => {
+  //       console.log(error);
+  //       console.log(
+  //         `Be sure there is a graph named "${nsp}" on the Redis server: ${host}`
+  //       );
+  //     });
+  // });
+  socket.on('exposureWarning', async (userID, ack) => {
     let everybody = await io.allSockets();
     console.log('All Online sockets:', printJson([...everybody]));
 
     socket.broadcast.emit('alertPending', socket.userID);
-    // General policy: use "" as query delimiters (because some values are possessive)
-    let query = getExposureQuery(subject);
-    console.log(success('Visit query:', printJson(query)));
-    Graph.query(query)
-      .then((results) => ackWarning(results, ack))
-      .then((results) => alertOthers(socket, results, ack))
-      .catch((error) => {
-        console.log(error);
-        console.log(
-          `Be sure there is a graph named "${nsp}" on the Redis server: ${host}`
+
+    onExposureWarning(userID).then((exposed) => {
+      exposed.forEach((userID) => {
+        console.log(userID);
+        findExposedVisitors(userID).then((userIDs) =>
+          alertOthers(socket, userIDs, ack)
         );
-      });
-  });
-  socket.on('exposureWarning', async (subject, ack) => {
-    let everybody = await io.allSockets();
-    console.log('All Online sockets:', printJson([...everybody]));
-
-    socket.broadcast.emit('alertPending', socket.userID);
-
-    onExposureWarning(visitor).then((r) => {
-      r.forEach((element) => {
-        // alertVisitors(element).then((r) => console.log(r));
       });
     });
-
-    let query = getExposureQuery(subject);
-    console.log(success('Visit query:', printJson(query)));
-    Graph.query(query)
-      .then((results) => ackWarning(results, ack))
-      .then((results) => alertOthers(socket, results, ack))
-      .catch((error) => {
-        console.log(error);
-        console.log(
-          `Be sure there is a graph named "${nsp}" on the Redis server: ${host}`
-        );
-      });
   });
 
   socket.on('logVisit', (data, ack) => {
@@ -187,7 +188,7 @@ io.on('connection', (socket) => {
       .catch((error) => {
         console.log(error);
         console.log(
-          `Be sure there is a graph named "${nsp}" on the Redis server: ${host}`
+          `Be sure there is a graph named "${graphName}" on the Redis server: ${host}`
         );
       });
   });
@@ -200,12 +201,12 @@ io.on('connection', (socket) => {
       socket.broadcast.emit('user disconnected', socket.userID);
       // update the connection status of the session
 
-      store(socket.sessionID, {
+      store.set(socket.sessionID, {
         userID: socket.userID,
         username: socket.username,
         connected: false,
       });
-      console.log(`Sessions after adding ${socket.sessionID}`, store());
+      console.log(`Sessions after adding ${socket.sessionID}`, store.print());
     }
     console.groupCollapsed('users after disconnect');
     console.log(users);
@@ -228,13 +229,19 @@ function getLogQuery(data) {
 }
 
 // this query gets called for each exposed visit date for a given subject
-function getExposureQuery(subject) {
-  // in full development we should query on userID and leave userName out of the graph altogether
-  let query = `MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) `;
-  query += `WHERE a1.name = "${subject}" AND a2.name <> "${subject}" `;
-  query += `RETURN a2.userID`;
-  return query;
-}
+// function getExposureQuery(subject) {
+// in full development we should query on userID and leave userName out of the graph altogether
+// let query = `MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) `;
+// query += `WHERE a1.name = "${subject}" AND a2.name <> "${subject}" `;
+// query += `RETURN a2.userID`;
+
+//   let q = `MATCH (a1:visitor{name:'${subject}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor)
+//     WHERE a2.name <> a1.name
+//     AND v2.started>=v.started
+//     RETURN a2.userID`; //a2.name, id(a2), s.name, id(s), v.started, id(v), v2.started, id(v2)`;
+
+//   return q;
+// }
 
 const ackWarning = (results, ack) => {
   const ret = `Alerting ${results._resultsCount} other visitors.`;
@@ -247,9 +254,10 @@ const ackWarning = (results, ack) => {
   return results;
 };
 
-const alertOthers = (socket, results, ack) => {
+const alertOthers = (socket, alerts, ack) => {
+  // alerts is an array of userIDs
   const msg = 'Please get tested. Quarantine, if necessary.';
-  const alerts = results._results.flatMap((v) => v._values);
+  // const alerts = results._results.flatMap((v) => v._values);
   alerts.forEach((to) => {
     io.in(socket.userID)
       .allSockets()
@@ -258,7 +266,7 @@ const alertOthers = (socket, results, ack) => {
           cache.set(to);
           console.log('Cache:', printJson(cache));
         } else {
-          console.log('Alerting:', to);
+          console.log('Alerting:', to); // to is a userID (of the exposed visitor)
           socket.in(to).emit(
             'exposureAlert',
             msg,

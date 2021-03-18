@@ -295,7 +295,7 @@ export default {
     },
 
     onSendExposureWarning() {
-      socket.emit('exposureWarning', this.username, (results) =>
+      socket.emit('exposureWarning', this.userID, (results) =>
         this.auditor.logEntry(`exposureWarning results: ${printJson(results)}`)
       );
     },

@@ -9,20 +9,27 @@ const options = {
 // const { graphName } = require('./config.js');
 const graphName = 'Sisters';
 const Graph = new RedisGraph(graphName, null, null, options);
-const DEBUG = 1;
+const DEBUG = 0;
 
-module.exports = { Graph, graphName, host, alertVisitors, onExposureWarning };
+module.exports = {
+  Graph,
+  graphName,
+  host,
+  findExposedVisitors,
+  onExposureWarning,
+};
 
-function alertVisitors(name, subject = false) {
+function findExposedVisitors(userID, subject = false) {
+  console.log(`in findExposedVisitors(${userID})`);
   let promise = new Promise(function (resolve) {
     Graph.query(
-      `MATCH (a:visitor{name:'${name}'})-[v:visited]->(s:space)
-    RETURN a.name, id(a), s.name, id(s), v.started, id(v), id(s)`
+      `MATCH (a:visitor{userID:'${userID}'})-[v:visited]->(s:space)
+    RETURN a.userID, a.name, id(a), s.name, id(s), v.started, id(v), id(s)`
     ).then((res) => {
       console.log(`\n${subject ? 'Patient Zero' : 'Exposed'}:`);
 
       const rec = res._results[0];
-      console.log(rec.get('id(a)'), rec.get('a.name'), 'visited:');
+      console.log(rec.get('id(a)'), userID, rec.get('a.name'), 'visited:');
 
       while (res.hasNext()) {
         let record = res.next();
@@ -54,15 +61,15 @@ function alertVisitors(name, subject = false) {
   return promise;
 }
 
-function onExposureWarning(subject) {
+function onExposureWarning(userID) {
   let promise = new Promise(function (resolve) {
     Graph.query(
-      `MATCH (a1:visitor{name:'${subject}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor) 
+      `MATCH (a1:visitor{userID:'${userID}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor) 
     WHERE a2.name <> a1.name 
     AND v2.started>=v.started
-    RETURN a2.name, id(a2), s.name, id(s), v.started, id(v), v2.started, id(v2)`
+    RETURN a2.userID, a2.name, id(a2), s.name, id(s), v.started, id(v), v2.started, id(v2)`
     ).then((res) => {
-      console.log(`\nVisits on or after exposure by ${subject}:`);
+      console.log(`\nVisits on or after exposure by ${userID}:`);
       // console.log(
       //   '123456791123456789212345679012345678931234567901234567894123456795123456789612345678981234567899123456789100'
       // );
@@ -74,9 +81,7 @@ function onExposureWarning(subject) {
         let vid = record.get('id(v2)');
         let sid = record.get('id(s)');
 
-        let visit = record.get('v2.started') + ' = ' + date;
         let name = record.get('a2.name');
-        let v = visit.length;
         console.log(
           aid < 10 ? ' ' : '',
           aid,
@@ -118,10 +123,10 @@ if (DEBUG) {
   ];
   // execute tests
   const visitor = visitors[5];
-  alertVisitors(visitor, true);
+  findExposedVisitors(visitor, true);
   onExposureWarning(visitor).then((exposed) => {
     exposed.forEach((name) => {
-      alertVisitors(name).then((ack) =>
+      findExposedVisitors(name).then((ack) =>
         console.log('Possible exposure(s)', ack)
       );
     });
