@@ -199,7 +199,7 @@ export default {
 
     onExposureWarning() {
       console.log(warn('emitting exposureWarning'));
-      this.auditor.logEntry(`emitting exposureWarning`);
+      this.auditor.logEntry(`emitting exposureWarning`, 'Warnings');
 
       this.$emit('sendExposureWarning');
     },

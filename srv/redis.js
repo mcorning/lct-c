@@ -9,7 +9,12 @@ const options = {
 // const { graphName } = require('./config.js');
 const graphName = 'Sisters';
 const Graph = new RedisGraph(graphName, null, null, options);
-const { printJson, warn, info, success } = require('../src/utils/colors.js');
+const {
+  printJson,
+  warn,
+  highlight,
+  success,
+} = require('../src/utils/colors.js');
 
 const DEBUG = 0;
 
@@ -22,21 +27,26 @@ module.exports = {
   onExposureWarning,
 };
 
+// see if an alerted visitor has potential alerts to share
 function findExposedVisitors(userID, subject = false) {
-  console.log(`in findExposedVisitors(${userID})`);
   let promise = new Promise(function (resolve) {
     Graph.query(
       `MATCH (a:visitor{userID:'${userID}'})-[v:visited]->(s:space)
-    RETURN a.userID, a.name, id(a), s.name, id(s), v.start, id(v), id(s)`
+    RETURN a.userID, a.name, id(a), s.name, id(s), v.start, v.end, id(v), id(s)`
     ).then((res) => {
-      console.log(`\n${subject ? 'Patient Zero' : 'Exposed'}:`);
+      if (!res._results.length) {
+        console.log(userID, 'exposed nobody');
+        return resolve(userID);
+      }
 
+      console.log(success(`\n${subject ? 'Patient Zero' : 'Exposed'}:`));
       const rec = res._results[0];
       console.log(rec.get('id(a)'), userID, rec.get('a.name'), 'visited:');
 
       while (res.hasNext()) {
         let record = res.next();
-        let date = new Date(record.get('v.start') / 1).toLocaleString();
+        let start = new Date(record.get('v.start') / 1).toLocaleString();
+        let end = new Date(record.get('v.end') / 1).toLocaleString();
         let vid = record.get('id(v)');
         let sid = record.get('id(s)');
 
@@ -47,8 +57,13 @@ function findExposedVisitors(userID, subject = false) {
           ' '.repeat(vid / 100),
           record.get('v.start'),
           '=',
-          date,
-          ' '.repeat(25 - date.length),
+          start,
+          ' '.repeat(25 - start.length),
+
+          record.get('v.end'),
+          '=',
+          end,
+          ' '.repeat(25 - end.length),
 
           sid < 10 ? ' ' : '',
           sid,
@@ -64,49 +79,88 @@ function findExposedVisitors(userID, subject = false) {
   return promise;
 }
 
+// find any visitor who's start time is between the carrier's start and end times
 function onExposureWarning(userID) {
   let promise = new Promise(function (resolve) {
-    Graph.query(
-      `MATCH (a1:visitor{userID:'${userID}'})-[v:visited]->(s:space)<-[v2:visited]-(a2:visitor) 
-    WHERE a2.name <> a1.name 
-    AND v2.start>=v.start
-    RETURN a2.userID, a2.name, id(a2), s.name, id(s), v.start, id(v), v2.start, id(v2)`
-    ).then((res) => {
-      console.log(`\nVisits on or after exposure by ${userID}:`);
+    const q = `MATCH (carrier:visitor{userID:'${userID}'})-[c:visited]->(s:space)<-[e:visited]-(exposed:visitor) 
+    WHERE (e.end>=c.start OR e.start>= c.end) 
+    AND exposed.name <> carrier.name    
+    RETURN exposed.userID, exposed.name, id(exposed), s.name, id(s), c.start, c.end, id(c),  e.start, e.end, id(e) `;
+    console.log(highlight(q));
+    Graph.query(q).then((res) => {
+      console.log(
+        warn(`
+      Visits on or after exposure by ${userID}:
+      `)
+      );
       // console.log(
       //   '123456791123456789212345679012345678931234567901234567894123456795123456789612345678981234567899123456789100'
       // );
       while (res.hasNext()) {
         let record = res.next();
-        let date = new Date(record.get('v2.start') / 1).toLocaleString();
+        let startC = new Date(record.get('c.start') / 1).toLocaleString();
+        let endC = new Date(record.get('c.end') / 1).toLocaleString();
+        let startE = new Date(record.get('e.start') / 1).toLocaleString();
+        let endE = new Date(record.get('e.end') / 1).toLocaleString();
 
-        let aid = record.get('id(a2)');
-        let vid = record.get('id(v2)');
-        let sid = record.get('id(s)');
+        // let exposedId = record.get('id(exposed)');
+        // let eid = record.get('id(e)');
+        // let sid = record.get('id(s)');
 
-        let name = record.get('a2.name');
+        let name = record.get('exposed.name');
+
         console.log(
-          aid < 10 ? ' ' : '',
-          aid,
-
           name,
-          ' '.repeat(15 - name.length),
-
-          vid < 10 ? ' ' : '',
-          vid,
-          record.get('v.start'),
-          '=',
-          date,
-          ' '.repeat(25 - date.length),
-
-          sid < 10 ? ' ' : '',
-          sid,
-          record.get('s.name')
+          'left',
+          record.get('e.end') >= record.get('c.start') ? 'after' : 'before',
+          'carrier arrived'
         );
+        console.log(endE, startC);
+
+        console.log(
+          name,
+          'arrived',
+          record.get('e.start') <= record.get('c.end') ? 'before' : 'after',
+          'carrier left'
+        );
+        console.log(startE, endC);
+        console.log(' ');
+        // console.log(
+        //   exposedId < 10 ? ' ' : '',
+        //   exposedId,
+
+        //   name,
+        //   ' '.repeat(15 - name.length),
+
+        //   eid < 10 ? ' ' : '',
+        //   eid,
+        //   record.get('c.start'),
+        //   '=',
+        //   startC,
+        //   ' '.repeat(25 - startC.length),
+        //   record.get('c.end'),
+        //   '=',
+        //   endC,
+        //   ' '.repeat(25 - endC.length),
+
+        //   record.get('e.start'),
+        //   '=',
+        //   startE,
+        //   ' '.repeat(25 - startE.length),
+        //   record.get('e.end'),
+        //   '=',
+        //   endE,
+        //   ' '.repeat(25 - endE.length),
+
+        //   sid < 10 ? ' ' : '',
+        //   sid,
+        //   record.get('s.name')
+        // );
       }
       const visitors = [
         ...new Set(res._results.map((v) => v._values).map((v) => v[0])),
       ];
+      printJson(visitors);
       resolve(visitors);
     });
   });
@@ -120,7 +174,7 @@ function logVisit(data, ack) {
   const { username, userID, selectedSpace, start, end } = data;
   let query = `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
   MERGE (s:space{ name: "${selectedSpace}"}) 
-  MERGE (v)-[:visited{start:${start}}]->(s)`;
+  MERGE (v)-[:visited{start:${start}, end:${end}}]->(s)`;
   console.log(warn('Visit query:', query));
   Graph.query(query)
     .then((results) => {
@@ -208,8 +262,8 @@ Spaces visited:
 MATCH  (:visitor{name:'Phone'})-[v:visited]->(s:space) RETURN  s.name, id(s), v.start
 
 
-MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Mphone' AND a2.name <> 'Mpnone' AND v.start='3/10/2021' RETURN a2.name, s.name
+MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Mphone' AND eexposed.name <> 'Mpnone' AND v.start='3/10/2021' RETURN eexposed.name, s.name
 useing DateTime:
-MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Tab hunter' AND a2.name <> 'Tab hunter' AND v.start='1615516200000' RETURN a2.name, s.name
+MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Tab hunter' AND eexposed.name <> 'Tab hunter' AND v.start='1615516200000' RETURN eexposed.name, s.name
 */
 //#endregion

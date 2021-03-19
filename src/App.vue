@@ -63,11 +63,12 @@
       top
       :value="alertPending"
       :timeout="-1"
-      color="orange darken-2"
+      color="orange darken-3"
       vertical
       dark
+      max-width="400"
     >
-      <v-card dark color="orange" v-if="alertPending">
+      <v-card dark color="orange darken-1" v-if="alertPending">
         <v-card-title>COVID-19 Detected</v-card-title>
         <v-card-subtitle>
           Someone in your community has tested positive for COVID-19.
@@ -87,14 +88,15 @@
 
     <!-- Alert Snackbar -->
     <v-snackbar
-      centered
       :value="exposureAlert"
       :timeout="-1"
-      color="red darken-1"
+      color="red darken-3"
       vertical
+      centered
       dark
+      max-width="400"
     >
-      <v-card dark color="red darken-3" v-if="exposureAlert">
+      <v-card dark color="red darken-1" v-if="exposureAlert">
         <v-card-title>COVID-19 Exposure Alert</v-card-title>
         <v-card-subtitle>
           You shared space recently with someone who tested positive
@@ -285,18 +287,26 @@ export default {
         userID: socket.userID,
         selectedSpace: visit.name,
         start: visit.start,
+        end: visit.end,
       };
-      this.auditor.logEntry(`Visit query: ${printJson(query)}`);
+      this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
 
+      // send the visit to the server
       socket.emit('logVisit', query, (results) => {
-        this.auditor.logEntry(`Log Visit Results: ${printJson(results)}`);
+        this.auditor.logEntry(
+          `Log Visit Results: ${printJson(results)}`,
+          'Log Visit'
+        );
         this.hasSaved = true;
       });
     },
 
     onSendExposureWarning() {
       socket.emit('exposureWarning', this.userID, (results) =>
-        this.auditor.logEntry(`exposureWarning results: ${printJson(results)}`)
+        this.auditor.logEntry(
+          `exposureWarning results: ${printJson(results)}`,
+          'Warnings'
+        )
       );
     },
 
