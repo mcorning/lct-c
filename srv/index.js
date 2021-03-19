@@ -4,13 +4,13 @@ const serveStatic = require('serve-static');
 const crypto = require('crypto');
 const randomId = () => crypto.randomBytes(8).toString('hex');
 
-const store = require('./store');
-
-const cache = new Map();
-
 const path = require('path');
 
 const { printJson, warn, info, success } = require('../src/utils/colors.js');
+
+const { Cache } = require('./Cache.js');
+const sessionCache = new Cache(__dirname + '/sessions.json');
+const alertsCache = new Cache(__dirname + '/alerts.json');
 
 const {
   graphName, // mapped to client nsp (aka namespace or community name)
@@ -29,7 +29,7 @@ console.log('social graph:', graphName);
 console.log('redis host:', host);
 console.log('pwd:', dirPath);
 // list past sessions (all should be connected:false)
-store.print(null, 'Past Sessions:');
+sessionCache.print(null, 'Past Sessions:');
 
 const server = express()
   .use(serveStatic(dirPath))
@@ -56,8 +56,8 @@ io.use((socket, next) => {
 
   // see if we have a session for the username
   if (sessionID) {
-    const session = store.get(sessionID);
-    store.print(session, 'Rehydrated session:');
+    const session = sessionCache.get(sessionID);
+    sessionCache.print(session, 'Rehydrated session:');
 
     // if we have seen this session before, ensure the client uses the same
     // userID and username used in the last session
@@ -91,16 +91,17 @@ io.on('connection', (socket) => {
   const { id: socketID, sessionID, userID, username } = socket;
   //#region Handling socket connection
   console.log('Client connected on socket ', socketID);
-  store.set(sessionID, {
+  sessionCache.set(sessionID, {
     userID: userID,
     username: username,
+    lastInteraction: new Date().toLocaleString(),
     connected: true,
   });
-  console.log(
-    `Binding Session: ${sessionID} to socket ${socketID}:`,
-    store.print(sessionID)
-  );
 
+  sessionCache.print(
+    sessionID,
+    `Binding Session: ${sessionID} to socket ${socketID}:`
+  );
   console.log('Returning session data to client');
 
   // emit session details so the client can store the session in localStorage
@@ -118,26 +119,26 @@ io.on('connection', (socket) => {
   // we send alerts using the userID stored in redisGraph for visitors
   socket.join(userID);
 
-  if (cache.has(userID)) {
+  if (alertsCache.has(userID)) {
     const msg = 'Your warning was cached, and now you have it.';
     // sending to individual socketid (private message)
     io.to(socketID).emit('exposureAlert', msg);
+    alertsCache.delete(userID);
+    alertsCache.print();
   }
+  console.groupEnd();
   //#endregion Handling socket connection
 
   //#region Handling Users
   // fetch existing users
-  const users = [...Object.entries(store.all())];
+  // const users = [...Object.entries(sessionCache.all())];
+  const users = sessionCache.all();
   // send users back to client so they know how widespread LCT usage is
   // (the more users are active, the safer the community)
   socket.emit('users', users);
-
-  console.groupCollapsed('Online users:');
-  console.log(printJson(users));
-
-  let onlineUsers = users.length;
-  console.log('onlineUsers: ', onlineUsers);
-
+  const onlineUsers = users.filter((v) => v[1].connected);
+  console.groupCollapsed(`There are ${onlineUsers.length} online users:`);
+  console.log(printJson(onlineUsers));
   console.groupEnd();
 
   // notify existing users (this is only important if use has opted in to LCT Private Messaging)
@@ -183,19 +184,18 @@ io.on('connection', (socket) => {
       socket.broadcast.emit('user disconnected', socket.userID);
       // update the connection status of the session
 
-      store.set(socket.sessionID, {
+      sessionCache.set(socket.sessionID, {
         userID: socket.userID,
         username: socket.username,
+        lastInteraction: new Date().toLocaleString(),
         connected: false,
       });
-      console.log(`Sessions after disconnecting ${socket.sessionID}:`);
-      store.print();
+      const online = sessionCache.all().filter((v) => v[1].connected);
+      console.log(
+        `There are ${online.length} online sessions after disconnecting ${socket.sessionID}:`
+      );
+      console.log(printJson(online));
     }
-    console.groupCollapsed(
-      `There are ${users.length} users after this disconnect`
-    );
-    console.log(users);
-    console.groupEnd();
   });
 });
 
@@ -217,10 +217,11 @@ const alertOthers = (socket, alerts, ack) => {
   alerts.forEach((to) => {
     if (io.sockets.adapter.rooms.has(to)) {
       sendExposureAlert(to, msg);
+      alertsCache.delete(to);
     } else {
-      cache.set(to);
-      console.log('Cache:', printJson([...cache]));
+      alertsCache.set(to);
     }
+    alertsCache.print(null, 'Cache:');
   });
 
   // const ackWarning = (results, ack) => {
