@@ -149,6 +149,7 @@ import calendarCard from '@/components/cards/calendarCard';
 import { data } from '@/maps/communityData.json';
 
 export default {
+  // props passed in by Visitor.vue
   props: {
     easing: String,
     favorites: Array,

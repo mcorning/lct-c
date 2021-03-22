@@ -1,16 +1,16 @@
-const express = require('express');
-const socketIO = require('socket.io');
-const serveStatic = require('serve-static');
-const crypto = require('crypto');
-const randomId = () => crypto.randomBytes(8).toString('hex');
+const express = require("express");
+const socketIO = require("socket.io");
+const serveStatic = require("serve-static");
+const crypto = require("crypto");
+const randomId = () => crypto.randomBytes(8).toString("hex");
 
-const path = require('path');
+const path = require("path");
 
-const { printJson, warn, info, success } = require('../src/utils/colors.js');
+const { printJson, warn, info, success } = require("../src/utils/colors.js");
 
-const { Cache } = require('./Cache.js');
-const sessionCache = new Cache(__dirname + '/sessions.json');
-const alertsCache = new Cache(__dirname + '/alerts.json');
+const { Cache } = require("./Cache.js");
+const sessionCache = new Cache(__dirname + "/sessions.json");
+const alertsCache = new Cache(__dirname + "/alerts.json");
 
 const {
   graphName, // mapped to client nsp (aka namespace or community name)
@@ -18,18 +18,19 @@ const {
   findExposedVisitors,
   logVisit,
   onExposureWarning,
-} = require('./redis');
+} = require("./redis");
+const { toUnicode } = require("punycode");
 
 const PORT = process.env.PORT || 3000;
 
-const dirPath = path.join(__dirname, './dist');
+const dirPath = path.join(__dirname, "./dist");
 
 console.log(new Date().toLocaleString());
-console.log('social graph:', graphName);
-console.log('redis host:', host);
-console.log('pwd:', dirPath);
+console.log("social graph:", graphName);
+console.log("redis host:", host);
+console.log("pwd:", dirPath);
 // list past sessions (all should be connected:false)
-sessionCache.print(null, 'Past Sessions:');
+sessionCache.print(null, "Past Sessions:");
 
 const server = express()
   .use(serveStatic(dirPath))
@@ -41,23 +42,23 @@ io.use((socket, next) => {
   const { sessionID, userID, username } = socket.handshake.auth;
   console.log(
     warn(
-      sessionID || 'No stored session',
-      '\t',
-      userID || 'No userID',
-      '\t',
-      username || 'No username'
+      sessionID || "No stored session",
+      "\t",
+      userID || "No userID",
+      "\t",
+      username || "No username"
     )
   );
 
   // if first connection, prompt client for a username
-  // if (!username) {
-  //   return next(new Error('No username'));
-  // }
+  if (!username) {
+    return next(new Error("No username"));
+  }
 
   // see if we have a session for the username
   if (sessionID) {
     const session = sessionCache.get(sessionID);
-    sessionCache.print(session, 'Rehydrated session:');
+    sessionCache.print(session, "Rehydrated session:");
 
     // if we have seen this session before, ensure the client uses the same
     // userID and username used in the last session
@@ -65,16 +66,16 @@ io.use((socket, next) => {
       socket.sessionID = sessionID;
       socket.userID = session.userID;
       socket.username = session.username;
-      console.groupCollapsed('Handshake: Known party');
+      console.groupCollapsed("Handshake: Known party");
       console.log(warn(`LEAVING io.use() with  ${sessionID}'s session data.`));
       return next();
     }
   }
 
   // otherwise, setup the new user...
-  console.log('\n', info(new Date().toLocaleString()));
-  console.groupCollapsed('Handshake: Known party');
-  console.log('Assigning new sessionID and userID for', username);
+  console.log("\n", info(new Date().toLocaleString()));
+  console.group("Handshake: Known party");
+  console.log("Assigning new sessionID and userID for", username);
 
   //...with a userID, and a sessionID
   socket.sessionID = randomId(); // these values gets attached to the socket so the client knows which session has their data and messages
@@ -82,15 +83,15 @@ io.use((socket, next) => {
 
   socket.username = username; // username is fixed by client
 
-  console.log(success('Leaving io.use()'));
+  console.log(success("Leaving io.use()"));
   // handle the connection, storing and returning the session data to client for storage.
   next();
 });
 
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   const { id: socketID, sessionID, userID, username } = socket;
   //#region Handling socket connection
-  console.log('Client connected on socket ', socketID);
+  console.log("Client connected on socket ", socketID);
   sessionCache.set(sessionID, {
     userID: userID,
     username: username,
@@ -102,10 +103,10 @@ io.on('connection', (socket) => {
     sessionID,
     `Binding Session: ${sessionID} to socket ${socketID}:`
   );
-  console.log('Returning session data to client');
+  console.log("Returning session data to client");
 
   // emit session details so the client can store the session in localStorage
-  socket.emit('session', {
+  socket.emit("session", {
     sessionID: sessionID,
     userID: userID,
     username: username,
@@ -120,9 +121,9 @@ io.on('connection', (socket) => {
   socket.join(userID);
 
   if (alertsCache.has(userID)) {
-    const msg = 'Your warning was cached, and now you have it.';
+    const msg = "Your warning was cached, and now you have it.";
     // sending to individual socketid (private message)
-    io.to(socketID).emit('exposureAlert', msg);
+    io.to(socketID).emit("exposureAlert", msg);
     alertsCache.delete(userID);
     alertsCache.print();
   }
@@ -135,19 +136,19 @@ io.on('connection', (socket) => {
   const users = sessionCache.all();
   // send users back to client so they know how widespread LCT usage is
   // (the more users are active, the safer the community)
-  socket.emit('users', users);
+  socket.emit("users", users);
   const onlineUsers = users.filter((v) => v[1].connected);
   console.groupCollapsed(`There are ${onlineUsers.length} online users:`);
   console.log(printJson(onlineUsers));
   console.groupEnd();
 
   // notify existing users (this is only important if use has opted in to LCT Private Messaging)
-  socket.broadcast.emit('user connected', {
+  socket.broadcast.emit("user connected", {
     userID: userID,
     username: username,
     connected: true,
   });
-  console.log('Leaving io.on(connect)');
+  console.log("Leaving io.on(connect)");
   console.groupEnd();
   //#endregion Handling Users
 
@@ -156,15 +157,15 @@ io.on('connection', (socket) => {
   //  1) broadcasts message to all users (online only?) when a case of covid is found in the community
   //  2) redisGraph queries for anyone connected to the positive case (ignoring the immunity some might have)
   //  3) returns the number of possible exposures to positive case
-  socket.on('exposureWarning', async (userID, ack) => {
+  socket.on("exposureWarning", async (userID, ack) => {
     let everybody = await io.allSockets();
-    console.log('All Online sockets:', printJson([...everybody]));
+    console.log("All Online sockets:", printJson([...everybody]));
 
-    socket.broadcast.emit('alertPending', socket.userID);
+    socket.broadcast.emit("alertPending", socket.userID);
 
     onExposureWarning(userID).then((exposed) => {
       exposed.forEach((userID) => {
-        console.log(warn('Processing '), userID);
+        console.log(warn("Processing "), userID);
         findExposedVisitors(userID).then((userIDs) =>
           alertOthers(socket, userIDs, ack)
         );
@@ -172,16 +173,23 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('logVisit', (data, ack) => {
-    logVisit(data, ack);
+  socket.on("logVisit", (data, ack) => {
+    // call the graph
+    console.log(printJson(data));
+    // ack gets set logVisit and passed along to App.vue here
+    // TODO:make logVisit into a Promise
+    logVisit(data, (res) => {
+      console.log(res);
+      ack(res);
+    });
   });
 
-  socket.on('disconnect', async () => {
+  socket.on("disconnect", async () => {
     const matchingSockets = await io.in(socket.userID).allSockets();
     const isDisconnected = matchingSockets.size === 0;
     if (isDisconnected) {
       // notify other users
-      socket.broadcast.emit('user disconnected', socket.userID);
+      socket.broadcast.emit("user disconnected", socket.userID);
       // update the connection status of the session
 
       sessionCache.set(socket.sessionID, {
@@ -203,25 +211,25 @@ const alertOthers = (socket, alerts, ack) => {
   // alerts is an array of userIDs
 
   const sendExposureAlert = (to, msg) => {
-    console.log('Alerting:', to); // to is a userID (of the exposed visitor)
+    console.log("Alerting:", to); // to is a userID (of the exposed visitor)
     socket.in(to).emit(
-      'exposureAlert',
+      "exposureAlert",
       msg,
-      ack((res) => {
-        console.log(success(res, 'confirms'));
+      ack((socketID) => {
+        console.log(success(socketID, "confirms"));
       })
     );
   };
 
-  const msg = 'Please get tested. Quarantine, if necessary.';
+  const msg = "Please get tested. Quarantine, if necessary.";
   alerts.forEach((to) => {
     if (io.sockets.adapter.rooms.has(to)) {
       sendExposureAlert(to, msg);
       alertsCache.delete(to);
     } else {
-      alertsCache.set(to);
+      alertsCache.set(to, { cached: new Date() });
     }
-    alertsCache.print(null, 'Cache:');
+    alertsCache.print(null, "Cache:");
   });
 
   // const ackWarning = (results, ack) => {

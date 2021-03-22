@@ -14,10 +14,12 @@
           absolute
           top
           right
-          @click="$emit('exposureWarning')"
+          :disabled="!hasMessages"
+          @click="warnThem"
         >
           <v-icon dark> mdi-alert </v-icon></v-btn
         >
+
         <div class="d-none d-sm-block">
           <v-list-item-subtitle
             >Log each public space you visit.</v-list-item-subtitle
@@ -34,8 +36,10 @@
 
 <script>
 export default {
+  // props passed in by Visitor.vue
   props: {
     nickname: String,
+    hasMessages: Boolean,
   },
   computed: {
     small() {
@@ -43,6 +47,11 @@ export default {
     },
     vclass() {
       return this.$vuetify.breakpoint.sm ? 'mt-8' : 'mt-6';
+    },
+  },
+  methods: {
+    warnThem() {
+      this.$emit('exposureWarning');
     },
   },
 };

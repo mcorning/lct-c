@@ -39,7 +39,11 @@
       </v-card>
     </v-dialog>
 
-    <diaryCard :nickname="nickname" @exposureWarning="onExposureWarning" />
+    <diaryCard
+      :nickname="nickname"
+      :hasMessages="!!messages.length"
+      @exposureWarning="onExposureWarning"
+    />
 
     <!-- roomCard -->
     <v-row no-gutters>
@@ -94,6 +98,7 @@ import roomCard from '@/components/cards/roomCard';
 export default {
   name: 'Lct-C',
 
+  // props passed in by App.vue
   props: {
     showLogs: Boolean,
     nickname: String,

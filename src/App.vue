@@ -34,8 +34,15 @@
           >
         </v-col>
         <v-spacer></v-spacer>
-        <v-col cols="auto" class="text-right"
-          ><v-card-title>Local Contact Tracing </v-card-title>
+        <v-col cols="auto" class="text-right">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <v-card-title v-bind="attrs" v-on="on" @click="hardRefresh"
+                >Local Contact Tracing
+              </v-card-title>
+            </template>
+            <span>Hard refresh LCT</span></v-tooltip
+          >
         </v-col>
       </v-row>
     </v-app-bar>
@@ -146,6 +153,9 @@
         </template>
         <span>Version of LCT-C</span></v-tooltip
       >
+      <v-btn small text @click="hardRefresh"
+        ><v-icon>mdi-refresh</v-icon>
+      </v-btn>
       <v-spacer></v-spacer>
       <v-tooltip top>
         <template v-slot:activator="{ on, attrs }">
@@ -269,6 +279,10 @@ export default {
     };
   },
   methods: {
+    hardRefresh() {
+      window.location.reload(true);
+    },
+
     onConnectionStatusChanged(val) {
       this.connectionStatus = val;
     },
@@ -276,6 +290,8 @@ export default {
     onUsernameSelection({ username, sessionID }) {
       this.usernameAlreadySelected = true;
       this.username = username;
+      console.log('onUsernameSelection()', this.username);
+
       socket.auth = { username, sessionID };
       socket.connect();
     },
@@ -332,7 +348,7 @@ export default {
   created() {
     this.sessionID = localStorage.getItem('sessionID');
     this.username = localStorage.getItem('username');
-
+    console.log('created()', this.username);
     if (this.sessionID) {
       this.usernameAlreadySelected = true;
       // this.sid = sessionID;
@@ -343,6 +359,7 @@ export default {
 
     socket.on('connect', () => {
       this.auditor.logEntry(`Socket ${socket.id} connected`);
+      this.auditor.logEntry(`updateExists: ${this.updateExists}`, 'PWA');
     });
 
     socket.on('session', ({ sessionID, userID, username, graphName }) => {
@@ -355,15 +372,14 @@ export default {
       socket.userID = userID;
       // this.sid = sessionID;
       this.username = username;
+      console.log('on Session', this.username);
+
       this.userID = userID;
       this.graphName = graphName;
     });
 
     socket.on('connect_error', (err) => {
       this.usernameAlreadySelected = err.message != 'No username';
-
-      console.log(error(err.message));
-      this.auditor.logEntry(err.message);
     });
 
     socket.on('exposureAlert', (alert, ack) => {
@@ -422,7 +438,6 @@ export default {
 
   async mounted() {
     this.overlay = false;
-    this.auditor.logEntry(`updateExists: ${this.updateExists}`);
     console.log('Visitor.vue mounted');
   },
   //#endregion

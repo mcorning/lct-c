@@ -22,7 +22,9 @@ if (process.env.NODE_ENV === 'production') {
       console.log('New content is downloading.');
     },
     updated() {
-      console.log('New content is available; please refresh.');
+      console.log(
+        'New content is available; please do a hard refresh or click the Update button on the Update dialog.'
+      );
     },
     offline() {
       console.log(

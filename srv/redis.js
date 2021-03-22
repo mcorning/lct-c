@@ -1,20 +1,20 @@
 //https://github.com/RedisGraph/redisgraph.js
-const RedisGraph = require('redisgraph.js').Graph;
-const host = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
+const RedisGraph = require("redisgraph.js").Graph;
+const host = "redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com";
 const options = {
   host: host,
   port: 11939,
-  password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
+  password: "7B3DId42aDCtMjmSXg7VN0XZSMOItGAG",
 };
 // const { graphName } = require('./config.js');
-const graphName = 'Sisters';
+const graphName = "Sisters";
 const Graph = new RedisGraph(graphName, null, null, options);
 const {
   printJson,
   warn,
   highlight,
   success,
-} = require('../src/utils/colors.js');
+} = require("../src/utils/colors.js");
 
 const DEBUG = 0;
 
@@ -35,39 +35,39 @@ function findExposedVisitors(userID, subject = false) {
     RETURN a.userID, a.name, id(a), s.name, id(s), v.start, v.end, id(v), id(s)`
     ).then((res) => {
       if (!res._results.length) {
-        console.log(userID, 'exposed nobody');
+        console.log(userID, "exposed nobody");
         return resolve(userID);
       }
 
-      console.log(success(`\n${subject ? 'Patient Zero' : 'Exposed'}:`));
+      console.log(success(`\n${subject ? "Patient Zero" : "Exposed"}:`));
       const rec = res._results[0];
-      console.log(rec.get('id(a)'), userID, rec.get('a.name'), 'visited:');
+      console.log(rec.get("id(a)"), userID, rec.get("a.name"), "visited:");
 
       while (res.hasNext()) {
         let record = res.next();
-        let start = new Date(record.get('v.start') / 1).toLocaleString();
-        let end = new Date(record.get('v.end') / 1).toLocaleString();
-        let vid = record.get('id(v)');
-        let sid = record.get('id(s)');
+        let start = new Date(record.get("v.start") / 1).toLocaleString();
+        let end = new Date(record.get("v.end") / 1).toLocaleString();
+        let vid = record.get("id(v)");
+        let sid = record.get("id(s)");
 
         console.log(
-          ' '.repeat(19),
-          vid < 10 ? ' ' : '',
+          " ".repeat(19),
+          vid < 10 ? " " : "",
           vid,
-          ' '.repeat(vid / 100),
-          record.get('v.start'),
-          '=',
+          " ".repeat(vid / 100),
+          record.get("v.start"),
+          "=",
           start,
-          ' '.repeat(25 - start.length),
+          " ".repeat(25 - start.length),
 
-          record.get('v.end'),
-          '=',
+          record.get("v.end"),
+          "=",
           end,
-          ' '.repeat(25 - end.length),
+          " ".repeat(25 - end.length),
 
-          sid < 10 ? ' ' : '',
+          sid < 10 ? " " : "",
           sid,
-          record.get('s.name')
+          record.get("s.name")
         );
       }
       const others = [
@@ -98,33 +98,33 @@ function onExposureWarning(userID) {
       // );
       while (res.hasNext()) {
         let record = res.next();
-        let startC = new Date(record.get('c.start') / 1).toLocaleString();
-        let endC = new Date(record.get('c.end') / 1).toLocaleString();
-        let startE = new Date(record.get('e.start') / 1).toLocaleString();
-        let endE = new Date(record.get('e.end') / 1).toLocaleString();
+        let startC = new Date(record.get("c.start") / 1).toLocaleString();
+        let endC = new Date(record.get("c.end") / 1).toLocaleString();
+        let startE = new Date(record.get("e.start") / 1).toLocaleString();
+        let endE = new Date(record.get("e.end") / 1).toLocaleString();
 
         // let exposedId = record.get('id(exposed)');
         // let eid = record.get('id(e)');
         // let sid = record.get('id(s)');
 
-        let name = record.get('exposed.name');
+        let name = record.get("exposed.name");
 
         console.log(
           name,
-          'left',
-          record.get('e.end') >= record.get('c.start') ? 'after' : 'before',
-          'carrier arrived'
+          "left",
+          record.get("e.end") >= record.get("c.start") ? "after" : "before",
+          "carrier arrived"
         );
         console.log(endE, startC);
 
         console.log(
           name,
-          'arrived',
-          record.get('e.start') <= record.get('c.end') ? 'before' : 'after',
-          'carrier left'
+          "arrived",
+          record.get("e.start") <= record.get("c.end") ? "before" : "after",
+          "carrier left"
         );
         console.log(startE, endC);
-        console.log(' ');
+        console.log(" ");
         // console.log(
         //   exposedId < 10 ? ' ' : '',
         //   exposedId,
@@ -168,6 +168,7 @@ function onExposureWarning(userID) {
   return promise;
 }
 
+// delegated in index.js to handle socket.on('logVisit')
 // Example query:
 // MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{start:'1615856400000'}]->(s)
 function logVisit(data, ack) {
@@ -175,32 +176,30 @@ function logVisit(data, ack) {
   let query = `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
   MERGE (s:space{ name: "${selectedSpace}"}) 
   MERGE (v)-[:visited{start:${start}, end:${end}}]->(s)`;
-  console.log(warn('Visit query:', query));
+  console.log(warn("Visit query:", query));
   Graph.query(query)
     .then((results) => {
       const stats = results._statistics._raw;
       console.log(`stats: ${printJson(stats)}`);
       if (ack) {
-        ack(stats);
+        ack({ logged: true });
       }
     })
     .catch((error) => {
       console.log(error);
-      console.log(
-        `Be sure there is a graph named "${graphName}" on the Redis server: ${host}`
-      );
+      ack({ logged: true, error: error });
     });
 }
 
 if (DEBUG) {
   const visitors = [
-    'c23po',
-    'Coffee Girl',
-    'hero',
-    'Ladydowling',
-    'Mphone',
-    'Phone',
-    'Tab hunter',
+    "c23po",
+    "Coffee Girl",
+    "hero",
+    "Ladydowling",
+    "Mphone",
+    "Phone",
+    "Tab hunter",
   ];
   // execute tests
   const visitor = visitors[5];
@@ -208,7 +207,7 @@ if (DEBUG) {
   onExposureWarning(visitor).then((exposed) => {
     exposed.forEach((name) => {
       findExposedVisitors(name).then((ack) =>
-        console.log('Possible exposure(s)', ack)
+        console.log("Possible exposure(s)", ack)
       );
     });
   });

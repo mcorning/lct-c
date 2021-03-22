@@ -1,5 +1,7 @@
 const { readFileSync, writeFileSync } = require('fs');
 const { printJson } = require('../src/utils/colors.js');
+const msPerDay = 1000 * 60 * 60 * 24;
+
 function tryParse(filepath) {
   try {
     return JSON.parse(readFileSync(filepath));
@@ -7,6 +9,10 @@ function tryParse(filepath) {
     return;
   }
 }
+
+const hasNotExpired = (firstDate) => {
+  !firstDate || (Date.now() - firstDate.getTime()) / msPerDay < 14;
+};
 
 class Cache {
   constructor(filepath) {
@@ -52,7 +58,8 @@ class Cache {
   }
 
   save() {
-    writeFileSync(this.filepath, JSON.stringify([...this.cache]));
+    const unexpired = [...this.cache].filter((v) => hasNotExpired(v.cachedOn));
+    writeFileSync(this.filepath, JSON.stringify(unexpired));
     return true;
   }
 
