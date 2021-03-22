@@ -35,14 +35,7 @@
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="auto" class="text-right">
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on, attrs }">
-              <v-card-title v-bind="attrs" v-on="on" @click="hardRefresh"
-                >Local Contact Tracing
-              </v-card-title>
-            </template>
-            <span>Hard refresh LCT</span></v-tooltip
-          >
+          <v-card-title>Local Contact Tracing </v-card-title>
         </v-col>
       </v-row>
     </v-app-bar>

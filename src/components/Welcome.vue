@@ -71,7 +71,7 @@ export default {
 
     welcomeMessage() {
       let msg = this.sessionID
-        ? `Welcome back, ${this.sessionID}`
+        ? `Welcome back to your old session, ${this.sessionID}`
         : `Welcome to Local Contact Tracing - Sisters`;
       return msg;
     },
