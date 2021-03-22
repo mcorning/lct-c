@@ -1,10 +1,11 @@
-const { readFileSync, writeFileSync } = require("fs");
-const { printJson, warn } = require("../src/utils/colors.js");
-const msPerDay = 1000 * 60 * 60 * 24;
+const { readFileSync } = require('fs');
+const { writeFile } = require('fs').promises;
+const { printJson, warn } = require('../src/utils/colors.js');
 
 function tryParse(filepath) {
   try {
-    return JSON.parse(readFileSync(filepath));
+    const data = JSON.parse(readFileSync(filepath));
+    return data;
   } catch (error) {
     console.log(`${new Date().toLocaleString} error`);
     return;
@@ -27,7 +28,7 @@ class Cache {
 
   clear() {
     this.cache = new Map();
-    writeFileSync(this.filepath, "");
+    writeFile(this.filepath, '');
     return true;
   }
 
@@ -39,25 +40,43 @@ class Cache {
     return this.cache.has(key);
   }
 
-  print(key, heading = "Cache:") {
-    console.log(this.cache.size > 0 ? heading : warn("No Cache data"));
+  print(key, heading = 'Cache:') {
+    console.log(this.cache.size > 0 ? heading : warn('No Cache data'));
 
     if (key) {
       console.log(printJson(key));
       return;
     }
     this.cache.forEach((value, key) => {
-      console.log("\t", key);
+      console.log('\t', key);
       if (value) {
         console.log(printJson(value));
       }
     });
   }
 
-  // override default when necessary; e.g., alerts cache has expiration
-  save(cache = [...this.cache]) {
-    writeFileSync(this.filepath, JSON.stringify(cache));
-    return true;
+  purge(fnc) {
+    return new Promise((resolve, reject) => {
+      let purged = [];
+      try {
+        this.cache.forEach((value, key) => {
+          if (fnc(value.cached)) {
+            purged.push(key);
+            this.delete(key);
+          }
+        });
+        this.save();
+        resolve(purged);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  save() {
+    writeFile(this.filepath, JSON.stringify([...this.cache]))
+      .then(() => true)
+      .catch((err) => err);
   }
 
   set(key, value) {

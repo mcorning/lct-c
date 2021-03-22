@@ -11,11 +11,9 @@
       </v-card>
 
       <v-card tile v-if="showFavorites" :height="ht">
+        <v-card-title>Recent Visits, {{ nickname }}:</v-card-title>
         <v-card-text>
           <v-list dense shaped max-width="300">
-            <v-subheader
-              >Spaces you visited recently, {{ nickname }}:</v-subheader
-            >
             <v-divider></v-divider>
             <v-list-item-group v-model="favorite" color="secondary">
               <v-list-item v-for="(item, i) in favorites" :key="i">
