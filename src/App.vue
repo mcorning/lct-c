@@ -164,7 +164,7 @@
           </v-icon>
         </template>
         <span
-          >Your unique userId: {{ userID ? userID : 'is unavailable' }}</span
+          >Your unique userId: {{ userID ? userID : "is unavailable" }}</span
         >
       </v-tooltip>
 
@@ -183,7 +183,7 @@
         </template>
         <span
           >Name of exposure alert graph:
-          {{ graphName ? graphName : 'is not available' }}
+          {{ graphName ? graphName : "is not available" }}
         </span></v-tooltip
       >
       <v-tooltip top>
@@ -199,17 +199,17 @@
 </template>
 
 <script>
-import crypto from 'crypto';
-const randomId = () => crypto.randomBytes(8).toString('hex');
+import crypto from "crypto";
+const randomId = () => crypto.randomBytes(8).toString("hex");
 
-import Visitor from './components/Visitor';
-import Welcome from './components/Welcome';
+import Visitor from "./components/Visitor";
+import Welcome from "./components/Welcome";
 // import Chat from './components/Chat';
 
-import socket from './socket';
-import { error, printJson } from './utils/colors';
-import update from '@/mixins/update.js';
-import helpers from '@/mixins/helpers.js';
+import socket from "./socket";
+import { printJson } from "./utils/colors";
+import update from "@/mixins/update.js";
+import helpers from "@/mixins/helpers.js";
 
 class Auditor {
   constructor() {
@@ -220,7 +220,7 @@ class Auditor {
     return this.log.get(id);
   }
 
-  logEntry(entry, type = 'info') {
+  logEntry(entry, type = "info") {
     this.log.set(randomId(), {
       message: entry,
       type: type,
@@ -234,7 +234,7 @@ class Auditor {
 }
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     // Chat,
     Visitor,
@@ -242,40 +242,40 @@ export default {
   },
   computed: {
     connectIcon() {
-      return this.userID ? 'mdi-lan-connect' : 'mdi-lan-disconnect';
+      return this.userID ? "mdi-lan-connect" : "mdi-lan-disconnect";
     },
 
     build() {
       return this.$store.getters.appVersion;
     },
     alertColor() {
-      return this.alertPending ? 'orange darken-2' : 'red darken-1';
+      return this.alertPending ? "orange darken-2" : "red darken-1";
     },
   },
   data() {
     return {
-      sessionID: '',
+      sessionID: "",
       userCount: 0,
-      selectedSpace: '',
+      selectedSpace: "",
       hasSaved: false,
       auditor: new Auditor(),
-      graphName: '',
-      alertText: '',
+      graphName: "",
+      alertText: "",
       alertMe: false,
       exposureAlert: false,
       alertPending: false,
-      query: '',
+      query: "",
       showLogs: false,
       drawer: false,
       showUsers: true,
-      cols: '',
+      cols: "",
       connectionStatus: false,
-      nsp: 'Sisters',
+      nsp: "Sisters",
       overlay: true,
       usernameAlreadySelected: false,
-      sid: '',
-      userID: '',
-      username: '',
+      sid: "",
+      userID: "",
+      username: "",
     };
   },
   methods: {
@@ -290,7 +290,7 @@ export default {
     onUsernameSelection({ username, sessionID }) {
       this.usernameAlreadySelected = true;
       this.username = username;
-      console.log('onUsernameSelection()', this.username);
+      console.log("onUsernameSelection()", this.username);
 
       socket.auth = { username, sessionID };
       socket.connect();
@@ -305,23 +305,23 @@ export default {
         start: visit.start,
         end: visit.end,
       };
-      this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
+      this.auditor.logEntry(`Visit query: ${printJson(query)}`, "Log Visit");
 
       // send the visit to the server
-      socket.emit('logVisit', query, (results) => {
+      socket.emit("logVisit", query, (results) => {
         this.auditor.logEntry(
           `Log Visit Results: ${printJson(results)}`,
-          'Log Visit'
+          "Log Visit"
         );
         this.hasSaved = true;
       });
     },
 
     onSendExposureWarning() {
-      socket.emit('exposureWarning', this.userID, (results) =>
+      socket.emit("exposureWarning", this.userID, (results) =>
         this.auditor.logEntry(
           `exposureWarning results: ${printJson(results)}`,
-          'Warnings'
+          "Warnings"
         )
       );
     },
@@ -346,9 +346,9 @@ export default {
 
   //#region Lifecycle Hooks
   created() {
-    this.sessionID = localStorage.getItem('sessionID');
-    this.username = localStorage.getItem('username');
-    console.log('created()', this.username);
+    this.sessionID = localStorage.getItem("sessionID");
+    this.username = localStorage.getItem("username");
+    console.log("created()", this.username);
     if (this.sessionID) {
       this.usernameAlreadySelected = true;
       // this.sid = sessionID;
@@ -357,51 +357,51 @@ export default {
       socket.connect();
     }
 
-    socket.on('connect', () => {
+    socket.on("connect", () => {
       this.auditor.logEntry(`Socket ${socket.id} connected`);
-      this.auditor.logEntry(`updateExists: ${this.updateExists}`, 'PWA');
+      this.auditor.logEntry(`updateExists: ${this.updateExists}`, "PWA");
     });
 
-    socket.on('session', ({ sessionID, userID, username, graphName }) => {
+    socket.on("session", ({ sessionID, userID, username, graphName }) => {
       // attach the session ID to the next reconnection attempts
       socket.auth = { sessionID };
       // store it in the localStorage
-      localStorage.setItem('sessionID', sessionID);
+      localStorage.setItem("sessionID", sessionID);
       // save the ID of the user
       // TODO isn't userID already assigned in middleware?
       socket.userID = userID;
       // this.sid = sessionID;
       this.username = username;
-      console.log('on Session', this.username);
+      console.log("on Session", this.username);
 
       this.userID = userID;
       this.graphName = graphName;
     });
 
-    socket.on('connect_error', (err) => {
-      this.usernameAlreadySelected = err.message != 'No username';
+    socket.on("connect_error", (err) => {
+      this.usernameAlreadySelected = err.message != "No username";
     });
 
-    socket.on('exposureAlert', (alert, ack) => {
+    socket.on("exposureAlert", (alert, ack) => {
       this.exposureAlert = true;
       this.alertText = alert;
       if (ack) {
         ack(socket.id);
       }
-      this.auditor.logEntry(alert, 'Alert');
+      this.auditor.logEntry(alert, "Alert");
     });
 
-    socket.on('alertPending', () => {
+    socket.on("alertPending", () => {
       this.alertPending = true;
     });
 
-    socket.on('users online', (userCount) => {
+    socket.on("users online", (userCount) => {
       this.auditor.logEntry(`Current total LCT-C2 user count: ${userCount}`);
 
       this.userCount = userCount;
     });
 
-    socket.on('private message', ({ content, from, to }) => {
+    socket.on("private message", ({ content, from, to }) => {
       if (this.users) {
         for (let i = 0; i < this.users.length; i++) {
           const user = this.users[i];
@@ -425,20 +425,20 @@ export default {
   destroyed() {
     // should we turn off session and connect_error?
     // what is the genaral rule for destroyed()?
-    socket.off('alertPending');
-    socket.off('connect');
-    socket.off('disconnect');
-    socket.off('exposureAlert');
-    socket.off('users');
-    socket.off('user connected');
-    socket.off('users online');
-    socket.off('user disconnected');
-    socket.off('private message');
+    socket.off("alertPending");
+    socket.off("connect");
+    socket.off("disconnect");
+    socket.off("exposureAlert");
+    socket.off("users");
+    socket.off("user connected");
+    socket.off("users online");
+    socket.off("user disconnected");
+    socket.off("private message");
   },
 
   async mounted() {
     this.overlay = false;
-    console.log('Visitor.vue mounted');
+    console.log("Visitor.vue mounted");
   },
   //#endregion
 };
@@ -451,7 +451,7 @@ body {
 
 @font-face {
   font-family: Lato;
-  src: url('/fonts/Lato-Regular.ttf');
+  src: url("/fonts/Lato-Regular.ttf");
 }
 
 #app {

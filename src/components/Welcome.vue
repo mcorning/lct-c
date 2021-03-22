@@ -26,7 +26,7 @@
             <v-dialog v-model="dialog" persistent max-width="400px">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn color="primary" dark v-bind="attrs" v-on="on">
-                  Next
+                  Thanks
                 </v-btn>
               </template>
               <v-card>
@@ -62,38 +62,40 @@
 
 <script>
 export default {
-  name: 'Welcome',
+  name: "Welcome",
 
   computed: {
     sessionID() {
-      return localStorage.getItem('sessionID');
+      return localStorage.getItem("sessionID");
     },
 
     welcomeMessage() {
-      return `Welcome ${
-        this.sessionID ? 'back' : ''
-      } to Local Contact Tracing ${this.sessionID}`;
+      let msg = this.sessionID
+        ? `Welcome back, ${this.sessionID}`
+        : `Welcome to Local Contact Tracing - Sisters`;
+      return msg;
     },
   },
+
   data() {
     return {
       dialog: false,
-      nsp: 'Sisters',
-      username: '',
-      rules: [(v) => v.length > 2 || 'Between 3 and 10 characters'],
+      nsp: "Sisters",
+      username: "",
+      rules: [(v) => v?.length > 2 || "Between 3 and 10 characters"],
     };
   },
 
   methods: {
     onSubmit() {
-      localStorage.setItem('username', this.username);
+      localStorage.setItem("username", this.username);
       this.dialog = true;
     },
 
     onGo() {
       this.dialog = false;
 
-      this.$emit('input', {
+      this.$emit("input", {
         username: this.username,
         sessionID: this.sessionID,
       });
@@ -101,7 +103,7 @@ export default {
   },
 
   created() {
-    this.username = localStorage.getItem('username');
+    this.username = localStorage.getItem("username");
   },
 };
 </script>

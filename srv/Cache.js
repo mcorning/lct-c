@@ -1,18 +1,15 @@
-const { readFileSync, writeFileSync } = require('fs');
-const { printJson } = require('../src/utils/colors.js');
+const { readFileSync, writeFileSync } = require("fs");
+const { printJson, warn } = require("../src/utils/colors.js");
 const msPerDay = 1000 * 60 * 60 * 24;
 
 function tryParse(filepath) {
   try {
     return JSON.parse(readFileSync(filepath));
   } catch (error) {
+    console.log(`${new Date().toLocaleString} error`);
     return;
   }
 }
-
-const hasNotExpired = (firstDate) => {
-  !firstDate || (Date.now() - firstDate.getTime()) / msPerDay < 14;
-};
 
 class Cache {
   constructor(filepath) {
@@ -30,7 +27,7 @@ class Cache {
 
   clear() {
     this.cache = new Map();
-    writeFileSync(this.filepath, '');
+    writeFileSync(this.filepath, "");
     return true;
   }
 
@@ -42,24 +39,24 @@ class Cache {
     return this.cache.has(key);
   }
 
-  print(key, heading = 'Cache:') {
-    console.log(this.cache.size > 0 ? heading : 'No Cache data');
+  print(key, heading = "Cache:") {
+    console.log(this.cache.size > 0 ? heading : warn("No Cache data"));
 
     if (key) {
       console.log(printJson(key));
       return;
     }
     this.cache.forEach((value, key) => {
-      console.log('\t', key);
+      console.log("\t", key);
       if (value) {
         console.log(printJson(value));
       }
     });
   }
 
-  save() {
-    const unexpired = [...this.cache].filter((v) => hasNotExpired(v.cachedOn));
-    writeFileSync(this.filepath, JSON.stringify(unexpired));
+  // override default when necessary; e.g., alerts cache has expiration
+  save(cache = [...this.cache]) {
+    writeFileSync(this.filepath, JSON.stringify(cache));
     return true;
   }
 

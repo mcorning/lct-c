@@ -1,16 +1,21 @@
+const path = require("path");
 const express = require("express");
 const socketIO = require("socket.io");
 const serveStatic = require("serve-static");
 const crypto = require("crypto");
 const randomId = () => crypto.randomBytes(8).toString("hex");
 
-const path = require("path");
-
-const { printJson, warn, info, success } = require("../src/utils/colors.js");
+const {
+  printJson,
+  warn,
+  highlight,
+  info,
+  success,
+} = require("../src/utils/colors.js");
 
 const { Cache } = require("./Cache.js");
-const sessionCache = new Cache(__dirname + "/sessions.json");
-const alertsCache = new Cache(__dirname + "/alerts.json");
+const sessionCache = new Cache(path.resolve(__dirname, "sessions.json"));
+const alertsCache = new Cache(path.resolve(__dirname, "alerts.json"));
 
 const {
   graphName, // mapped to client nsp (aka namespace or community name)
@@ -19,22 +24,23 @@ const {
   logVisit,
   onExposureWarning,
 } = require("./redis");
-const { toUnicode } = require("punycode");
 
 const PORT = process.env.PORT || 3000;
 
 const dirPath = path.join(__dirname, "./dist");
 
-console.log(new Date().toLocaleString());
-console.log("social graph:", graphName);
-console.log("redis host:", host);
-console.log("pwd:", dirPath);
+console.log(highlight(new Date().toLocaleString()));
+console.log(highlight("social graph:", graphName));
+console.log(highlight("redis host:", host));
+console.log(highlight("pwd:", dirPath));
 // list past sessions (all should be connected:false)
 sessionCache.print(null, "Past Sessions:");
 
 const server = express()
   .use(serveStatic(dirPath))
-  .listen(PORT, () => console.log(`Listening on http://localhost:${PORT}`));
+  .listen(PORT, () =>
+    console.log(highlight(`Listening on http://localhost:${PORT}`))
+  );
 
 const io = socketIO(server);
 
@@ -66,16 +72,18 @@ io.use((socket, next) => {
       socket.sessionID = sessionID;
       socket.userID = session.userID;
       socket.username = session.username;
-      console.groupCollapsed("Handshake: Known party");
-      console.log(warn(`LEAVING io.use() with  ${sessionID}'s session data.`));
+      console.group("Handshake: Known party");
+      console.log(
+        highlight(`LEAVING io.use() with  ${sessionID}'s session data.`)
+      );
       return next();
     }
   }
 
   // otherwise, setup the new user...
   console.log("\n", info(new Date().toLocaleString()));
-  console.group("Handshake: Known party");
-  console.log("Assigning new sessionID and userID for", username);
+  console.group("Handshake: Unknown party");
+  console.log(warn(`Assigning new sessionID and userID for ${username}`));
 
   //...with a userID, and a sessionID
   socket.sessionID = randomId(); // these values gets attached to the socket so the client knows which session has their data and messages
@@ -113,7 +121,9 @@ io.on("connection", (socket) => {
     graphName: graphName, // track the graphName so we know where messages from client end up in redisGraph
   });
   console.log(
-    `socket ${socketID} joining ${username}'s room with userID ${userID}`
+    success(
+      `socket ${socketID} joining ${username}'s room with userID ${userID}`
+    )
   );
 
   // join the "userID" room
@@ -138,7 +148,7 @@ io.on("connection", (socket) => {
   // (the more users are active, the safer the community)
   socket.emit("users", users);
   const onlineUsers = users.filter((v) => v[1].connected);
-  console.groupCollapsed(`There are ${onlineUsers.length} online users:`);
+  console.group(`There are ${onlineUsers.length} online users:`);
   console.log(printJson(onlineUsers));
   console.groupEnd();
 
@@ -163,28 +173,28 @@ io.on("connection", (socket) => {
 
     socket.broadcast.emit("alertPending", socket.userID);
 
-    onExposureWarning(userID).then((exposed) => {
-      exposed.forEach((userID) => {
-        console.log(warn("Processing "), userID);
-        findExposedVisitors(userID).then((userIDs) =>
-          alertOthers(socket, userIDs, ack)
-        );
-      });
-    });
+    onExposureWarning(userID)
+      .then((exposed) => {
+        exposed.forEach((userID) => {
+          console.log(warn("Processing "), userID);
+          findExposedVisitors(userID).then((userIDs) =>
+            alertOthers(socket, userIDs, ack)
+          );
+        });
+      })
+      .catch((error) => console.log(error(error)));
   });
 
   socket.on("logVisit", (data, ack) => {
     // call the graph
     console.log(printJson(data));
-    // ack gets set logVisit and passed along to App.vue here
-    // TODO:make logVisit into a Promise
-    logVisit(data, (res) => {
+    logVisit(data).then((res) => {
       console.log(res);
       ack(res);
     });
   });
 
-  socket.on("disconnect", async () => {
+  socket.on("disconnectAsync", async () => {
     const matchingSockets = await io.in(socket.userID).allSockets();
     const isDisconnected = matchingSockets.size === 0;
     if (isDisconnected) {
@@ -205,10 +215,38 @@ io.on("connection", (socket) => {
       console.log(printJson(online));
     }
   });
+
+  socket.on("disconnect", async () => {
+    io.in(socket.userID)
+      .allSockets()
+      .then((matchingSockets) => {
+        const isDisconnected = matchingSockets.size === 0;
+        if (isDisconnected) {
+          // notify other users
+          socket.broadcast.emit("user disconnected", socket.userID);
+          // update the connection status of the session
+
+          sessionCache.set(socket.sessionID, {
+            userID: socket.userID,
+            username: socket.username,
+            lastInteraction: new Date().toLocaleString(),
+            connected: false,
+          });
+          const online = sessionCache.all().filter((v) => v[1].connected);
+          console.log(
+            `There are ${online.length} online sessions after disconnecting ${socket.sessionID}:`
+          );
+          console.log(printJson(online));
+        }
+      });
+  });
 });
 
+// alerts is an array of userIDs
 const alertOthers = (socket, alerts, ack) => {
-  // alerts is an array of userIDs
+  const hasNotExpired = (firstDate) => {
+    !firstDate || (Date.now() - firstDate.getTime()) / msPerDay < 14;
+  };
 
   const sendExposureAlert = (to, msg) => {
     console.log("Alerting:", to); // to is a userID (of the exposed visitor)
@@ -229,8 +267,10 @@ const alertOthers = (socket, alerts, ack) => {
     } else {
       alertsCache.set(to, { cached: new Date() });
     }
-    alertsCache.print(null, "Cache:");
   });
+
+  const unexpired = [...alertsCache].filter((v) => hasNotExpired(v.cachedOn));
+  alertsCache.print(unexpired, "Active Alerts Cache:");
 
   // const ackWarning = (results, ack) => {
   //   const ret = `Alerting ${results._resultsCount} other visitors.`;
