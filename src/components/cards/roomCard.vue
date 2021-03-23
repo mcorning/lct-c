@@ -228,7 +228,7 @@ export default {
 
   methods: {
     getFavorites() {
-      const visits = JSON.parse(localStorage.getItem('visits'));
+      const visits = JSON.parse(localStorage.getItem('visits')) || [];
       this.favorites = [...new Set(visits.map((v) => v.name))];
       console.log('favorites', this.favorites);
     },
