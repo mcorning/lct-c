@@ -56,6 +56,7 @@
           :showLogs="showLogs"
           :auditor="auditor"
           @roomLoggedVisit="onRoomLoggedVisit"
+          @roomDeletedVisit="onRoomDeletedVisit"
         />
       </v-col>
     </v-row>
@@ -83,19 +84,19 @@
 </template>
 
 <script>
-import crypto from "crypto";
-const randomId = () => crypto.randomBytes(8).toString("hex");
+import crypto from 'crypto';
+const randomId = () => crypto.randomBytes(8).toString('hex');
 
-import * as easings from "vuetify/es5/services/goto/easing-patterns";
-import { success, warn, info, printJson } from "../utils/colors.js";
+import * as easings from 'vuetify/es5/services/goto/easing-patterns';
+import { success, warn, info, printJson } from '../utils/colors.js';
 
-import Message from "@/models/Message";
-import diaryCard from "@/components/cards/diaryCard";
+import Message from '@/models/Message';
+import diaryCard from '@/components/cards/diaryCard';
 
-import roomCard from "@/components/cards/roomCard";
+import roomCard from '@/components/cards/roomCard';
 
 export default {
-  name: "Lct-C",
+  name: 'Lct-C',
 
   // props passed in by App.vue
   props: {
@@ -117,7 +118,7 @@ export default {
     },
 
     visits() {
-      return JSON.parse(localStorage.getItem("visits")) || [];
+      return JSON.parse(localStorage.getItem('visits')) || [];
     },
 
     favorites() {
@@ -126,7 +127,7 @@ export default {
 
     favoriteMessages() {
       const favs = Message.query()
-        .orderBy("sentTime")
+        .orderBy('sentTime')
         .get()
         .map((v) => v.room);
       const favSet = new Set(favs);
@@ -158,31 +159,31 @@ export default {
   data: () => ({
     dialog: false,
     entered: false,
-    easing: "easeInOutCubic",
+    easing: 'easeInOutCubic',
     easings: Object.keys(easings),
 
     overlay: true,
     snackBar: true,
-    connectionMessage: "Provide a name to Connect to the Server.",
+    connectionMessage: 'Provide a name to Connect to the Server.',
     disconnectedFromServer: true,
     showEntryRoomCard: false,
     feedbackMessage:
-      "Thanks for making us safer together using Local Contact Tracing...",
-    messageColor: "secondary lighten-1",
-    socketMessage: "visitor",
-    search: "",
+      'Thanks for making us safer together using Local Contact Tracing...',
+    messageColor: 'secondary lighten-1',
+    socketMessage: 'visitor',
+    search: '',
 
     rating: 3,
-    alertIcon: "mdi-alert",
-    alertColor: "",
-    alertMessage: "",
-    socketId: "",
+    alertIcon: 'mdi-alert',
+    alertColor: '',
+    alertMessage: '',
+    socketId: '',
     enabled: { visitor: {}, room: {}, canEnter: -1 },
 
     cons: [],
     rooms: [],
     socketServerOnline: false,
-    visitFormat: "HH:mm ddd, MMM DD",
+    visitFormat: 'HH:mm ddd, MMM DD',
     checkedOut: true,
   }),
 
@@ -193,34 +194,48 @@ export default {
       this.dialog = false;
 
       this.emit({
-        event: "stepFiveVisitorReceivedAlert",
+        event: 'stepFiveVisitorReceivedAlert',
         message: this.enabled.visitor.id,
         ack: (ACK) => {
-          this.log(ACK, "ACK: stepFiveVisitorReceivedAlert");
+          this.log(ACK, 'ACK: stepFiveVisitorReceivedAlert');
         },
       });
     },
 
     onExposureWarning() {
-      console.log(warn("emitting exposureWarning"));
-      this.auditor.logEntry(`emitting exposureWarning`, "Warnings");
+      console.log(warn('emitting exposureWarning'));
+      this.auditor.logEntry(`emitting exposureWarning`, 'Warnings');
 
-      this.$emit("sendExposureWarning");
+      this.$emit('sendExposureWarning');
     },
 
     onRoomLoggedVisit(visit) {
-      console.log(success("Visit:", printJson(visit)));
+      console.log(success('Visit:', printJson(visit)));
       // cache the visit in Messages
       let msg = {
         visitor: this.nickname,
         room: visit.name,
-        message: "Entered",
+        message: 'Entered',
         sentTime: new Date().toISOString(),
       };
       this.messages = msg;
 
       // notify App.vue so it can send event to server
-      this.$emit("visitorLoggedVisit", visit);
+      this.$emit('visitorLoggedVisit', visit);
+    },
+    onRoomDeletedVisit(visit) {
+      console.log(success('Deleted Visit:', printJson(visit)));
+      // cache the visit in Messages
+      let msg = {
+        visitor: this.nickname,
+        room: visit.name,
+        message: 'Deleted',
+        sentTime: new Date().toISOString(),
+      };
+      this.messages = msg;
+
+      // notify App.vue so it can send event to server
+      this.$emit('visitorDeletedVisit', visit);
     },
   },
 
@@ -240,7 +255,7 @@ export default {
     // await Visitor.$fetch();
 
     this.overlay = false;
-    console.log(info("Visitor.vue mounted"));
+    console.log(info('Visitor.vue mounted'));
   },
 };
 </script>

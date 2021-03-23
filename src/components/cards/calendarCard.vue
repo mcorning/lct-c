@@ -95,29 +95,15 @@
           <v-card max-width=" 400px" color="grey lighten-4" flat>
             <v-card-title> {{ selectedEvent.name }}</v-card-title>
             <v-card-subtitle>Visit {{ getLoggedState() }}.</v-card-subtitle>
-            <v-card-text>
+            <!-- <v-card-text>
               You can only delete an unlogged visit. You cannot delete data from
               the server.
-            </v-card-text>
+            </v-card-text> -->
             <v-card-actions>
-              <v-btn
-                text
-                color="primary"
-                @click="logVisit"
-                :disabled="isLogged"
-              >
-                Log
-              </v-btn>
+              <v-btn text color="primary" @click="logVisit"> Log </v-btn>
               <v-spacer></v-spacer>
 
-              <v-btn
-                text
-                color="primary"
-                @click="deleteVisit"
-                :disabled="isLogged"
-              >
-                Delete
-              </v-btn>
+              <v-btn text color="primary" @click="deleteVisit"> Delete </v-btn>
               <v-btn text color="primary" @click="selectedOpen = false">
                 Cancel
               </v-btn>
@@ -218,7 +204,9 @@ export default {
     },
 
     deleteVisit() {
+      this.$emit('deleteVisit', this.visit);
       this.visits = this.arrayRemove(this.visits, this.selectedEvent);
+      this.saveVisits();
       this.selectedOpen = false;
     },
 

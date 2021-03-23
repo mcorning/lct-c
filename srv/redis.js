@@ -1,25 +1,26 @@
 //https://github.com/RedisGraph/redisgraph.js
-const RedisGraph = require("redisgraph.js").Graph;
-const host = "redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com";
+const RedisGraph = require('redisgraph.js').Graph;
+const host = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
 const options = {
   host: host,
   port: 11939,
-  password: "7B3DId42aDCtMjmSXg7VN0XZSMOItGAG",
+  password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
 };
 // const { graphName } = require('./config.js');
-const graphName = "Sisters";
+const graphName = 'Sisters';
 const Graph = new RedisGraph(graphName, null, null, options);
 const {
   printJson,
   warn,
   highlight,
   success,
-} = require("../src/utils/colors.js");
+} = require('../src/utils/colors.js');
 
 module.exports = {
   Graph,
   graphName,
   host,
+  deleteVisit,
   findExposedVisitors,
   logVisit,
   onExposureWarning,
@@ -33,7 +34,7 @@ function findExposedVisitors(userID, subject = false) {
     RETURN a.userID, a.name, id(a), s.name, id(s), v.start, v.end, id(v), id(s)`
     ).then((res) => {
       if (!res._results.length) {
-        console.log(userID, "exposed nobody");
+        console.log(userID, 'exposed nobody');
         return resolve(userID);
       }
 
@@ -46,35 +47,35 @@ function findExposedVisitors(userID, subject = false) {
   });
 
   function printExposedVisitors(res) {
-    console.log(success(`\n${subject ? "Patient Zero" : "Exposed"}:`));
+    console.log(success(`\n${subject ? 'Patient Zero' : 'Exposed'}:`));
     const rec = res._results[0];
-    console.log(rec.get("id(a)"), userID, rec.get("a.name"), "visited:");
+    console.log(rec.get('id(a)'), userID, rec.get('a.name'), 'visited:');
 
     while (res.hasNext()) {
       let record = res.next();
-      let start = new Date(record.get("v.start") / 1).toLocaleString();
-      let end = new Date(record.get("v.end") / 1).toLocaleString();
-      let vid = record.get("id(v)");
-      let sid = record.get("id(s)");
+      let start = new Date(record.get('v.start') / 1).toLocaleString();
+      let end = new Date(record.get('v.end') / 1).toLocaleString();
+      let vid = record.get('id(v)');
+      let sid = record.get('id(s)');
 
       console.log(
-        " ".repeat(19),
-        vid < 10 ? " " : "",
+        ' '.repeat(19),
+        vid < 10 ? ' ' : '',
         vid,
-        " ".repeat(vid / 100),
-        record.get("v.start"),
-        "=",
+        ' '.repeat(vid / 100),
+        record.get('v.start'),
+        '=',
         start,
-        " ".repeat(25 - start.length),
+        ' '.repeat(25 - start.length),
 
-        record.get("v.end"),
-        "=",
+        record.get('v.end'),
+        '=',
         end,
-        " ".repeat(25 - end.length),
+        ' '.repeat(25 - end.length),
 
-        sid < 10 ? " " : "",
+        sid < 10 ? ' ' : '',
         sid,
-        record.get("s.name")
+        record.get('s.name')
       );
     }
   }
@@ -113,32 +114,32 @@ function onExposureWarning(userID) {
     // );
     while (res.hasNext()) {
       let record = res.next();
-      let startC = new Date(record.get("c.start") / 1).toLocaleString();
-      let endC = new Date(record.get("c.end") / 1).toLocaleString();
-      let startE = new Date(record.get("e.start") / 1).toLocaleString();
-      let endE = new Date(record.get("e.end") / 1).toLocaleString();
+      let startC = new Date(record.get('c.start') / 1).toLocaleString();
+      let endC = new Date(record.get('c.end') / 1).toLocaleString();
+      let startE = new Date(record.get('e.start') / 1).toLocaleString();
+      let endE = new Date(record.get('e.end') / 1).toLocaleString();
 
-      let name = record.get("exposed.name");
-      let exposedId = record.get("id(exposed)");
-      let eid = record.get("id(e)");
-      let sid = record.get("id(s)");
+      let name = record.get('exposed.name');
+      let exposedId = record.get('id(exposed)');
+      let eid = record.get('id(e)');
+      let sid = record.get('id(s)');
 
       console.log(
         name,
-        "left",
-        record.get("e.end") >= record.get("c.start") ? "after" : "before",
-        "carrier arrived"
+        'left',
+        record.get('e.end') >= record.get('c.start') ? 'after' : 'before',
+        'carrier arrived'
       );
       console.log(endE, startC);
 
       console.log(
         name,
-        "arrived",
-        record.get("e.start") <= record.get("c.end") ? "before" : "after",
-        "carrier left"
+        'arrived',
+        record.get('e.start') <= record.get('c.end') ? 'before' : 'after',
+        'carrier left'
       );
       console.log(startE, endC);
-      console.log(" ");
+      console.log(' ');
       printTable(exposedId, eid, sid, name, record, startC, endC, startE, endE);
     }
   }
@@ -155,35 +156,35 @@ function onExposureWarning(userID) {
     endE
   ) {
     console.log(
-      exposedId < 10 ? " " : "",
+      exposedId < 10 ? ' ' : '',
       exposedId,
 
       name,
-      " ".repeat(15 - name.length),
+      ' '.repeat(15 - name.length),
 
-      eid < 10 ? " " : "",
+      eid < 10 ? ' ' : '',
       eid,
-      record.get("c.start"),
-      "=",
+      record.get('c.start'),
+      '=',
       startC,
-      " ".repeat(25 - startC.length),
-      record.get("c.end"),
-      "=",
+      ' '.repeat(25 - startC.length),
+      record.get('c.end'),
+      '=',
       endC,
-      " ".repeat(25 - endC.length),
+      ' '.repeat(25 - endC.length),
 
-      record.get("e.start"),
-      "=",
+      record.get('e.start'),
+      '=',
       startE,
-      " ".repeat(25 - startE.length),
-      record.get("e.end"),
-      "=",
+      ' '.repeat(25 - startE.length),
+      record.get('e.end'),
+      '=',
       endE,
-      " ".repeat(25 - endE.length),
+      ' '.repeat(25 - endE.length),
 
-      sid < 10 ? " " : "",
+      sid < 10 ? ' ' : '',
       sid,
-      record.get("s.name")
+      record.get('s.name')
     );
   }
 }
@@ -197,7 +198,7 @@ function logVisit(data) {
     let query = `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
   MERGE (s:space{ name: "${selectedSpace}"}) 
   MERGE (v)-[:visited{start:${start}, end:${end}}]->(s)`;
-    console.log(warn("Visit query:", query));
+    console.log(warn('Visit query:', query));
     Graph.query(query)
       .then((results) => {
         const stats = results._statistics._raw;
@@ -207,6 +208,27 @@ function logVisit(data) {
       .catch((error) => {
         console.log(error);
         reject({ logged: true, error: error });
+      });
+  });
+}
+// delegated in index.js to handle socket.on('deleteVisit')
+// Example query:
+// MATCH  (:visitor{name:"Tab hunter"})-[v:visited{start:1616455800000, end:1616459400000}]->(:space{name:'Sisters Coffee Company'}) DELETE v
+
+function deleteVisit(data) {
+  return new Promise((resolve, reject) => {
+    const { username, userID, selectedSpace, start, end } = data;
+    let query = `MATCH  (:visitor{name:"${username}", userID: "${userID}"})-[v:visited{start:${start}, end:${end}}]->(:space{name:"${selectedSpace}"}) DELETE v`;
+    console.log(warn('DELETE Visit query:', query));
+    Graph.query(query)
+      .then((results) => {
+        const stats = results._statistics._raw;
+        console.log(`stats: ${printJson(stats)}`);
+        resolve({ deleted: true });
+      })
+      .catch((error) => {
+        console.log(error);
+        reject({ deleted: true, error: error });
       });
   });
 }

@@ -62,11 +62,11 @@
 
 <script>
 export default {
-  name: "Welcome",
+  name: 'Welcome',
 
   computed: {
     sessionID() {
-      return localStorage.getItem("sessionID");
+      return localStorage.getItem('sessionID');
     },
 
     welcomeMessage() {
@@ -80,22 +80,22 @@ export default {
   data() {
     return {
       dialog: false,
-      nsp: "Sisters",
-      username: "",
-      rules: [(v) => v?.length > 2 || "Between 3 and 10 characters"],
+      nsp: 'Sisters',
+      username: '',
+      rules: [(v) => v?.length > 2 || 'Between 3 and 10 characters'],
     };
   },
 
   methods: {
     onSubmit() {
-      localStorage.setItem("username", this.username);
+      localStorage.setItem('username', this.username);
       this.dialog = true;
     },
 
     onGo() {
       this.dialog = false;
 
-      this.$emit("input", {
+      this.$emit('input', {
         username: this.username,
         sessionID: this.sessionID,
       });
@@ -103,7 +103,7 @@ export default {
   },
 
   created() {
-    this.username = localStorage.getItem("username");
+    this.username = localStorage.getItem('username');
   },
 };
 </script>

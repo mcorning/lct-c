@@ -20,6 +20,7 @@ const alertsCache = new Cache(path.resolve(__dirname, 'alerts.json'));
 const {
   graphName, // mapped to client nsp (aka namespace or community name)
   host,
+  deleteVisit,
   findExposedVisitors,
   logVisit,
   onExposureWarning,
@@ -189,6 +190,15 @@ io.on('connection', (socket) => {
     // call the graph
     console.log(printJson(data));
     logVisit(data).then((res) => {
+      console.log(res);
+      ack(res);
+    });
+  });
+
+  socket.on('deleteVisit', (data, ack) => {
+    // call the graph
+    console.log(printJson(data));
+    deleteVisit(data).then((res) => {
       console.log(res);
       ack(res);
     });

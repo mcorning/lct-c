@@ -7,6 +7,7 @@
           :avgStay="avgStay"
           :selectedSpaceName="selectedSpace.name"
           @logVisit="onLogVisit"
+          @deleteVisit="onDeleteVisit"
         />
       </v-card>
 
@@ -137,14 +138,14 @@
 </template>
 
 <script>
-import { success, info, highlight, printJson } from "../../utils/colors";
+import { success, info, highlight, printJson } from '../../utils/colors';
 
 // import warnRoomCard from "@/components/cards/warnRoomCard";
-import logsCard from "@/components/cards/logsCard";
-import GoogleMap from "@/components/cards/GoogleMap";
-import calendarCard from "@/components/cards/calendarCard";
+import logsCard from '@/components/cards/logsCard';
+import GoogleMap from '@/components/cards/GoogleMap';
+import calendarCard from '@/components/cards/calendarCard';
 
-import { data } from "@/maps/communityData.json";
+import { data } from '@/maps/communityData.json';
 
 export default {
   // props passed in by Visitor.vue
@@ -183,7 +184,7 @@ export default {
       const x = [
         ...new Set(data.filter((v) => v.category).map((v) => v.category)),
       ];
-      console.log(info("Categories:", x));
+      console.log(info('Categories:', x));
       return x;
     },
 
@@ -204,22 +205,22 @@ export default {
       favorites: [],
       // TODO make avgStay configurable by admin or user
       avgStay: 3600000,
-      categoryLabel: "",
+      categoryLabel: '',
       places: [],
-      spaceLabel: "",
+      spaceLabel: '',
       show: 0,
-      ht: "480px",
+      ht: '480px',
       value: 0,
-      selectedCategory: "",
+      selectedCategory: '',
       usePanels: false,
       alert: false,
       panelState: [],
       sheet: false,
       dialog: false,
       favorite: -1,
-      nsp: "Sisters",
+      nsp: 'Sisters',
       filteredSpaces: [],
-      categorySelected: "",
+      categorySelected: '',
       selectedSpace: {},
       model: null,
     };
@@ -227,12 +228,13 @@ export default {
 
   methods: {
     getFavorites() {
-      const visits = JSON.parse(localStorage.getItem("visits"));
+      const visits = JSON.parse(localStorage.getItem('visits'));
       this.favorites = [...new Set(visits.map((v) => v.name))];
+      console.log('favorites', this.favorites);
     },
 
     logLabel() {
-      return this.selectedSpace.name ? "Log visit:" : "Select a place";
+      return this.selectedSpace.name ? 'Log visit:' : 'Select a place';
     },
     cancel() {
       this.sheet = !this.sheet;
@@ -250,15 +252,19 @@ export default {
       this.selectedSpace = {
         name: place.name,
         id: place.place_id,
-        category: "",
+        category: '',
       };
-      console.log(info("Added place", printJson(this.selectedSpace)));
+      console.log(info('Added place', printJson(this.selectedSpace)));
       this.show = 2;
     },
 
     onLogVisit(data) {
-      console.log(success("Logging visit:", printJson(data)));
-      this.$emit("roomLoggedVisit", data);
+      console.log(success('Logging visit:', printJson(data)));
+      this.$emit('roomLoggedVisit', data);
+    },
+    onDeleteVisit(data) {
+      console.log(success('Deleted visit:', printJson(data)));
+      this.$emit('roomDeletedVisit', data);
     },
   },
 
@@ -280,7 +286,7 @@ export default {
 
     selectedCategory(newVal) {
       this.categorySelected = this.categories[newVal];
-      console.log("categorySelected", this.categorySelected);
+      console.log('categorySelected', this.categorySelected);
       this.filteredSpaces = this.spaces.filter(
         (v) => v.category == this.categorySelected
       );
