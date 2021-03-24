@@ -29,7 +29,7 @@ const formatVisitedDate = (date) => {
   return x;
 };
 const formatTime = (time) => {
-  let x = DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_SHORT);
+  let x = new DateTime(time).toLocaleString(DateTime.DATETIME_SHORT);
   return x;
 };
 

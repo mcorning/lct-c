@@ -6,8 +6,8 @@ const options = {
   port: 11939,
   password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
 };
-// const { graphName } = require('./config.js');
-const graphName = 'Sisters';
+const { graphName } = require('./config.js');
+// const graphName = 'Sisters';
 const Graph = new RedisGraph(graphName, null, null, options);
 const {
   printJson,

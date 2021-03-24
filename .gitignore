@@ -33,6 +33,6 @@ src/components/cards/calendarSlot.vue
 src/components/cards/calendarCardDnD.vue
 src/components/cards/calendarCard2.vue
 src/components/cards/calendarCardEvents.vue
-src/AppW.vue
 srv/sessions.json
 srv/alerts.json
+newfile.txt
