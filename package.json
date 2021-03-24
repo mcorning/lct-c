@@ -7,7 +7,6 @@
   ],
   "private": true,
   "scripts": {
-    "postinstall": "npm run build",
     "start": "node srv/.",
     "monitor": "nodemon srv/.",
     "serve": "vue-cli-service serve",

@@ -15,6 +15,7 @@ const {
   highlight,
   success,
 } = require('../src/utils/colors.js');
+const { formatTime } = require('../src/utils/luxonHelpers.js');
 
 module.exports = {
   Graph,
@@ -195,9 +196,13 @@ function onExposureWarning(userID) {
 function logVisit(data) {
   return new Promise((resolve, reject) => {
     const { username, userID, selectedSpace, start, end } = data;
+    const duration = `${formatTime(start)} TO ${formatTime(end)}`;
+    console.log(highlight(duration));
+
     let query = `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
   MERGE (s:space{ name: "${selectedSpace}"}) 
-  MERGE (v)-[:visited{start:${start}, end:${end}}]->(s)`;
+  MERGE (v)-[:visited{start:${start}, end:${end}, 
+    duration: '${duration}'}]->(s)`;
     console.log(warn('Visit query:', query));
     Graph.query(query)
       .then((results) => {

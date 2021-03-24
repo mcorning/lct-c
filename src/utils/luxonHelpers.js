@@ -28,6 +28,10 @@ const formatVisitedDate = (date) => {
   let x = DateTime.fromISO(date).toFormat(visitFormat);
   return x;
 };
+const formatTime = (time) => {
+  let x = DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_SHORT);
+  return x;
+};
 
 const getVisitDate = () => {
   let x = DateTime.now().toFormat(calendarFormat);
@@ -43,6 +47,7 @@ module.exports = {
   getNowAsIso,
   isToday,
   isBetween,
+  formatTime,
   formatVisitedDate,
   getVisitDate,
   getCurrentMilitaryTime,
