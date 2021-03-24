@@ -132,8 +132,7 @@
         </v-col>
         <!-- Logged Visit confirmation -->
         <v-snackbar v-model="hasSaved" :timeout="4000" bottom left>
-          You have entered
-          {{ selectedSpace.name }}
+          {{ confirmationMessage }}
         </v-snackbar>
       </v-row>
     </v-main>
@@ -248,6 +247,7 @@ export default {
   },
   data() {
     return {
+      confirmationMessage: '',
       sessionID: '',
       userCount: 0,
       selectedSpace: '',
@@ -308,18 +308,19 @@ export default {
           `Log Visit Results: ${printJson(results)}`,
           'Log Visit'
         );
+        this.confirmationMessage = `You have logged ${this.selectedSpace.name}`;
         this.hasSaved = true;
       });
     },
 
-    onVisitorDeletedVisit(visit) {
-      this.selectedSpace = visit;
+    onVisitorDeletedVisit(e) {
+      this.selectedSpace = e;
       const query = {
         username: this.username,
         userID: socket.userID,
-        selectedSpace: visit.name,
-        start: visit.start,
-        end: visit.end,
+        selectedSpace: e.name,
+        start: e.start,
+        end: e.end,
       };
       this.auditor.logEntry(
         `DELETE Visit query: ${printJson(query)}`,
@@ -329,9 +330,11 @@ export default {
       // send the visit to the server
       socket.emit('deleteVisit', query, (results) => {
         this.auditor.logEntry(
-          `Log Visit Results: ${printJson(results)}`,
+          `Delete Visit Results: ${printJson(results)}`,
           'DELETE Visit'
         );
+
+        this.confirmationMessage = `You have deleted ${this.selectedSpace.name}`;
         this.hasSaved = true;
       });
     },

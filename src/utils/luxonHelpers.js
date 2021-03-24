@@ -28,9 +28,10 @@ const formatVisitedDate = (date) => {
   let x = DateTime.fromISO(date).toFormat(visitFormat);
   return x;
 };
+
 const formatTime = (time) => {
-  let x = new DateTime(time).toLocaleString(DateTime.DATETIME_SHORT);
-  return x;
+  let ds = DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_SHORT);
+  return ds;
 };
 
 const getVisitDate = () => {

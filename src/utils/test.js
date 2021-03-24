@@ -1,4 +1,6 @@
 const {
+  formatTime,
+
   getNow,
   getNowAsIso,
   isToday,
@@ -8,7 +10,10 @@ const {
 
 const dx = getNowAsIso();
 const dz = '2021-03-01T18:00'; // modify later, as necessary
+const ms = Date.now();
 
+console.log(formatTime(ms));
+console.log(formatTime(ms + 3600000));
 console.group('BVTs');
 console.log(getNow());
 console.log(dx);

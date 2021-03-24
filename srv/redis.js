@@ -216,10 +216,10 @@ function logVisit(data) {
       });
   });
 }
+
 // delegated in index.js to handle socket.on('deleteVisit')
 // Example query:
 // MATCH  (:visitor{name:"Tab hunter"})-[v:visited{start:1616455800000, end:1616459400000}]->(:space{name:'Sisters Coffee Company'}) DELETE v
-
 function deleteVisit(data) {
   return new Promise((resolve, reject) => {
     const { username, userID, selectedSpace, start, end } = data;

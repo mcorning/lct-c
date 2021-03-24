@@ -318,6 +318,7 @@ export default {
     //#region  Drag and Drop
     // mouse and touch activate
     startDrag({ event, timed }) {
+      this.visit = event;
       if (event && timed) {
         this.dragEvent = event;
         this.dragTime = null;

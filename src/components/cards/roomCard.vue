@@ -204,7 +204,7 @@ export default {
     return {
       favorites: [],
       // TODO make avgStay configurable by admin or user
-      avgStay: 3600000,
+      avgStay: 60,
       categoryLabel: '',
       places: [],
       spaceLabel: '',
@@ -266,9 +266,9 @@ export default {
       console.log(success('Logging visit:', printJson(data)));
       this.$emit('roomLoggedVisit', data);
     },
-    onDeleteVisit(data) {
-      console.log(success('Deleted visit:', printJson(data)));
-      this.$emit('roomDeletedVisit', data);
+    onDeleteVisit(e) {
+      console.log(success('Deleted visit:', printJson(e)));
+      this.$emit('roomDeletedVisit', e);
     },
   },
 

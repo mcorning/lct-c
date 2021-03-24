@@ -223,19 +223,19 @@ export default {
       // notify App.vue so it can send event to server
       this.$emit('visitorLoggedVisit', visit);
     },
-    onRoomDeletedVisit(visit) {
-      console.log(success('Deleted Visit:', printJson(visit)));
+    onRoomDeletedVisit(e) {
+      console.log(success('Deleted Visit:', printJson(e)));
       // cache the visit in Messages
       let msg = {
         visitor: this.nickname,
-        room: visit.name,
+        room: e.name,
         message: 'Deleted',
         sentTime: new Date().toISOString(),
       };
       this.messages = msg;
 
       // notify App.vue so it can send event to server
-      this.$emit('visitorDeletedVisit', visit);
+      this.$emit('visitorDeletedVisit', e);
     },
   },
 
