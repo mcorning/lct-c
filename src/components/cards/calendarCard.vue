@@ -72,6 +72,11 @@
           @mousemove:time="mouseMove"
           @mouseup:time="endDrag"
           @mouseleave.native="cancelDrag"
+          @touchstart:event="touch2Mouse($event)"
+          @touchstart:time="touch2Mouse($event)"
+          @touchmove:time="touch2Mouse($event)"
+          @touchend:time="touch2Mouse($event)"
+          @touchcancel="touch2Mouse($event)"
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
@@ -134,7 +139,9 @@ export default {
   },
 
   data: () => ({
+    canMoveVisit: false,
     visit: {},
+    visits: [],
     place: '',
     type: 'day',
     snackBar: false,
@@ -157,25 +164,6 @@ export default {
     createStart: null,
     extendOriginal: null,
     //#endregion
-    names: ['Fika', 'Bimart', 'Mid-Oregon'],
-    colors: ['red', 'yellow', 'green'],
-    visits: [
-      // reenable these elements if you need to start over
-      //   {
-      //     name: 'Exposure Warning',
-      //     start: 1615463100000,
-      //     timed: false,
-      //     color: 'orange',
-      //     details:{logged:true},
-      //   },
-      //   {
-      //     name: 'Fika Sisters',
-      //     start: 1615542300000,
-      //     timed: true,
-      //     color: 'green',
-      //     details:{logged:true},
-      //   },
-    ],
   }),
   methods: {
     logVisit() {
@@ -251,11 +239,84 @@ export default {
       }
 
       nativeEvent.stopPropagation();
+      nativeEvent.preventDefault();
     },
 
+    /*
+          @mousedown:event="startDrag"
+          @mousedown:time="startTime"
+          @mousemove:time="mouseMove"
+          @mouseup:time="endDrag"
+          @mouseleave.native="cancelDrag"
+
+          @touchstart:event="touch2Mouse"
+          @touchstart:time="touch2Mouse"
+          @touchmove:time="touch2Mouse"
+          @touchend:time="touch2Mouse"
+          @touchcancel="touch2Mouse"
+          
+          @click:event="showEvent"
+          @click:more="viewDay"
+          @click:date="viewDay"
+    */
+
+    touch2Mouse(ev) {
+      const e = event || ev.nativeEvent;
+      let show = false;
+
+      const theTouch = e.changedTouches[0];
+      console.log(e.type, '\n', printJson(theTouch));
+      let mouseEv;
+
+      switch (e.type) {
+        case 'touchstart':
+          mouseEv = 'mousedown';
+          break;
+        case 'touchend':
+          mouseEv = 'mouseup';
+          show = true;
+          break;
+        case 'touchmove':
+          mouseEv = 'mousemove';
+          break;
+        default:
+          return;
+      }
+
+      const mouseEvent = document.createEvent('MouseEvent');
+      mouseEvent.initMouseEvent(
+        mouseEv,
+        true,
+        true,
+        window,
+        1,
+        theTouch.screenX,
+        theTouch.screenY,
+        theTouch.clientX,
+        theTouch.clientY,
+        false,
+        false,
+        false,
+        false,
+        0,
+        null
+      );
+      theTouch.target.dispatchEvent(mouseEvent);
+
+      e.preventDefault();
+
+      if (show) {
+        // this.selectedEvent = ev;
+        // this.selectedElement = target;
+        this.selectedElement = event.target;
+
+        this.selectedOpen = true;
+      }
+    },
     //#endregion Active Calendar
 
     //#region  Drag and Drop
+    // mouse and touch activate
     startDrag({ event, timed }) {
       if (event && timed) {
         this.dragEvent = event;
@@ -263,6 +324,16 @@ export default {
         this.extendOriginal = null;
       }
     },
+    // startDrag({ nativeEvent, event, timed }) {
+    //   if (event && timed) {
+    //     this.dragEvent = event;
+    //     this.dragTime = null;
+    //     this.extendOriginal = null;
+    //     //...enables us to move the event by touch
+    //     nativeEvent.preventDefault();
+    //   }
+    // },
+
     startTime(tms) {
       const mouse = this.toTime(tms);
 
@@ -358,13 +429,6 @@ export default {
         tms.hour,
         tms.minute
       ).getTime();
-    },
-
-    rnd(a, b) {
-      return Math.floor((b - a + 1) * Math.random()) + a;
-    },
-    rndElement(arr) {
-      return arr[this.rnd(0, arr.length - 1)];
     },
 
     saveVisits() {

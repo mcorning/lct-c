@@ -11,6 +11,8 @@
 
     <gmap-autocomplete
       @place_changed="setPlace"
+      autofocus
+      auto-select-first
       style="width: 70%; border: orange; border-width: 2px; border-style: solid"
     >
     </gmap-autocomplete>

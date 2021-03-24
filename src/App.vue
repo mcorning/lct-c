@@ -201,7 +201,7 @@ import Welcome from './components/Welcome';
 // import Chat from './components/Chat';
 
 import socket from './socket';
-import { printJson } from './utils/colors';
+import { printJson, highlight } from './utils/colors';
 import update from '@/mixins/update.js';
 import helpers from '@/mixins/helpers.js';
 
@@ -299,6 +299,7 @@ export default {
         start: visit.start,
         end: visit.end,
       };
+      console.log(highlight(`Visit query: ${printJson(query)}`, 'Log Visit'));
       this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
 
       // send the visit to the server

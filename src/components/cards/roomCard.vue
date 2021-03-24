@@ -249,6 +249,10 @@ export default {
     },
 
     onAddedPlace(place) {
+      if (!place) {
+        alert("oops. I didn't get that. Please try again.");
+        return;
+      }
       this.selectedSpace = {
         name: place.name,
         id: place.place_id,
