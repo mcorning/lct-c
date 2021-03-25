@@ -204,7 +204,7 @@ export default {
     return {
       favorites: [],
       // TODO make avgStay configurable by admin or user
-      avgStay: 60,
+      avgStay: 3600000,
       categoryLabel: '',
       places: [],
       spaceLabel: '',

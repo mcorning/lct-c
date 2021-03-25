@@ -40,7 +40,9 @@ const getVisitDate = () => {
 };
 
 const getCurrentMilitaryTime = () => {
-  return DateTime.now().toLocaleString(DateTime.TIME_24_SIMPLE);
+  return DateTime.now()
+    .plus({ hour: 1 })
+    .toLocaleString(DateTime.TIME_24_SIMPLE);
 };
 
 module.exports = {
