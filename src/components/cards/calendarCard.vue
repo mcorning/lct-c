@@ -39,17 +39,35 @@
           </v-menu>
         </v-toolbar>
       </v-sheet>
-
-      <!-- Log, Delete, Cancel form -->
       <v-snackbar
-        v-model="snackBar"
-        :timeout="4000"
+        v-model="snackBarNew"
+        :timeout="10000"
         color="primary"
+        absolute
         dark
         bottom
-        absolute
       >
         {{ feedbackMessage }}
+        <template v-slot:action="{ attrs }">
+          <v-btn color="white" text v-bind="attrs" @click="snackBarNew = false">
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
+
+      <!-- Log, Delete, Cancel form -->
+      <v-snackbar v-model="snackBar" :timeout="10000" dark bottom vertical>
+        <v-card-text>
+          <v-row no-gutters>
+            <v-col cols="12"
+              >Visit to {{ selectedEvent.name }} {{ getLoggedState() }}:</v-col
+            >
+          </v-row>
+          <v-row no-gutters>
+            <v-col cols="12">Swipe LEFT to LOG VISIT</v-col>
+            <v-col class="text-right">Swipe RIGHT (or Del) to DELETE</v-col>
+          </v-row>
+        </v-card-text>
         <template v-slot:action="{ attrs }">
           <v-btn color="white" text v-bind="attrs" @click="snackBar = false">
             Close
@@ -61,6 +79,7 @@
       <!-- do not change the calendar sheet's height. if you do, you will lose scrollToTime, and you will lose hours on the calendar -->
       <v-sheet height="400">
         <v-calendar
+          id="scroll-target"
           ref="calendar"
           v-model="focus"
           color="primary"
@@ -72,14 +91,20 @@
           @mousemove:time="mouseMove"
           @mouseup:time="endDrag"
           @mouseleave.native="cancelDrag"
-          @touchstart:event="touch2Mouse($event)"
+          @click:event="showEvent"
+          @click:more="viewDay"
+          @click:date="viewDay"
+          @touchstart:event="startDrag"
           @touchstart:time="touch2Mouse($event)"
           @touchmove:time="touch2Mouse($event)"
           @touchend:time="touch2Mouse($event)"
           @touchcancel="touch2Mouse($event)"
-          @click:event="showEvent"
-          @click:more="viewDay"
-          @click:date="viewDay"
+          v-touch="{
+            left: () => swipe('Left'),
+            right: () => swipe('Right'),
+          }"
+          class="overflow-y-auto"
+          v-scroll:#scroll-target="onScroll"
         >
           <template v-slot:event="{ event, timed, eventSummary }">
             <div class="v-event-draggable" v-html="eventSummary()"></div>
@@ -90,7 +115,7 @@
             ></div>
           </template>
         </v-calendar>
-        <v-menu
+        <!--   <v-menu
           v-model="selectedOpen"
           :close-on-content-click="false"
           :activator="selectedElement"
@@ -100,10 +125,10 @@
           <v-card max-width=" 400px" color="grey lighten-4" flat>
             <v-card-title> {{ selectedEvent.name }}</v-card-title>
             <v-card-subtitle>Visit {{ getLoggedState() }}.</v-card-subtitle>
-            <!-- <v-card-text>
+          <v-card-text>
               You can only delete an unlogged visit. You cannot delete data from
               the server.
-            </v-card-text> -->
+            </v-card-text>
             <v-card-actions>
               <v-btn text color="primary" @click="logVisit"> Log </v-btn>
               <v-spacer></v-spacer>
@@ -114,7 +139,7 @@
               </v-btn>
             </v-card-actions>
           </v-card>
-        </v-menu>
+        </v-menu> -->
       </v-sheet>
     </v-col>
   </v-row>
@@ -139,12 +164,13 @@ export default {
   },
 
   data: () => ({
-    canMoveVisit: false,
+    swipeDirection: 'None',
     visit: {},
     visits: [],
     place: '',
     type: 'day',
     snackBar: false,
+    snackBarNew: false,
     feedbackMessage: '',
     focus: '',
     typeToLabel: {
@@ -166,6 +192,19 @@ export default {
     //#endregion
   }),
   methods: {
+    onScroll(e) {
+      console.log(e.target.scrollTop);
+    },
+
+    swipe(direction) {
+      this.swipeDirection = direction;
+      if (direction == 'Left') {
+        this.logVisit();
+      } else if (direction == 'Right') {
+        this.deleteVisit();
+      }
+    },
+
     logVisit() {
       this.selectedOpen = false;
       this.visit.details = { logged: true };
@@ -192,10 +231,15 @@ export default {
     },
 
     deleteVisit() {
-      this.$emit('deleteVisit', this.visit);
-      this.visits = this.arrayRemove(this.visits, this.selectedEvent);
-      this.saveVisits();
-      this.selectedOpen = false;
+      if (
+        event.code == 'Delete' &&
+        confirm(`Sure you want to DELETE visit to ${this.visit.name}?`)
+      ) {
+        this.$emit('deleteVisit', this.visit);
+        this.visits = this.arrayRemove(this.visits, this.selectedEvent);
+        this.saveVisits();
+        this.selectedOpen = false;
+      }
     },
 
     //#region Active Calendar
@@ -224,15 +268,18 @@ export default {
 
     showEvent({ nativeEvent, event }) {
       const open = () => {
+        // this.feedbackMessage = `Swipe LEFT to LOG VISIT     Swipe RIGHT to DELETE`;
         this.selectedEvent = event;
         this.selectedElement = nativeEvent.target;
         setTimeout(() => {
-          this.selectedOpen = true;
+          // this.selectedOpen = true;
+          this.snackBar = true;
         }, 10);
       };
 
-      if (this.selectedOpen) {
-        this.selectedOpen = false;
+      if (this.snackBar) {
+        // this.selectedOpen = false;
+        this.snackBar = false;
         setTimeout(open, 10);
       } else {
         open();
@@ -254,7 +301,7 @@ export default {
           @touchmove:time="touch2Mouse"
           @touchend:time="touch2Mouse"
           @touchcancel="touch2Mouse"
-          
+
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
@@ -270,11 +317,12 @@ export default {
 
       switch (e.type) {
         case 'touchstart':
+          // so we can add a visit
           mouseEv = 'mousedown';
           break;
         case 'touchend':
           mouseEv = 'mouseup';
-          show = true;
+          show = this.visit.name && true;
           break;
         case 'touchmove':
           mouseEv = 'mousemove';
@@ -306,11 +354,7 @@ export default {
       e.preventDefault();
 
       if (show) {
-        // this.selectedEvent = ev;
-        // this.selectedElement = target;
-        this.selectedElement = event.target;
-
-        this.selectedOpen = true;
+        this.snackBar = true;
       }
     },
     //#endregion Active Calendar
@@ -356,9 +400,9 @@ export default {
         this.visits.push(this.visit);
         this.saveVisits();
         this.place = '';
-        this.feedbackMessage = `Click event to log to the server`;
+        // this.feedbackMessage = `Swipe LEFT to LOG VISIT     Swipe RIGHT to DELETE`;
         this.snackBar = true;
-        this.selectedOpen = true;
+        // this.selectedOpen = true;
       }
     },
     extendBottom(event) {
@@ -442,9 +486,20 @@ export default {
     },
   },
 
-  watch: {},
+  watch: {
+    visit(newVal) {
+      console.log(newVal);
+    },
+  },
 
   mounted() {
+    let self = this;
+
+    window.addEventListener('keydown', function (ev) {
+      if (ev.code == 'Delete') {
+        self.deleteVisit(); // called with the Del key
+      }
+    });
     this.place = this.selectedSpaceName;
     const v = localStorage.getItem('visits');
     this.visits = v ? JSON.parse(v) : [];
@@ -453,7 +508,7 @@ export default {
     this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
     if (this.place) {
       this.feedbackMessage = `Click a time to visit ${this.place}:`;
-      this.snackBar = true;
+      this.snackBarNew = true;
     }
   },
   destroyed() {
