@@ -56,11 +56,19 @@
       </v-snackbar>
 
       <!-- Log, Delete, Cancel form -->
-      <v-snackbar v-model="snackBar" :timeout="10000" dark bottom vertical>
+      <v-snackbar
+        v-model="snackBar"
+        :timeout="10000"
+        top
+        light
+        vertical
+        max-width="350"
+      >
         <v-card-text>
           <v-row no-gutters>
             <v-col cols="12"
-              >Visit to {{ selectedEvent.name }} {{ getLoggedState() }}:</v-col
+              >Visit to {{ visit.name }}
+              <p>{{ getLoggedState() }}:</p></v-col
             >
           </v-row>
           <v-row no-gutters>
@@ -69,9 +77,7 @@
           </v-row>
         </v-card-text>
         <template v-slot:action="{ attrs }">
-          <v-btn color="white" text v-bind="attrs" @click="snackBar = false">
-            Close
-          </v-btn>
+          <v-btn text v-bind="attrs" @click="snackBar = false"> Close </v-btn>
         </template>
       </v-snackbar>
 
@@ -79,7 +85,7 @@
       <!-- do not change the calendar sheet's height. if you do, you will lose scrollToTime, and you will lose hours on the calendar -->
       <v-sheet height="400">
         <v-calendar
-          id="scroll-target"
+          id="calendar-target"
           ref="calendar"
           v-model="focus"
           color="primary"
@@ -87,24 +93,21 @@
           :events="visits"
           :event-ripple="false"
           @mousedown:event="startDrag"
+          @touchstart:event="startDrag"
           @mousedown:time="startTime"
+          @touchstart:time="startTime"
           @mousemove:time="mouseMove"
+          @touchmove:time="mouseMove"
           @mouseup:time="endDrag"
+          @touchend:time="endDrag"
           @mouseleave.native="cancelDrag"
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
-          @touchstart:event="startDrag"
-          @touchstart:time="touch2Mouse($event)"
-          @touchmove:time="touch2Mouse($event)"
-          @touchend:time="touch2Mouse($event)"
-          @touchcancel="touch2Mouse($event)"
           v-touch="{
             left: () => swipe('Left'),
             right: () => swipe('Right'),
           }"
-          class="overflow-y-auto"
-          v-scroll:#scroll-target="onScroll"
         >
           <template v-slot:event="{ event, timed, eventSummary }">
             <div class="v-event-draggable" v-html="eventSummary()"></div>
@@ -147,7 +150,7 @@
 
 <script>
 import { getCurrentMilitaryTime } from '../../utils/luxonHelpers';
-import { success, printJson } from '../../utils/colors';
+import { success, highlight, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -164,6 +167,7 @@ export default {
   },
 
   data: () => ({
+    isMovingEvent: false,
     swipeDirection: 'None',
     visit: {},
     visits: [],
@@ -192,6 +196,7 @@ export default {
     //#endregion
   }),
   methods: {
+    //#region Non Pointer methods
     onScroll(e) {
       console.log(e.target.scrollTop);
     },
@@ -201,7 +206,7 @@ export default {
       if (direction == 'Left') {
         this.logVisit();
       } else if (direction == 'Right') {
-        this.deleteVisit();
+        this.deleteVisit(true);
       }
     },
 
@@ -230,19 +235,19 @@ export default {
       });
     },
 
-    deleteVisit() {
+    deleteVisit(swiped) {
       if (
-        event.code == 'Delete' &&
-        confirm(`Sure you want to DELETE visit to ${this.visit.name}?`)
+        event.code == 'Delete' ||
+        (swiped &&
+          confirm(`Sure you want to DELETE visit to ${this.visit.name}?`))
       ) {
         this.$emit('deleteVisit', this.visit);
-        this.visits = this.arrayRemove(this.visits, this.selectedEvent);
+        this.visits = this.arrayRemove(this.visits, this.visit);
         this.saveVisits();
         this.selectedOpen = false;
       }
     },
 
-    //#region Active Calendar
     changeType(type) {
       this.type = type;
       this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
@@ -265,6 +270,7 @@ export default {
     next() {
       this.$refs.calendar.next();
     },
+    //#endregion
 
     showEvent({ nativeEvent, event }) {
       const open = () => {
@@ -357,11 +363,14 @@ export default {
         this.snackBar = true;
       }
     },
-    //#endregion Active Calendar
 
     //#region  Drag and Drop
     // mouse and touch activate
-    startDrag({ event, timed }) {
+    startDrag({ nativeEvent, event, timed }) {
+      console.log(highlight('startDrag', nativeEvent.type));
+      if (nativeEvent.type === 'touchstart') {
+        nativeEvent.preventDefault();
+      }
       this.visit = event;
       if (event && timed) {
         this.dragEvent = event;
@@ -369,6 +378,7 @@ export default {
         this.extendOriginal = null;
       }
     },
+
     // startDrag({ nativeEvent, event, timed }) {
     //   if (event && timed) {
     //     this.dragEvent = event;
@@ -380,6 +390,8 @@ export default {
     // },
 
     startTime(tms) {
+      console.log(highlight('startTime'));
+
       const mouse = this.toTime(tms);
 
       if (this.dragEvent && this.dragTime === null) {
@@ -406,14 +418,20 @@ export default {
       }
     },
     extendBottom(event) {
+      console.log(highlight('extendBottom'));
+
       this.createEvent = event;
       this.createStart = event.start;
       this.extendOriginal = event.end;
     },
+
     mouseMove(tms) {
+      console.log(highlight('mouseMove'));
       const mouse = this.toTime(tms);
 
       if (this.dragEvent && this.dragTime !== null) {
+        console.log(highlight('changing the time slot'));
+
         const start = this.dragEvent.start;
         const end = this.dragEvent.end;
         const duration = end - start;
@@ -424,6 +442,9 @@ export default {
         this.dragEvent.start = newStart;
         this.dragEvent.end = newEnd;
       } else if (this.createEvent && this.createStart !== null) {
+        // changing the time
+        console.log(highlight('changing the end time slot'));
+
         const mouseRounded = this.roundTime(mouse, false);
         const min = Math.min(mouseRounded, this.createStart);
         const max = Math.max(mouseRounded, this.createStart);
@@ -433,6 +454,15 @@ export default {
       }
     },
     endDrag() {
+      console.log(highlight('endDrag'));
+
+      let el = document.getElementById('calendar-target');
+      console.log(highlight(el.style.overflowY));
+
+      el.style.overflowY = 'auto';
+      console.log(highlight(el.style.overflowY));
+
+      this.isMovingEvent = false;
       this.dragTime = null;
       this.dragEvent = null;
       this.createEvent = null;
@@ -440,6 +470,8 @@ export default {
       this.extendOriginal = null;
     },
     cancelDrag() {
+      console.log(highlight('cancelDrag'));
+
       if (this.createEvent) {
         if (this.extendOriginal) {
           this.createEvent.end = this.extendOriginal;
@@ -487,8 +519,16 @@ export default {
   },
 
   watch: {
-    visit(newVal) {
-      console.log(newVal);
+    isMovingEvent() {
+      let el = document.getElementById('calendar-target');
+      if (this.isMovingEvent) {
+        console.log(highlight('hidden'));
+        el.style.overflow = 'hidden';
+        return;
+      }
+      console.log(highlight('auto'));
+
+      el.style.overflow = 'auto';
     },
   },
 
@@ -550,6 +590,11 @@ export default {
 
   &:hover::after {
     display: block;
+  }
+
+  #calendar-target {
+    touch-action: none;
+    overflow-y: hidden;
   }
 }
 </style>
