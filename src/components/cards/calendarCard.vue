@@ -115,6 +115,7 @@
               v-if="timed"
               class="v-event-drag-bottom"
               @mousedown.stop="extendBottom(event)"
+              @touchstart.stop="extendBottom(event)"
             ></div>
           </template>
         </v-calendar>
@@ -150,7 +151,7 @@
 
 <script>
 import { getCurrentMilitaryTime } from '../../utils/luxonHelpers';
-import { success, highlight, printJson } from '../../utils/colors';
+import { success, highlight, warn, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -167,7 +168,6 @@ export default {
   },
 
   data: () => ({
-    isMovingEvent: false,
     swipeDirection: 'None',
     visit: {},
     visits: [],
@@ -193,6 +193,7 @@ export default {
     createEvent: null,
     createStart: null,
     extendOriginal: null,
+    pointerType: '',
     //#endregion
   }),
   methods: {
@@ -292,81 +293,12 @@ export default {
       }
 
       nativeEvent.stopPropagation();
-      nativeEvent.preventDefault();
-    },
-
-    /*
-          @mousedown:event="startDrag"
-          @mousedown:time="startTime"
-          @mousemove:time="mouseMove"
-          @mouseup:time="endDrag"
-          @mouseleave.native="cancelDrag"
-
-          @touchstart:event="touch2Mouse"
-          @touchstart:time="touch2Mouse"
-          @touchmove:time="touch2Mouse"
-          @touchend:time="touch2Mouse"
-          @touchcancel="touch2Mouse"
-
-          @click:event="showEvent"
-          @click:more="viewDay"
-          @click:date="viewDay"
-    */
-
-    touch2Mouse(ev) {
-      const e = event || ev.nativeEvent;
-      let show = false;
-
-      const theTouch = e.changedTouches[0];
-      console.log(e.type, '\n', printJson(theTouch));
-      let mouseEv;
-
-      switch (e.type) {
-        case 'touchstart':
-          // so we can add a visit
-          mouseEv = 'mousedown';
-          break;
-        case 'touchend':
-          mouseEv = 'mouseup';
-          show = this.visit.name && true;
-          break;
-        case 'touchmove':
-          mouseEv = 'mousemove';
-          break;
-        default:
-          return;
-      }
-
-      const mouseEvent = document.createEvent('MouseEvent');
-      mouseEvent.initMouseEvent(
-        mouseEv,
-        true,
-        true,
-        window,
-        1,
-        theTouch.screenX,
-        theTouch.screenY,
-        theTouch.clientX,
-        theTouch.clientY,
-        false,
-        false,
-        false,
-        false,
-        0,
-        null
-      );
-      theTouch.target.dispatchEvent(mouseEvent);
-
-      e.preventDefault();
-
-      if (show) {
-        this.snackBar = true;
-      }
     },
 
     //#region  Drag and Drop
     // mouse and touch activate
     startDrag({ nativeEvent, event, timed }) {
+      this.pointerType = nativeEvent.type;
       console.log(highlight('startDrag', nativeEvent.type));
       if (nativeEvent.type === 'touchstart') {
         nativeEvent.preventDefault();
@@ -379,18 +311,8 @@ export default {
       }
     },
 
-    // startDrag({ nativeEvent, event, timed }) {
-    //   if (event && timed) {
-    //     this.dragEvent = event;
-    //     this.dragTime = null;
-    //     this.extendOriginal = null;
-    //     //...enables us to move the event by touch
-    //     nativeEvent.preventDefault();
-    //   }
-    // },
-
     startTime(tms) {
-      console.log(highlight('startTime'));
+      console.log(highlight('startTime using ', this.pointerType));
 
       const mouse = this.toTime(tms);
 
@@ -418,7 +340,7 @@ export default {
       }
     },
     extendBottom(event) {
-      console.log(highlight('extendBottom'));
+      console.log(highlight('extendBottom using', this.pointerType));
 
       this.createEvent = event;
       this.createStart = event.start;
@@ -426,11 +348,13 @@ export default {
     },
 
     mouseMove(tms) {
-      console.log(highlight('mouseMove'));
+      console.log(highlight('mouseMove using', this.pointerType));
       const mouse = this.toTime(tms);
 
       if (this.dragEvent && this.dragTime !== null) {
-        console.log(highlight('changing the time slot'));
+        console.log(
+          highlight('changing the time slot using', this.pointerType)
+        );
 
         const start = this.dragEvent.start;
         const end = this.dragEvent.end;
@@ -443,8 +367,7 @@ export default {
         this.dragEvent.end = newEnd;
       } else if (this.createEvent && this.createStart !== null) {
         // changing the time
-        console.log(highlight('changing the end time slot'));
-
+        console.log(highlight(`changing the slot's end time`));
         const mouseRounded = this.roundTime(mouse, false);
         const min = Math.min(mouseRounded, this.createStart);
         const max = Math.max(mouseRounded, this.createStart);
@@ -454,7 +377,7 @@ export default {
       }
     },
     endDrag() {
-      console.log(highlight('endDrag'));
+      console.log(highlight('endDrag using', this.pointerType));
 
       let el = document.getElementById('calendar-target');
       console.log(highlight(el.style.overflowY));
@@ -462,7 +385,6 @@ export default {
       el.style.overflowY = 'auto';
       console.log(highlight(el.style.overflowY));
 
-      this.isMovingEvent = false;
       this.dragTime = null;
       this.dragEvent = null;
       this.createEvent = null;
@@ -470,7 +392,7 @@ export default {
       this.extendOriginal = null;
     },
     cancelDrag() {
-      console.log(highlight('cancelDrag'));
+      console.log(highlight('cancelDrag using', this.pointerType));
 
       if (this.createEvent) {
         if (this.extendOriginal) {
@@ -519,16 +441,17 @@ export default {
   },
 
   watch: {
-    isMovingEvent() {
-      let el = document.getElementById('calendar-target');
-      if (this.isMovingEvent) {
-        console.log(highlight('hidden'));
-        el.style.overflow = 'hidden';
-        return;
-      }
-      console.log(highlight('auto'));
-
-      el.style.overflow = 'auto';
+    createStart(newVal, oldVal) {
+      console.log(
+        warn(
+          'createStart new:',
+          newVal,
+          ' / old: ',
+          oldVal,
+          ' using',
+          this.pointerType
+        )
+      );
     },
   },
 

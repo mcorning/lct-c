@@ -303,13 +303,31 @@ export default {
       this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
 
       // send the visit to the server
-      socket.emit('logVisit', query, (results) => {
+      this.addVisitToGraph(query, visit).then((results) => {
+        console.log('addVisitToGraph', visit.name, results);
+        // let v = JSON.parse(localStorage.getItem('visits'));
+        // let x = v.filter(
+        //   (v) =>
+        //     v.name === visit.name &&
+        //     v.start === visit.start &&
+        //     v.end === visit.end
+        // )[0];
+
+        // x.details.id = 10;
         this.auditor.logEntry(
           `Log Visit Results: ${printJson(results)}`,
           'Log Visit'
         );
         this.confirmationMessage = `You have logged ${this.selectedSpace.name}`;
         this.hasSaved = true;
+      });
+    },
+
+    addVisitToGraph(query) {
+      return new Promise((resolve) => {
+        socket.emit('logVisit', query, (results) => {
+          resolve(results);
+        });
       });
     },
 

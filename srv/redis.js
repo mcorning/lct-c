@@ -1,10 +1,16 @@
 //https://github.com/RedisGraph/redisgraph.js
 const RedisGraph = require('redisgraph.js').Graph;
-const host = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
-const options = {
+const hostOld = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
+const host = 'redis-16914.c53.west-us.azure.cloud.redislabs.com';
+const optionsOld = {
   host: host,
   port: 11939,
   password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
+};
+const options = {
+  host: host,
+  port: 16914,
+  password: 'kqhiYfB2XwoYV2Jy3vUw3eXDrWhCaSWq',
 };
 const { graphName } = require('./config.js');
 // const graphName = 'Sisters';
@@ -201,14 +207,16 @@ function logVisit(data) {
 
     let query = `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
   MERGE (s:space{ name: "${selectedSpace}"}) 
-  MERGE (v)-[:visited{start:${start}, end:${end}, 
-    duration: '${duration}'}]->(s)`;
+  MERGE (v)-[r:visited{start:${start}, end:${end}, 
+    duration: '${duration}'}]->(s) RETURN id(r)`;
     console.log(warn('Visit query:', query));
     Graph.query(query)
       .then((results) => {
+        let x = results.next();
+        let id = x.get('id(r)');
         const stats = results._statistics._raw;
         console.log(`stats: ${printJson(stats)}`);
-        resolve({ logged: true });
+        resolve({ logged: true, id: id });
       })
       .catch((error) => {
         console.log(error);

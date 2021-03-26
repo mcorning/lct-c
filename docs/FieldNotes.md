@@ -58,3 +58,12 @@ In our case with the `exposureAlert`, the server wants to know that the message 
 socket.emit() | socket.on()
 ------------- | -----------
 name, [data],[anonymous function] | name, [data] or [(data, function([msg]))]
+
+
+## Calendar
+
+When the pointer touches a time slot in the calendar, startTime(tms) gets called with the time, minutes, and seconds of the slot.
+
+If the user is coming to the calendar with a place in hand, there is, by definition, no dragEvent in play. In this case, startTime() will transform the tms data into a start time. It adds an avgStay value to store the default end time of the visit. And it gives the new event a name provided by the place.
+
+This event gets cached as a visit in localStorage.
