@@ -59,8 +59,7 @@
       <v-snackbar
         v-model="confirm"
         :timeout="10000"
-        color="primary"
-        absolute
+        :color="color"
         dark
         centered
       >
@@ -113,8 +112,9 @@
                   v-html="eventSummary()"
                 ></div>
               </template>
-              <span>Left swipe to log</span
-              ><span class="pl-5">Right swipe to delete </span></v-tooltip
+              <span>LOG: Enter key or Left swipe</span><br /><span class="pl-8"
+                >DELETE: Del key or Right swipe
+              </span></v-tooltip
             >
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
@@ -137,7 +137,7 @@
 </template>
 
 <script>
-import { getCurrentMilitaryTime } from '../../utils/luxonHelpers';
+import { showCurrentMilitaryTime } from '../../utils/luxonHelpers';
 import { success, highlight, printJson } from '../../utils/colors';
 
 export default {
@@ -155,6 +155,7 @@ export default {
   },
 
   data: () => ({
+    color: 'primary',
     action: '',
     confirm: false,
     loading: true,
@@ -334,13 +335,14 @@ export default {
       console.log('Going Right...');
       this.feedbackMessage = `Are you sure you want to DELETE ${this.visit.name}`;
       this.action = 'DELETE';
+      this.color = 'warning';
       this.confirm = true;
     },
     goLeft() {
       console.log('Going Left...');
       this.feedbackMessage = `Are you sure you want to LOG ${this.visit.name}`;
       this.action = 'LOG';
-
+      this.color = 'primary';
       this.confirm = true;
     },
 
@@ -394,7 +396,7 @@ export default {
 
     changeType(type) {
       this.type = type;
-      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+      this.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
     },
 
     viewDay({ date }) {
@@ -406,7 +408,7 @@ export default {
     },
     setToday() {
       this.focus = '';
-      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+      this.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
     },
     prev() {
       this.$refs.calendar.prev();
@@ -463,6 +465,13 @@ export default {
         tms.minute
       ).getTime();
     },
+
+    newEvent() {
+      this.addEvent(Date.now());
+      this.endDrag();
+      this.feedbackMessage = `Confirm (or move) the time to visit ${this.place}:`;
+      this.snackBarNew = true;
+    },
   },
 
   watch: {
@@ -477,18 +486,18 @@ export default {
     window.addEventListener('keydown', function (ev) {
       if (ev.code == 'Delete') {
         self.deleteVisit(ev.code); // called with the Del key
+      } else if (ev.code == 'Enter') {
+        self.logVisit(); // called with the Enter key
       }
     });
     self.place = self.selectedSpaceName;
     const v = localStorage.getItem('visits');
     self.visits = v ? JSON.parse(v) : [];
     console.log(printJson(self.visits));
-    console.log('now:', getCurrentMilitaryTime());
-    self.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+    console.log('now:', showCurrentMilitaryTime());
+    self.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
     if (self.place) {
-      // self.addEvent(Date.now());
-      self.feedbackMessage = `Confirm (or move) the time to visit ${self.place}:`;
-      self.snackBarNew = true;
+      self.newEvent();
     }
     self.loading = false;
     console.log('mounted calendarCard');

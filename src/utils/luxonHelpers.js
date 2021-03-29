@@ -2,6 +2,14 @@ const { DateTime, Interval } = require('luxon');
 const visitFormat = 'HH:mm ccc, DD';
 const calendarFormat = 'yyyy-LL-dd hh:mm';
 
+const t = () => {
+  // using Luxon Presets
+  return DateTime.now();
+};
+const tPlusOne = (avgStay = 30) => {
+  // using Luxon Presets
+  return DateTime.now().plus({ minutes: avgStay });
+};
 const getNow = () => {
   // using Luxon Presets
   return DateTime.now().toLocaleString(DateTime.TIME_24_WITH_SECONDS);
@@ -39,9 +47,9 @@ const getVisitDate = () => {
   return x;
 };
 
-const getCurrentMilitaryTime = () => {
+const showCurrentMilitaryTime = () => {
   return DateTime.now()
-    .plus({ hour: 1 })
+    .minus({ minute: 15 })
     .toLocaleString(DateTime.TIME_24_SIMPLE);
 };
 
@@ -53,5 +61,7 @@ module.exports = {
   formatTime,
   formatVisitedDate,
   getVisitDate,
-  getCurrentMilitaryTime,
+  showCurrentMilitaryTime,
+  t,
+  tPlusOne,
 };

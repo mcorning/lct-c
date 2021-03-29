@@ -27,12 +27,12 @@
           medium
           dark
           class="ml-5"
-          @click="logVisit"
+          @click="addVisit"
         >
           <v-icon>mdi-calendar</v-icon>
         </v-btn>
       </template>
-      <span>Send to calendar </span></v-tooltip
+      <span>Mark your calendar </span></v-tooltip
     >
   </div>
 </template>
@@ -44,6 +44,7 @@ import { defaultLocation } from '../../maps/mapconfig.json';
 console.log(defaultLocation);
 
 export default {
+  // see main.js for vue2-google-maps instantiation
   name: 'GoogleMap',
 
   props: {
@@ -67,7 +68,7 @@ export default {
   },
 
   methods: {
-    logVisit() {
+    addVisit() {
       this.$emit('addedPlace', this.currentPlace);
     },
 

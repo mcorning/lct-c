@@ -274,7 +274,7 @@ export default {
   },
   methods: {
     hardRefresh() {
-      window.location.reload(true);
+      window.location.replace(window.location.href);
     },
 
     onConnectionStatusChanged(val) {

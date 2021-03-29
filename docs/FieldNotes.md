@@ -2,6 +2,16 @@
 
 This is a collection of technical details that may help you understand how some of the more arcane parts of Local Contact Tracing work.
 
+## Experiments
+
+### Add sw cached strategy
+
+### Click map to mark calendar
+
+### Vite?
+
+### Shared open slots
+
 ## Acknowledgements
 
 Socket.io adds a call back function to Web Socket messages.
@@ -58,7 +68,6 @@ In our case with the `exposureAlert`, the server wants to know that the message 
 socket.emit() | socket.on()
 ------------- | -----------
 name, [data],[anonymous function] | name, [data] or [(data, function([msg]))]
-
 
 ## Calendar
 

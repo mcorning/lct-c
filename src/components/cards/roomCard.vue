@@ -13,6 +13,9 @@
 
       <v-card tile v-if="showFavorites" :height="ht">
         <v-card-title>Recent Visits, {{ nickname }}:</v-card-title>
+        <v-card-subtitle v-model="newUser"
+          >Go to the <strong>Spaces</strong> page to add visits</v-card-subtitle
+        >
         <v-card-text>
           <v-list dense shaped max-width="300">
             <v-divider></v-divider>
@@ -202,6 +205,7 @@ export default {
 
   data() {
     return {
+      newUser: false,
       favorites: [],
       // TODO make avgStay configurable by admin or user
       avgStay: 3600000,
@@ -231,6 +235,7 @@ export default {
       const visits = JSON.parse(localStorage.getItem('visits')) || [];
       this.favorites = [...new Set(visits.map((v) => v.name))];
       console.log('favorites', this.favorites);
+      this.newUser = this.favorites.length === 0;
     },
 
     logLabel() {
