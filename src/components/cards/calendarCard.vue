@@ -55,29 +55,21 @@
         </template>
       </v-snackbar>
 
-      <!-- Log, Delete, Cancel form -->
+      <!-- confirmation dialog -->
       <v-snackbar
-        v-model="snackBar"
+        v-model="confirm"
         :timeout="10000"
-        top
-        light
-        vertical
-        max-width="350"
+        color="primary"
+        absolute
+        dark
+        centered
       >
-        <v-card-text>
-          <v-row no-gutters>
-            <v-col cols="12"
-              >Visit to {{ visit.name }}
-              <p>{{ getLoggedState() }}:</p></v-col
-            >
-          </v-row>
-          <v-row no-gutters>
-            <v-col cols="12">Swipe LEFT to LOG VISIT</v-col>
-            <v-col class="text-right">Swipe RIGHT (or Del) to DELETE</v-col>
-          </v-row>
-        </v-card-text>
+        {{ feedbackMessage }}
         <template v-slot:action="{ attrs }">
-          <v-btn text v-bind="attrs" @click="snackBar = false"> Close </v-btn>
+          <v-btn color="white" text v-bind="attrs" @click="act"> Yes </v-btn>
+          <v-btn color="white" text v-bind="attrs" @click="confirm = false">
+            No
+          </v-btn>
         </template>
       </v-snackbar>
 
@@ -98,52 +90,47 @@
           @touchstart:time="startTime"
           @mousemove:time="mouseMove"
           @touchmove:time="mouseMove"
-          @mouseup:time="endDrag"
-          @touchend:time="endDrag"
           @mouseleave.native="cancelDrag"
           @click:event="showEvent"
           @click:more="viewDay"
+          @mouseup:time="endDrag"
+          @touchend:time="endDrag"
           @click:date="viewDay"
           v-touch="{
-            left: () => swipe('Left'),
-            right: () => swipe('Right'),
+            left: goLeft,
+            right: goRight,
+            up: goUp,
+            down: goDn,
           }"
         >
           <template v-slot:event="{ event, timed, eventSummary }">
-            <div class="v-event-draggable" v-html="eventSummary()"></div>
-            <div
-              v-if="timed"
-              class="v-event-drag-bottom"
-              @mousedown.stop="extendBottom(event)"
-              @touchstart.stop="extendBottom(event)"
-            ></div>
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <div
+                  v-bind="attrs"
+                  v-on="on"
+                  class="v-event-draggable"
+                  v-html="eventSummary()"
+                ></div>
+              </template>
+              <span>Left swipe to log</span
+              ><span class="pl-5">Right swipe to delete </span></v-tooltip
+            >
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <div
+                  v-if="timed"
+                  v-bind="attrs"
+                  v-on="on"
+                  class="v-event-drag-bottom"
+                  @mousedown.stop="extendBottom(event)"
+                  @touchstart.stop="extendBottom(event)"
+                ></div>
+              </template>
+              <span>Drag and drop event as necessary </span></v-tooltip
+            >
           </template>
         </v-calendar>
-        <!--   <v-menu
-          v-model="selectedOpen"
-          :close-on-content-click="false"
-          :activator="selectedElement"
-          offset-x
-          offset-y
-        >
-          <v-card max-width=" 400px" color="grey lighten-4" flat>
-            <v-card-title> {{ selectedEvent.name }}</v-card-title>
-            <v-card-subtitle>Visit {{ getLoggedState() }}.</v-card-subtitle>
-          <v-card-text>
-              You can only delete an unlogged visit. You cannot delete data from
-              the server.
-            </v-card-text>
-            <v-card-actions>
-              <v-btn text color="primary" @click="logVisit"> Log </v-btn>
-              <v-spacer></v-spacer>
-
-              <v-btn text color="primary" @click="deleteVisit"> Delete </v-btn>
-              <v-btn text color="primary" @click="selectedOpen = false">
-                Cancel
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-menu> -->
       </v-sheet>
     </v-col>
   </v-row>
@@ -151,7 +138,7 @@
 
 <script>
 import { getCurrentMilitaryTime } from '../../utils/luxonHelpers';
-import { success, highlight, warn, printJson } from '../../utils/colors';
+import { success, highlight, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -168,7 +155,9 @@ export default {
   },
 
   data: () => ({
-    swipeDirection: 'None',
+    action: '',
+    confirm: false,
+    loading: true,
     visit: {},
     visits: [],
     place: '',
@@ -185,7 +174,6 @@ export default {
     },
     selectedEvent: {},
     selectedElement: null,
-    selectedOpen: false,
 
     //#region  drag and drop
     dragEvent: null,
@@ -197,148 +185,7 @@ export default {
     //#endregion
   }),
   methods: {
-    //#region Non Pointer methods
-    onScroll(e) {
-      console.log(e.target.scrollTop);
-    },
-
-    swipe(direction) {
-      this.swipeDirection = direction;
-      if (direction == 'Left') {
-        this.logVisit();
-      } else if (direction == 'Right') {
-        this.deleteVisit(true);
-      }
-    },
-
-    logVisit() {
-      this.selectedOpen = false;
-      this.visit.details = { logged: true };
-      this.visit.color = 'primary';
-      this.selectedEvent.details = { logged: true };
-      this.selectedEvent.color = 'primary';
-      console.log(success('Logging visit:', printJson(this.visit)));
-      this.saveVisits();
-      this.$emit('logVisit', this.visit);
-    },
-
-    getLoggedState() {
-      console.log(printJson(this.selectedEvent));
-      let x = this.isLogged
-        ? 'was logged to server'
-        : 'is not logged to server yet';
-      return x;
-    },
-
-    arrayRemove(arr, value) {
-      return arr.filter((ele) => {
-        return ele != value;
-      });
-    },
-
-    deleteVisit(swiped) {
-      if (
-        event.code == 'Delete' ||
-        (swiped &&
-          confirm(`Sure you want to DELETE visit to ${this.visit.name}?`))
-      ) {
-        this.$emit('deleteVisit', this.visit);
-        this.visits = this.arrayRemove(this.visits, this.visit);
-        this.saveVisits();
-        this.selectedOpen = false;
-      }
-    },
-
-    changeType(type) {
-      this.type = type;
-      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
-    },
-
-    viewDay({ date }) {
-      this.focus = date;
-      this.type = 'day';
-    },
-    getEventColor(event) {
-      return event.color;
-    },
-    setToday() {
-      this.focus = '';
-      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
-    },
-    prev() {
-      this.$refs.calendar.prev();
-    },
-    next() {
-      this.$refs.calendar.next();
-    },
-    //#endregion
-
-    showEvent({ nativeEvent, event }) {
-      const open = () => {
-        // this.feedbackMessage = `Swipe LEFT to LOG VISIT     Swipe RIGHT to DELETE`;
-        this.selectedEvent = event;
-        this.selectedElement = nativeEvent.target;
-        setTimeout(() => {
-          // this.selectedOpen = true;
-          this.snackBar = true;
-        }, 10);
-      };
-
-      if (this.snackBar) {
-        // this.selectedOpen = false;
-        this.snackBar = false;
-        setTimeout(open, 10);
-      } else {
-        open();
-      }
-
-      nativeEvent.stopPropagation();
-    },
-
-    //#region  Drag and Drop
-    // mouse and touch activate
-    startDrag({ nativeEvent, event, timed }) {
-      this.pointerType = nativeEvent.type;
-      console.log(highlight('startDrag', nativeEvent.type));
-      if (nativeEvent.type === 'touchstart') {
-        nativeEvent.preventDefault();
-      }
-      this.visit = event;
-      if (event && timed) {
-        this.dragEvent = event;
-        this.dragTime = null;
-        this.extendOriginal = null;
-      }
-    },
-
-    startTime(tms) {
-      console.log(highlight('startTime using ', this.pointerType));
-
-      const mouse = this.toTime(tms);
-
-      if (this.dragEvent && this.dragTime === null) {
-        const start = this.dragEvent.start;
-
-        this.dragTime = mouse - start;
-      } else if (this.place) {
-        this.createStart = this.roundTime(mouse);
-        this.createEvent = {
-          name: this.place,
-          color: 'secondary',
-          start: this.createStart,
-          end: this.createStart + this.avgStay,
-          timed: true,
-          details: { logged: false },
-        };
-        this.visit = this.createEvent;
-        this.visits.push(this.visit);
-        this.saveVisits();
-        this.place = '';
-        // this.feedbackMessage = `Swipe LEFT to LOG VISIT     Swipe RIGHT to DELETE`;
-        this.snackBar = true;
-        // this.selectedOpen = true;
-      }
-    },
+    // called by event slot in calendar
     extendBottom(event) {
       console.log(highlight('extendBottom using', this.pointerType));
 
@@ -347,6 +194,47 @@ export default {
       this.extendOriginal = event.end;
     },
 
+    //#region  Drag and Drop
+
+    // @mousedown:event="startDrag"
+    // @touchstart:event="startDrag"
+    startDrag({ nativeEvent, event, timed }) {
+      this.pointerType = nativeEvent.type;
+      console.log(highlight('startDrag', nativeEvent.type));
+      if (nativeEvent.type === 'touchstart') {
+        nativeEvent.preventDefault();
+      }
+      if (event && timed) {
+        this.dragEvent = event;
+        this.dragTime = null;
+        this.extendOriginal = null;
+
+        this.visit = this.dragEvent;
+      }
+    },
+
+    // @mousedown:time="startTime"
+    // @touchstart:time="startTime"
+    startTime(tms) {
+      console.log(highlight('startTime using ', this.pointerType));
+
+      const mouse = this.toTime(tms);
+
+      // enable a drag of an existing event
+      if (this.dragEvent && this.dragTime === null) {
+        const start = this.dragEvent.start;
+
+        this.dragTime = mouse - start;
+      }
+      // new event specified by this.place
+      else if (this.place) {
+        this.addEvent(mouse);
+        // this.snackBar = true;
+      }
+    },
+
+    // @mousemove:time="mouseMove"
+    // @touchmove:time="mouseMove"
     mouseMove(tms) {
       console.log(highlight('mouseMove using', this.pointerType));
       const mouse = this.toTime(tms);
@@ -376,14 +264,14 @@ export default {
         this.createEvent.end = max;
       }
     },
+
+    // @mouseup:time="endDrag"
+    // @touchend:time="endDrag"
     endDrag() {
       console.log(highlight('endDrag using', this.pointerType));
 
       let el = document.getElementById('calendar-target');
-      console.log(highlight(el.style.overflowY));
-
       el.style.overflowY = 'auto';
-      console.log(highlight(el.style.overflowY));
 
       this.dragTime = null;
       this.dragEvent = null;
@@ -391,6 +279,8 @@ export default {
       this.createStart = null;
       this.extendOriginal = null;
     },
+
+    // e.g., leaving calendar component
     cancelDrag() {
       console.log(highlight('cancelDrag using', this.pointerType));
 
@@ -412,6 +302,150 @@ export default {
     },
     //#endregion Drag and Drop
 
+    //#region Non Pointer methods
+
+    addEvent(time) {
+      this.createStart = this.roundTime(time);
+      this.createEvent = {
+        name: this.place,
+        color: 'secondary',
+        start: this.createStart,
+        end: this.createStart + this.avgStay,
+        timed: true,
+        details: { logged: false },
+      };
+      this.visit = this.createEvent;
+      this.visits.push(this.visit);
+      this.saveVisits();
+      this.place = '';
+    },
+
+    onScroll(e) {
+      console.log(e.target.scrollTop);
+    },
+
+    goUp() {
+      console.log('Going Up...');
+    },
+    goDn() {
+      console.log('Going Down...');
+    },
+    goRight() {
+      console.log('Going Right...');
+      this.feedbackMessage = `Are you sure you want to DELETE ${this.visit.name}`;
+      this.action = 'DELETE';
+      this.confirm = true;
+    },
+    goLeft() {
+      console.log('Going Left...');
+      this.feedbackMessage = `Are you sure you want to LOG ${this.visit.name}`;
+      this.action = 'LOG';
+
+      this.confirm = true;
+    },
+
+    act() {
+      switch (this.action) {
+        case 'DELETE':
+          this.deleteVisit();
+          break;
+        case 'LOG':
+          this.logVisit();
+          break;
+      }
+    },
+
+    logVisit() {
+      if (this.visit.details.logged) {
+        return;
+      }
+      this.visit.details = { logged: true };
+      this.visit.color = 'primary';
+      this.selectedEvent.details = { logged: true };
+      this.selectedEvent.color = 'primary';
+      console.log(success('Logging visit:', printJson(this.visit)));
+      this.saveVisits();
+      this.$emit('logVisit', this.visit);
+      this.confirm = false;
+    },
+
+    getLoggedState() {
+      console.log(printJson(this.selectedEvent));
+      let x = this.isLogged
+        ? 'was logged to server'
+        : 'is not logged to server yet';
+      return x;
+    },
+
+    arrayRemove(arr, value) {
+      return arr.filter((ele) => {
+        return ele != value;
+      });
+    },
+
+    deleteVisit() {
+      {
+        this.$emit('deleteVisit', this.visit);
+        this.visits = this.arrayRemove(this.visits, this.visit);
+        this.saveVisits();
+        this.confirm = false;
+      }
+    },
+
+    changeType(type) {
+      this.type = type;
+      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+    },
+
+    viewDay({ date }) {
+      this.focus = date;
+      this.type = 'day';
+    },
+    getEventColor(event) {
+      return event.color;
+    },
+    setToday() {
+      this.focus = '';
+      this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+    },
+    prev() {
+      this.$refs.calendar.prev();
+    },
+    next() {
+      this.$refs.calendar.next();
+    },
+    //#endregion
+
+    // @click:event="showEvent"
+    showEvent({ nativeEvent, event }) {
+      const self = this;
+      const open = () => {
+        self.selectedEvent = event;
+        self.selectedElement = nativeEvent.target;
+        // setTimeout(() => {
+        //   self.snackBar = true;
+        // }, 10);
+      };
+
+      if (self.snackBar) {
+        self.snackBar = false;
+        setTimeout(open, 10);
+      } else {
+        open();
+      }
+
+      nativeEvent.stopPropagation();
+    },
+
+    saveVisits() {
+      // do not store blank visits (it will mess up the calendar with a null ref exception)
+      this.visits = this.arrayRemove(this.visits, '');
+
+      let visitStr = JSON.stringify(this.visits);
+      console.log(visitStr);
+      localStorage.setItem('visits', visitStr);
+    },
+
     roundTime(time, down = true) {
       const roundTo = 15; // minutes
       const roundDownTime = roundTo * 60 * 1000;
@@ -429,29 +463,11 @@ export default {
         tms.minute
       ).getTime();
     },
-
-    saveVisits() {
-      // do not store blank visits (it will mess up the calendar with a null ref exception)
-      this.visits = this.arrayRemove(this.visits, '');
-
-      let visitStr = JSON.stringify(this.visits);
-      console.log(visitStr);
-      localStorage.setItem('visits', visitStr);
-    },
   },
 
   watch: {
-    createStart(newVal, oldVal) {
-      console.log(
-        warn(
-          'createStart new:',
-          newVal,
-          ' / old: ',
-          oldVal,
-          ' using',
-          this.pointerType
-        )
-      );
+    selectedEvent(newVal) {
+      console.log('this.selectedEvent', newVal);
     },
   },
 
@@ -460,20 +476,24 @@ export default {
 
     window.addEventListener('keydown', function (ev) {
       if (ev.code == 'Delete') {
-        self.deleteVisit(); // called with the Del key
+        self.deleteVisit(ev.code); // called with the Del key
       }
     });
-    this.place = this.selectedSpaceName;
+    self.place = self.selectedSpaceName;
     const v = localStorage.getItem('visits');
-    this.visits = v ? JSON.parse(v) : [];
-    console.log(this.visits);
-    console.log(getCurrentMilitaryTime());
-    this.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
-    if (this.place) {
-      this.feedbackMessage = `Click a time to visit ${this.place}:`;
-      this.snackBarNew = true;
+    self.visits = v ? JSON.parse(v) : [];
+    console.log(printJson(self.visits));
+    console.log('now:', getCurrentMilitaryTime());
+    self.$refs.calendar.scrollToTime(getCurrentMilitaryTime());
+    if (self.place) {
+      // self.addEvent(Date.now());
+      self.feedbackMessage = `Confirm (or move) the time to visit ${self.place}:`;
+      self.snackBarNew = true;
     }
+    self.loading = false;
+    console.log('mounted calendarCard');
   },
+
   destroyed() {
     this.saveVisits();
   },
