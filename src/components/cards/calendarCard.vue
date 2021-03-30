@@ -145,7 +145,7 @@ export default {
 
   computed: {
     isLogged() {
-      const d = this.selectedEvent.details?.logged;
+      const d = this.selectedCalendarEvent.details?.logged;
       return d;
     },
   },
@@ -187,7 +187,6 @@ export default {
     // called by event slot in calendar
     extendBottom(event) {
       console.log(highlight('extendBottom using', this.pointerType));
-      this.delta.end = event.end - this.extendOriginal;
 
       this.createEvent = event;
       this.createStart = event.start;
@@ -195,16 +194,17 @@ export default {
 
       this.selectedCalendarEvent = this.createEvent;
     },
+
     // @click:event="showEvent"
-    // but may start if we need to annotate visits
     showEvent({ nativeEvent, event }) {
-      console.log('event:', event.name, nativeEvent.name);
+      console.log('Calendar event:', event.name, nativeEvent.name);
       this.selectedCalendarEvent = event;
     },
 
     cancel() {
       this.confirm = false;
-      this.visit.end -= this.delta.end;
+      this.selectedCalendarEvent.start = this.original.start;
+      this.selectedCalendarEvent.end = this.original.end;
       this.reset();
     },
 
@@ -286,12 +286,6 @@ export default {
     // @touchend:time="endDrag"
     // handles updates:
     // this.original stores visit's original interval
-    // this.delta determines the interval difference
-    //    e.g., original.start =  1617063300000
-    //          dragEvent.start = 1617065500000
-    //          delta = 2200000
-    //          so we add 2200000 to visit.start
-    //          then save the visit
     endDrag() {
       console.log(`this.visit ${this.original.start} ${this.original.end} `);
       //this.selectedCalendarEvent should always have a value whether from
@@ -300,17 +294,11 @@ export default {
       //  or when an event is clicked with the mouse
       if (this.selectedCalendarEvent.start) {
         console.log(highlight('endDrag using', this.pointerType));
-        this.delta.start =
-          this.selectedCalendarEvent.start - this.original.start;
-        this.delta.end = this.selectedCalendarEvent.end - this.original.end;
-        console.log(`this.delta ${this.delta.start} ${this.delta.end} `);
 
-        if (this.delta.start !== 0 || this.delta.end !== 0) {
-          this.color = 'secondary';
-          this.feedbackMessage = 'Ready to update the visit?';
-          this.action = 'UPDATE';
-          this.confirm = true;
-        }
+        this.color = 'secondary';
+        this.feedbackMessage = 'Ready to update the visit?';
+        this.action = 'UPDATE';
+        this.confirm = true;
       }
       this.reset();
     },
@@ -318,8 +306,6 @@ export default {
     updateTime() {
       this.visit = this.selectedCalendarEvent;
       this.confirm = false;
-      // this.visit.start += this.delta.start;
-      // this.visit.end += this.delta.end;
       this.visit.interval = `${formatTime(this.visit.start)} to ${formatTime(
         this.visit.end
       )}`;
@@ -336,6 +322,7 @@ export default {
       this.createEvent = null;
       this.createStart = null;
       this.extendOriginal = null;
+      this.selectedCalendarEvent = null;
     },
 
     // e.g., leaving calendar component
@@ -423,8 +410,6 @@ export default {
       }
       this.visit.details = { logged: true };
       this.visit.color = 'primary';
-      this.selectedEvent.details = { logged: true };
-      this.selectedEvent.color = 'primary';
       console.log(success('Logging visit:', printJson(this.visit)));
       this.saveVisits();
       this.$emit('logVisit', this.visit);
