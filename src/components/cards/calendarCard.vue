@@ -66,9 +66,7 @@
         {{ feedbackMessage }}
         <template v-slot:action="{ attrs }">
           <v-btn color="white" text v-bind="attrs" @click="act"> Yes </v-btn>
-          <v-btn color="white" text v-bind="attrs" @click="confirm = false">
-            No
-          </v-btn>
+          <v-btn color="white" text v-bind="attrs" @click="cancel"> No </v-btn>
         </template>
       </v-snackbar>
 
@@ -98,8 +96,6 @@
           v-touch="{
             left: goLeft,
             right: goRight,
-            up: goUp,
-            down: goDn,
           }"
         >
           <template v-slot:event="{ event, timed, eventSummary }">
@@ -137,8 +133,8 @@
 </template>
 
 <script>
-import { showCurrentMilitaryTime } from '../../utils/luxonHelpers';
-import { success, highlight, printJson } from '../../utils/colors';
+import { showCurrentMilitaryTime, formatTime } from '../../utils/luxonHelpers';
+import { error, success, highlight, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -155,6 +151,8 @@ export default {
   },
 
   data: () => ({
+    original: { start: 0, end: 0 },
+    delta: { start: 0, end: 0 },
     color: 'primary',
     action: '',
     confirm: false,
@@ -173,7 +171,7 @@ export default {
       day: 'Day',
       '4day': '4 Days',
     },
-    selectedEvent: {},
+    selectedCalendarEvent: {},
     selectedElement: null,
 
     //#region  drag and drop
@@ -189,10 +187,25 @@ export default {
     // called by event slot in calendar
     extendBottom(event) {
       console.log(highlight('extendBottom using', this.pointerType));
+      this.delta.end = event.end - this.extendOriginal;
 
       this.createEvent = event;
       this.createStart = event.start;
       this.extendOriginal = event.end;
+
+      this.selectedCalendarEvent = this.createEvent;
+    },
+    // @click:event="showEvent"
+    // but may start if we need to annotate visits
+    showEvent({ nativeEvent, event }) {
+      console.log('event:', event.name, nativeEvent.name);
+      this.selectedCalendarEvent = event;
+    },
+
+    cancel() {
+      this.confirm = false;
+      this.visit.end -= this.delta.end;
+      this.reset();
     },
 
     //#region  Drag and Drop
@@ -209,8 +222,11 @@ export default {
         this.dragEvent = event;
         this.dragTime = null;
         this.extendOriginal = null;
-
-        this.visit = this.dragEvent;
+        const started = this.dragEvent.start;
+        const ended = this.dragEvent.end;
+        this.original.start = started;
+        this.original.end = ended;
+        this.selectedCalendarEvent = this.dragEvent;
       }
     },
 
@@ -268,9 +284,50 @@ export default {
 
     // @mouseup:time="endDrag"
     // @touchend:time="endDrag"
+    // handles updates:
+    // this.original stores visit's original interval
+    // this.delta determines the interval difference
+    //    e.g., original.start =  1617063300000
+    //          dragEvent.start = 1617065500000
+    //          delta = 2200000
+    //          so we add 2200000 to visit.start
+    //          then save the visit
     endDrag() {
-      console.log(highlight('endDrag using', this.pointerType));
+      console.log(`this.visit ${this.original.start} ${this.original.end} `);
+      //this.selectedCalendarEvent should always have a value whether from
+      //  each time this.createEvent instantiates (changes)
+      //  or this.dragEvent instantiates (changes)
+      //  or when an event is clicked with the mouse
+      if (this.selectedCalendarEvent.start) {
+        console.log(highlight('endDrag using', this.pointerType));
+        this.delta.start =
+          this.selectedCalendarEvent.start - this.original.start;
+        this.delta.end = this.selectedCalendarEvent.end - this.original.end;
+        console.log(`this.delta ${this.delta.start} ${this.delta.end} `);
 
+        if (this.delta.start !== 0 || this.delta.end !== 0) {
+          this.color = 'secondary';
+          this.feedbackMessage = 'Ready to update the visit?';
+          this.action = 'UPDATE';
+          this.confirm = true;
+        }
+      }
+      this.reset();
+    },
+
+    updateTime() {
+      this.visit = this.selectedCalendarEvent;
+      this.confirm = false;
+      // this.visit.start += this.delta.start;
+      // this.visit.end += this.delta.end;
+      this.visit.interval = `${formatTime(this.visit.start)} to ${formatTime(
+        this.visit.end
+      )}`;
+      this.saveVisits();
+      this.reset();
+    },
+
+    reset() {
       let el = document.getElementById('calendar-target');
       el.style.overflowY = 'auto';
 
@@ -282,6 +339,7 @@ export default {
     },
 
     // e.g., leaving calendar component
+    // or canceling in the confirmation dialog
     cancelDrag() {
       console.log(highlight('cancelDrag using', this.pointerType));
 
@@ -305,32 +363,6 @@ export default {
 
     //#region Non Pointer methods
 
-    addEvent(time) {
-      this.createStart = this.roundTime(time);
-      this.createEvent = {
-        name: this.place,
-        color: 'secondary',
-        start: this.createStart,
-        end: this.createStart + this.avgStay,
-        timed: true,
-        details: { logged: false },
-      };
-      this.visit = this.createEvent;
-      this.visits.push(this.visit);
-      this.saveVisits();
-      this.place = '';
-    },
-
-    onScroll(e) {
-      console.log(e.target.scrollTop);
-    },
-
-    goUp() {
-      console.log('Going Up...');
-    },
-    goDn() {
-      console.log('Going Down...');
-    },
     goRight() {
       console.log('Going Right...');
       this.feedbackMessage = `Are you sure you want to DELETE ${this.visit.name}`;
@@ -354,7 +386,35 @@ export default {
         case 'LOG':
           this.logVisit();
           break;
+        case 'UPDATE':
+          this.updateTime();
+          break;
       }
+    },
+
+    arrayRemove(arr, value) {
+      return arr.filter((ele) => {
+        return ele != value;
+      });
+    },
+
+    addEvent(time) {
+      this.createStart = this.roundTime(time);
+      this.createEvent = {
+        name: this.place,
+        color: 'secondary',
+        start: this.createStart,
+        end: this.createStart + this.avgStay,
+        timed: true,
+        details: { logged: false },
+      };
+      this.visit = this.createEvent;
+      this.visit.interval = `${formatTime(
+        this.createEvent.start
+      )} to ${formatTime(this.createEvent.end)}`;
+      this.visits.push(this.visit);
+      this.saveVisits();
+      this.place = '';
     },
 
     logVisit() {
@@ -371,24 +431,10 @@ export default {
       this.confirm = false;
     },
 
-    getLoggedState() {
-      console.log(printJson(this.selectedEvent));
-      let x = this.isLogged
-        ? 'was logged to server'
-        : 'is not logged to server yet';
-      return x;
-    },
-
-    arrayRemove(arr, value) {
-      return arr.filter((ele) => {
-        return ele != value;
-      });
-    },
-
     deleteVisit() {
       {
-        this.$emit('deleteVisit', this.visit);
-        this.visits = this.arrayRemove(this.visits, this.visit);
+        this.$emit('deleteVisit', this.selectedCalendarEvent);
+        this.visits = this.arrayRemove(this.visits, this.selectedCalendarEvent);
         this.saveVisits();
         this.confirm = false;
       }
@@ -418,33 +464,11 @@ export default {
     },
     //#endregion
 
-    // @click:event="showEvent"
-    showEvent({ nativeEvent, event }) {
-      const self = this;
-      const open = () => {
-        self.selectedEvent = event;
-        self.selectedElement = nativeEvent.target;
-        // setTimeout(() => {
-        //   self.snackBar = true;
-        // }, 10);
-      };
-
-      if (self.snackBar) {
-        self.snackBar = false;
-        setTimeout(open, 10);
-      } else {
-        open();
-      }
-
-      nativeEvent.stopPropagation();
-    },
-
     saveVisits() {
       // do not store blank visits (it will mess up the calendar with a null ref exception)
       this.visits = this.arrayRemove(this.visits, '');
 
       let visitStr = JSON.stringify(this.visits);
-      console.log(visitStr);
       localStorage.setItem('visits', visitStr);
     },
 
@@ -475,8 +499,11 @@ export default {
   },
 
   watch: {
-    selectedEvent(newVal) {
-      console.log('this.selectedEvent', newVal);
+    dragEvent(newVal, oldVal) {
+      if (newVal === null) {
+        console.log(error('NULL'));
+      }
+      console.log('this.dragEvent', newVal, oldVal);
     },
   },
 
@@ -485,16 +512,16 @@ export default {
 
     window.addEventListener('keydown', function (ev) {
       if (ev.code == 'Delete') {
-        self.deleteVisit(ev.code); // called with the Del key
+        self.goRight(); // calls confirmation with the Del key
       } else if (ev.code == 'Enter') {
-        self.logVisit(); // called with the Enter key
+        self.goLeft(); // calls confirmation with the Enter key
       }
     });
     self.place = self.selectedSpaceName;
     const v = localStorage.getItem('visits');
     self.visits = v ? JSON.parse(v) : [];
-    console.log(printJson(self.visits));
-    console.log('now:', showCurrentMilitaryTime());
+    console.log('Visits:', printJson(self.visits));
+    console.log('at:', showCurrentMilitaryTime());
     self.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
     if (self.place) {
       self.newEvent();

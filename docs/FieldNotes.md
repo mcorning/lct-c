@@ -2,6 +2,14 @@
 
 This is a collection of technical details that may help you understand how some of the more arcane parts of Local Contact Tracing work.
 
+## Calendar Events
+
+The term `event` is overloaded in the calendarCard.vue. Depending on context, it can mean a DOM Event or it can refer to an entry in the calendar (also called an event). In this document we refer to events on the calendar as "calendar events."
+
+There are two operations on the calendar events. If you change the end time of an event, the `extendBottom()` function (re)creates a `createEvent` using the selected calendar event, and sets the `exteendOriginal` field to the `end` time of the calendar event it handles.
+
+If you move the mouse off the calendar or hit esc, `cancelDrag` gets called and sets the `createEvent` to the `extendOriginal` value.
+
 ## Experiments
 
 ### Add sw cached strategy
