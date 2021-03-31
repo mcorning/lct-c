@@ -1,140 +1,162 @@
 <template>
-  <v-row class="fill-height">
-    <v-col>
-      <!-- calendar controls -->
-      <v-sheet height="64">
-        <v-toolbar flat>
-          <v-icon medium @click="setToday"> mdi-calendar-today </v-icon>
-          <v-btn fab text small color="grey darken-2" @click="prev">
-            <v-icon> mdi-chevron-left </v-icon>
-          </v-btn>
-          <v-btn fab text small color="grey darken-2" @click="next">
-            <v-icon> mdi-chevron-right </v-icon>
-          </v-btn>
-          <v-toolbar-title v-if="$refs.calendar">
-            {{ $refs.calendar.title }}
-          </v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-menu bottom right>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn outlined color="grey darken-2" v-bind="attrs" v-on="on">
-                <span>{{ typeToLabel[type] }}</span>
-                <v-icon right> mdi-menu-down </v-icon>
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item @click="changeType('day')">
-                <v-list-item-title>Day</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="changeType('4day')">
-                <v-list-item-title>4 days</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="changeType('week')">
-                <v-list-item-title>Week</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="changeType('month')">
-                <v-list-item-title>Month</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-toolbar>
-      </v-sheet>
-      <v-snackbar
-        v-model="snackBarNew"
-        :timeout="10000"
-        color="primary"
-        absolute
-        dark
-        bottom
-      >
-        {{ feedbackMessage }}
-        <template v-slot:action="{ attrs }">
-          <v-btn color="white" text v-bind="attrs" @click="snackBarNew = false">
-            Close
-          </v-btn>
-        </template>
-      </v-snackbar>
-
-      <!-- confirmation dialog -->
-      <v-snackbar
-        v-model="confirm"
-        :timeout="10000"
-        :color="color"
-        dark
-        centered
-      >
-        {{ feedbackMessage }}
-        <template v-slot:action="{ attrs }">
-          <v-btn color="white" text v-bind="attrs" @click="act"> Yes </v-btn>
-          <v-btn color="white" text v-bind="attrs" @click="cancel"> No </v-btn>
-        </template>
-      </v-snackbar>
-
-      <!-- calendar -->
-      <!-- do not change the calendar sheet's height. if you do, you will lose scrollToTime, and you will lose hours on the calendar -->
-      <v-sheet height="400">
-        <v-calendar
-          id="calendar-target"
-          ref="calendar"
-          v-model="focus"
+  <div>
+    <v-row class="fill-height">
+      <v-col>
+        <!-- calendar controls -->
+        <v-sheet height="64">
+          <v-toolbar flat>
+            <v-icon medium @click="setToday"> mdi-calendar-today </v-icon>
+            <v-btn fab text small color="grey darken-2" @click="prev">
+              <v-icon> mdi-chevron-left </v-icon>
+            </v-btn>
+            <v-btn fab text small color="grey darken-2" @click="next">
+              <v-icon> mdi-chevron-right </v-icon>
+            </v-btn>
+            <v-toolbar-title v-if="$refs.calendar">
+              {{ $refs.calendar.title }}
+            </v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-menu bottom right>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn outlined color="grey darken-2" v-bind="attrs" v-on="on">
+                  <span>{{ typeToLabel[type] }}</span>
+                  <v-icon right> mdi-menu-down </v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item @click="changeType('day')">
+                  <v-list-item-title>Day</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="changeType('4day')">
+                  <v-list-item-title>4 days</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="changeType('week')">
+                  <v-list-item-title>Week</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="changeType('month')">
+                  <v-list-item-title>Month</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </v-toolbar>
+        </v-sheet>
+        <v-snackbar
+          v-model="snackBarNew"
+          :timeout="10000"
           color="primary"
-          :type="type"
-          :events="visits"
-          :event-ripple="false"
-          @mousedown:event="startDrag"
-          @touchstart:event="startDrag"
-          @mousedown:time="startTime"
-          @touchstart:time="startTime"
-          @mousemove:time="mouseMove"
-          @touchmove:time="mouseMove"
-          @mouseleave.native="cancelDrag"
-          @click:event="showEvent"
-          @click:more="viewDay"
-          @mouseup:time="endDrag"
-          @touchend:time="endDrag"
-          @click:date="viewDay"
-          v-touch="{
-            left: goLeft,
-            right: goRight,
-          }"
+          absolute
+          dark
+          bottom
         >
-          <template v-slot:event="{ event, timed, eventSummary }">
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <div
-                  v-bind="attrs"
-                  v-on="on"
-                  class="v-event-draggable"
-                  v-html="eventSummary()"
-                ></div>
-              </template>
-              <span>LOG: Enter key or Left swipe</span><br /><span class="pl-8"
-                >DELETE: Del key or Right swipe
-              </span></v-tooltip
+          {{ feedbackMessage }}
+          <template v-slot:action="{ attrs }">
+            <v-btn
+              color="white"
+              text
+              v-bind="attrs"
+              @click="snackBarNew = false"
             >
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <div
-                  v-if="timed"
-                  v-bind="attrs"
-                  v-on="on"
-                  class="v-event-drag-bottom"
-                  @mousedown.stop="extendBottom(event)"
-                  @touchstart.stop="extendBottom(event)"
-                ></div>
-              </template>
-              <span>Drag and drop event as necessary </span></v-tooltip
-            >
+              Close
+            </v-btn>
           </template>
-        </v-calendar>
-      </v-sheet>
-    </v-col>
-  </v-row>
+        </v-snackbar>
+
+        <!-- confirmation dialog -->
+        <v-snackbar
+          v-model="confirm"
+          :timeout="30000"
+          :color="color"
+          dark
+          centered
+          absolute
+        >
+          {{ feedbackMessage }}
+          <template v-slot:action="{ attrs }">
+            <v-btn color="white" text v-bind="attrs" @click="act"> Yes </v-btn>
+            <v-btn color="white" text v-bind="attrs" @click="cancel">
+              No
+            </v-btn>
+          </template>
+        </v-snackbar>
+
+        <!-- calendar -->
+        <!-- do not change the calendar sheet's height. if you do, you will lose scrollToTime, and you will lose hours on the calendar -->
+        <v-sheet height="400">
+          <v-calendar
+            id="calendar-target"
+            ref="calendar"
+            v-model="focus"
+            color="primary"
+            :type="type"
+            :events="visits"
+            :event-ripple="false"
+            @mousedown:event="startDrag"
+            @touchstart:event="startDrag"
+            @mousedown:time="startTime"
+            @touchstart:time="startTime"
+            @mousemove:time="mouseMove"
+            @touchmove:time="mouseMove"
+            @mouseleave.native="cancelDrag"
+            @click:event="showEvent"
+            @click:more="viewDay"
+            @mouseup:time="endDrag"
+            @touchend:time="endDrag"
+            @click:date="viewDay"
+            v-touch="{
+              left: goLeft,
+              right: goRight,
+            }"
+          >
+            <template v-slot:event="{ event, timed, eventSummary }">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <div
+                    v-bind="attrs"
+                    v-on="on"
+                    class="v-event-draggable"
+                    v-html="eventSummary()"
+                  ></div>
+                </template>
+                <span>LOG: Enter key or Left swipe</span><br /><span
+                  class="pl-8"
+                  >DELETE: Del key or Right swipe
+                </span></v-tooltip
+              >
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <div
+                    v-if="timed"
+                    v-bind="attrs"
+                    v-on="on"
+                    class="v-event-drag-bottom"
+                    @mousedown.stop="extendBottom(event)"
+                    @touchstart.stop="extendBottom(event)"
+                  ></div>
+                </template>
+                <span>Drag and drop event as necessary </span></v-tooltip
+              >
+            </template>
+          </v-calendar>
+        </v-sheet>
+      </v-col>
+    </v-row>
+    <v-row class="fill-height" no-gutters align="center">
+      <v-col
+        ><div class="pl-15">
+          <small>{{ status }}</small>
+        </div></v-col
+      >
+    </v-row>
+  </div>
 </template>
 
 <script>
-import { showCurrentMilitaryTime, formatTime } from '../../utils/luxonHelpers';
-import { error, success, highlight, printJson } from '../../utils/colors';
+import {
+  showCurrentMilitaryTime,
+  formatSmallTime,
+  formatTime,
+} from '../../utils/luxonHelpers';
+import { error, success, highlight, warn, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -145,14 +167,29 @@ export default {
 
   computed: {
     isLogged() {
-      const d = this.selectedCalendarEvent.details?.logged;
-      return d;
+      return this.selectedCalendarEvent.details?.logged;
+    },
+    name() {
+      return this.selectedCalendarEvent?.name;
     },
   },
 
   data: () => ({
+    calendarElement: null,
+    status: 'Ready',
     original: { start: 0, end: 0 },
-    delta: { start: 0, end: 0 },
+    path: new Map(),
+    node: {
+      startDrag: 0,
+      startTime: 0,
+      movedTo: 0,
+      endDrag: 0,
+      changed: false,
+      showEvent: 0,
+      dragStarted: 0,
+      swipeRightStarted: 0,
+      swipeLeftStarted: 0,
+    },
     color: 'primary',
     action: '',
     confirm: false,
@@ -186,8 +223,6 @@ export default {
   methods: {
     // called by event slot in calendar
     extendBottom(event) {
-      console.log(highlight('extendBottom using', this.pointerType));
-
       this.createEvent = event;
       this.createStart = event.start;
       this.extendOriginal = event.end;
@@ -197,15 +232,10 @@ export default {
 
     // @click:event="showEvent"
     showEvent({ nativeEvent, event }) {
-      console.log('Calendar event:', event.name, nativeEvent.name);
       this.selectedCalendarEvent = event;
-    },
-
-    cancel() {
-      this.confirm = false;
-      this.selectedCalendarEvent.start = this.original.start;
-      this.selectedCalendarEvent.end = this.original.end;
-      this.reset();
+      console.log(nativeEvent.type);
+      //formatTime defaults to Date.now()
+      this.node.showEvent = formatTime();
     },
 
     //#region  Drag and Drop
@@ -214,28 +244,29 @@ export default {
     // @touchstart:event="startDrag"
     startDrag({ nativeEvent, event, timed }) {
       this.pointerType = nativeEvent.type;
-      console.log(highlight('startDrag', nativeEvent.type));
       if (nativeEvent.type === 'touchstart') {
         nativeEvent.preventDefault();
       }
       if (event && timed) {
+        this.node.dragStarted = formatTime();
+        this.node.startDrag = formatTime(event.start);
+
         this.dragEvent = event;
         this.dragTime = null;
         this.extendOriginal = null;
-        const started = this.dragEvent.start;
-        const ended = this.dragEvent.end;
-        this.original.start = started;
-        this.original.end = ended;
+        this.original.start = this.dragEvent.start;
+        this.original.end = this.dragEvent.end;
         this.selectedCalendarEvent = this.dragEvent;
       }
     },
 
     // @mousedown:time="startTime"
     // @touchstart:time="startTime"
+    // recorded once with the first mouse click or touch
+    // can have any arbitrary value (depending only on mouse/finger position)
     startTime(tms) {
-      console.log(highlight('startTime using ', this.pointerType));
-
       const mouse = this.toTime(tms);
+      this.node.startTime = formatTime(mouse);
 
       // enable a drag of an existing event
       if (this.dragEvent && this.dragTime === null) {
@@ -253,9 +284,11 @@ export default {
     // @mousemove:time="mouseMove"
     // @touchmove:time="mouseMove"
     mouseMove(tms) {
-      console.log(highlight('mouseMove using', this.pointerType));
+      // mouse can move all over the calendar...
       const mouse = this.toTime(tms);
+      this.node.movedTo = formatTime(mouse);
 
+      //...but we care only if a dragEvent or createEvent exists
       if (this.dragEvent && this.dragTime !== null) {
         console.log(
           highlight('changing the time slot using', this.pointerType)
@@ -270,6 +303,7 @@ export default {
 
         this.dragEvent.start = newStart;
         this.dragEvent.end = newEnd;
+        this.node.changed = true; //this.dragEvent.start !== newStart
       } else if (this.createEvent && this.createStart !== null) {
         // changing the time
         console.log(highlight(`changing the slot's end time`));
@@ -279,6 +313,7 @@ export default {
 
         this.createEvent.start = min;
         this.createEvent.end = max;
+        this.node.changed = true;
       }
     },
 
@@ -287,48 +322,55 @@ export default {
     // handles updates:
     // this.original stores visit's original interval
     endDrag() {
-      console.log(`this.visit ${this.original.start} ${this.original.end} `);
-      //this.selectedCalendarEvent should always have a value whether from
-      //  each time this.createEvent instantiates (changes)
-      //  or this.dragEvent instantiates (changes)
-      //  or when an event is clicked with the mouse
-      if (this.selectedCalendarEvent.start) {
-        console.log(highlight('endDrag using', this.pointerType));
+      // get the end time from:
+      //    this.extendOriginal (if the lower edge of the event moved alone)
+      //    or this.dragEvent.end (if the whole time slot moved)
+      let last = this.extendOriginal
+        ? this.extendOriginal
+        : this.dragEvent
+        ? this.dragEvent.end
+        : 0;
+      this.node.endDrag = formatTime(last);
+      this.path.set(this.selectedCalendarEvent?.name, this.node);
 
-        this.color = 'secondary';
+      if (this.node.changed) {
+        this.color = '';
         this.feedbackMessage = 'Ready to update the visit?';
         this.action = 'UPDATE';
         this.confirm = true;
       }
-      this.reset();
-    },
 
-    updateTime() {
-      this.visit = this.selectedCalendarEvent;
-      this.confirm = false;
-      this.visit.interval = `${formatTime(this.visit.start)} to ${formatTime(
-        this.visit.end
-      )}`;
-      this.saveVisits();
       this.reset();
     },
 
     reset() {
-      let el = document.getElementById('calendar-target');
-      el.style.overflowY = 'auto';
+      console.log(warn('Resetting these variables'));
+      this.path.set(this.selectedCalendarEvent?.name, this.node);
+      console.log('path:', printJson([...this.path]));
+
+      this.calendarElement.style.overflowY = 'auto';
 
       this.dragTime = null;
       this.dragEvent = null;
       this.createEvent = null;
       this.createStart = null;
       this.extendOriginal = null;
-      this.selectedCalendarEvent = null;
+      this.node = {
+        startDrag: 0,
+        startTime: 0,
+        movedTo: 0,
+        endDrag: 0,
+        changed: false,
+        showEvent: 0,
+        dragStarted: 0,
+        swipeRightStarted: 0,
+        swipeLeftStarted: 0,
+      };
     },
 
     // e.g., leaving calendar component
-    // or canceling in the confirmation dialog
     cancelDrag() {
-      console.log(highlight('cancelDrag using', this.pointerType));
+      console.log(highlight('cancelDrag '));
 
       if (this.createEvent) {
         if (this.extendOriginal) {
@@ -341,10 +383,7 @@ export default {
         }
       }
 
-      this.createEvent = null;
-      this.createStart = null;
-      this.dragTime = null;
-      this.dragEvent = null;
+      this.reset();
     },
     //#endregion Drag and Drop
 
@@ -352,17 +391,23 @@ export default {
 
     goRight() {
       console.log('Going Right...');
-      this.feedbackMessage = `Are you sure you want to DELETE ${this.visit.name}`;
+      this.feedbackMessage = `Are you sure you want to DELETE ${this.name}`;
       this.action = 'DELETE';
       this.color = 'warning';
       this.confirm = true;
+      this.node.swipeRightStarted = formatSmallTime();
     },
     goLeft() {
+      if (this.isLogged) {
+        this.status = `You have already logged this ${this.name} visit to the server.`;
+        return;
+      }
       console.log('Going Left...');
-      this.feedbackMessage = `Are you sure you want to LOG ${this.visit.name}`;
+      this.feedbackMessage = `Are you sure you want to LOG ${this.name}`;
       this.action = 'LOG';
       this.color = 'primary';
       this.confirm = true;
+      this.node.swipeLeftStarted = formatSmallTime();
     },
 
     act() {
@@ -371,12 +416,16 @@ export default {
           this.deleteVisit();
           break;
         case 'LOG':
-          this.logVisit();
+          if (!this.logged) {
+            this.logVisit();
+          }
           break;
         case 'UPDATE':
           this.updateTime();
           break;
       }
+      this.path.set(this.selectedCalendarEvent?.name, this.node);
+      console.log('path:', printJson([...this.path]));
     },
 
     arrayRemove(arr, value) {
@@ -404,25 +453,63 @@ export default {
       this.place = '';
     },
 
-    logVisit() {
-      if (this.visit.details.logged) {
+    cancel() {
+      this.confirm = false;
+      // failsafe in case original.start has been reset before now
+      if (this.original.start === 0 || this.original.end === 0) {
+        console.log(
+          error(
+            'Somewhere original times got set to 0. No need to process further.'
+          )
+        );
         return;
       }
-      this.visit.details = { logged: true };
-      this.visit.color = 'primary';
-      console.log(success('Logging visit:', printJson(this.visit)));
-      this.saveVisits();
-      this.$emit('logVisit', this.visit);
-      this.confirm = false;
+      this.selectedCalendarEvent.start = this.original.start;
+      this.selectedCalendarEvent.end = this.original.end;
+      // cancel the operation means starting over
+      this.original.start = 0;
+      this.original.end = 0;
+      this.reset();
+    },
+
+    logVisit() {
+      try {
+        this.node.logStarted = formatTime();
+        console.log('path', printJson(this.node));
+        this.visit = this.selectedCalendarEvent;
+        this.visit.details = { logged: true };
+        this.visit.color = 'primary';
+        console.log(success('Logging visit:', printJson(this.visit)));
+        this.saveVisits();
+        this.$emit('logVisit', this.visit);
+        this.confirm = false;
+
+        throw ('error', 'test');
+      } catch (error) {
+        this.$emit('error', error);
+      }
     },
 
     deleteVisit() {
-      {
-        this.$emit('deleteVisit', this.selectedCalendarEvent);
-        this.visits = this.arrayRemove(this.visits, this.selectedCalendarEvent);
-        this.saveVisits();
-        this.confirm = false;
-      }
+      this.node.delStarted = formatTime();
+
+      this.$emit('deleteVisit', this.selectedCalendarEvent);
+      this.visits = this.arrayRemove(this.visits, this.selectedCalendarEvent);
+      this.saveVisits();
+      this.confirm = false;
+    },
+
+    updateTime() {
+      this.confirm = false;
+      this.visit = this.selectedCalendarEvent;
+      this.visit.interval = `${formatTime(this.visit.start)} to ${formatTime(
+        this.visit.end
+      )}`;
+      console.log('updated Visit:', printJson(this.visit));
+      this.saveVisits();
+      this.selectedCalendarEvent = null;
+
+      this.reset();
     },
 
     changeType(type) {
@@ -450,6 +537,14 @@ export default {
     //#endregion
 
     saveVisits() {
+      if (this.visits.filter((v) => v.start === 0).length > 0) {
+        console.log(
+          error(
+            'WARNING: at least one visit has a start time of 0. Abandoning save.'
+          )
+        );
+        return;
+      }
       // do not store blank visits (it will mess up the calendar with a null ref exception)
       this.visits = this.arrayRemove(this.visits, '');
 
@@ -481,19 +576,26 @@ export default {
       this.feedbackMessage = `Confirm (or move) the time to visit ${this.place}:`;
       this.snackBarNew = true;
     },
-  },
+    myKeyPress(e) {
+      var keynum;
 
-  watch: {
-    dragEvent(newVal, oldVal) {
-      if (newVal === null) {
-        console.log(error('NULL'));
+      if (window.event) {
+        // IE
+        keynum = e.keyCode;
+      } else if (e.which) {
+        // Netscape/Firefox/Opera
+        keynum = e.which;
       }
-      console.log('this.dragEvent', newVal, oldVal);
+
+      alert(String.fromCharCode(keynum));
     },
   },
 
+  watch: {},
+
   mounted() {
     let self = this;
+    self.calendarElement = document.getElementById('calendar-target');
 
     window.addEventListener('keydown', function (ev) {
       if (ev.code == 'Delete') {
@@ -502,6 +604,19 @@ export default {
         self.goLeft(); // calls confirmation with the Enter key
       }
     });
+    // you lose visibility into this if you move listeners into code
+    window.addEventListener('keypress', function (ev) {
+      if (ev.code == 'KeyY') {
+        if (self.action === 'DELETE') {
+          self.deleteVisit(); // calls confirmation with the Del key
+        } else if (self.action === 'LOG') {
+          self.logVisit(); // calls confirmation with the Del key
+        }
+      } else if (ev.code == 'KeyN') {
+        self.cancel();
+      }
+    });
+
     self.place = self.selectedSpaceName;
     const v = localStorage.getItem('visits');
     self.visits = v ? JSON.parse(v) : [];
