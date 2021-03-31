@@ -61,12 +61,6 @@ export default {
     };
   },
 
-  mounted() {
-    this.geolocate();
-
-    this.addMarker();
-  },
-
   methods: {
     addVisit() {
       this.$emit('addedPlace', this.currentPlace);
@@ -115,6 +109,12 @@ export default {
         this.center = marker;
       }
     },
+  },
+
+  mounted() {
+    const self = this;
+    self.geolocate();
+    self.addMarker();
   },
 };
 </script>

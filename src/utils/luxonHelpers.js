@@ -37,8 +37,13 @@ const formatVisitedDate = (date) => {
   return x;
 };
 
-const formatTime = (time) => {
+const formatTime = (time = Date.now()) => {
   let ds = DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_SHORT);
+  return ds;
+};
+
+const formatSmallTime = (time = Date.now()) => {
+  let ds = DateTime.fromMillis(time).toLocaleString(DateTime.TIME_WITH_SECONDS);
   return ds;
 };
 
@@ -58,6 +63,7 @@ module.exports = {
   getNowAsIso,
   isToday,
   isBetween,
+  formatSmallTime,
   formatTime,
   formatVisitedDate,
   getVisitDate,

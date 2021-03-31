@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-card class="overflow-hidden" color="primary lighten-2">
+    <v-card class="overflow-hidden">
       <!-- Favorites List -->
       <v-card tile v-if="showCalendar" :height="ht">
         <calendarCard
@@ -8,6 +8,7 @@
           :selectedSpaceName="selectedSpace.name"
           @logVisit="onLogVisit"
           @deleteVisit="onDeleteVisit"
+          @error="onError($event)"
         />
       </v-card>
 
@@ -32,7 +33,7 @@
 
       <!-- Spaces form -->
       <v-card v-if="showSpaces">
-        <div class="px-3 pt-1 mb-1">
+        <div class="px-3 pt-1">
           <v-row no-gutters>
             <v-col cols="12">
               <GoogleMap
@@ -103,7 +104,7 @@
         </v-card-text>
       </v-card>
     </v-card>
-
+    <div class="pl-5">{{ status }}</div>
     <v-bottom-navigation
       :value="value"
       color="secondary"
@@ -205,6 +206,8 @@ export default {
 
   data() {
     return {
+      status: '',
+
       newUser: false,
       favorites: [],
       // TODO make avgStay configurable by admin or user
@@ -213,7 +216,7 @@ export default {
       places: [],
       spaceLabel: '',
       show: 0,
-      ht: '480px',
+      ht: '520px',
       value: 0,
       selectedCategory: '',
       usePanels: false,
@@ -231,6 +234,10 @@ export default {
   },
 
   methods: {
+    onError(event) {
+      this.$emit('error', event);
+    },
+
     getFavorites() {
       const visits = JSON.parse(localStorage.getItem('visits')) || [];
       this.favorites = [...new Set(visits.map((v) => v.name))];
@@ -285,8 +292,24 @@ export default {
       }
     },
 
-    show() {
+    show(newVal) {
       this.getFavorites();
+      switch (newVal) {
+        case 0:
+          this.status =
+            'Thanks for being safer together using Local Contact Tracing.';
+          break;
+        case 1:
+          this.status = 'Type a place name. Hit tab. Hit Enter.';
+          break;
+        case 2:
+          this.status =
+            'New events default to the current time. Move, as necessary.';
+          break;
+        case 3:
+          this.status = 'Gatherings is currently under construction...';
+          break;
+      }
     },
 
     selectedSpace(newVal) {

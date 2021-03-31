@@ -7,6 +7,7 @@ const randomId = () => crypto.randomBytes(8).toString('hex');
 
 const {
   printJson,
+  error,
   warn,
   highlight,
   info,
@@ -16,6 +17,8 @@ const {
 const { Cache } = require('./Cache.js');
 const sessionCache = new Cache(path.resolve(__dirname, 'sessions.json'));
 const alertsCache = new Cache(path.resolve(__dirname, 'alerts.json'));
+const errorCache = new Cache(path.resolve(__dirname, 'errors.json'));
+const feedbackCache = new Cache(path.resolve(__dirname, 'feedback.json'));
 
 const {
   graphName, // mapped to client nsp (aka namespace or community name)
@@ -202,6 +205,20 @@ io.on('connection', (socket) => {
       console.log(res);
       ack(res);
     });
+  });
+
+  socket.on('userFeedback', (data) => {
+    feedbackCache.set(Date.now(), data);
+    feedbackCache.save();
+    feedbackCache.print(null, 'User Feedback:');
+  });
+
+  socket.on('client_error', (data) => {
+    errorCache.set(Date.now(), data);
+    errorCache.save();
+    console.log(error('Incoming client_error!'));
+    errorCache.print(null, 'Errors:');
+    console.log(error('See the errors.json later for details.'));
   });
 
   socket.on('disconnectAsync', async () => {

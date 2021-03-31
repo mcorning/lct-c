@@ -128,6 +128,8 @@
             @sendExposureWarning="onSendExposureWarning"
             @visitorLoggedVisit="onVisitorLoggedVisit"
             @visitorDeletedVisit="onVisitorDeletedVisit"
+            @userFeedback="onUserFeedback"
+            @error="onError($event)"
           />
         </v-col>
         <!-- Logged Visit confirmation -->
@@ -137,18 +139,23 @@
       </v-row>
     </v-main>
 
-    <v-system-bar app bottom dense color="primary" dark>
+    <v-system-bar app window dense color="primary" dark>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }"
+          ><v-btn small text @click="hardRefresh"
+            ><v-icon v-bind="attrs" v-on="on">mdi-refresh</v-icon>
+          </v-btn>
+        </template>
+        <span>Hard refesh</span></v-tooltip
+      >
+
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
-          <small class="pr-3" text v-bind="attrs" v-on="on"
-            >LCT v.{{ build }}
-          </small>
+          <span v-bind="attrs" v-on="on">LCT v.{{ build }} </span>
         </template>
         <span>Version of LCT-C</span></v-tooltip
       >
-      <v-btn small text @click="hardRefresh"
-        ><v-icon>mdi-refresh</v-icon>
-      </v-btn>
+
       <v-spacer></v-spacer>
       <v-tooltip top>
         <template v-slot:activator="{ on, attrs }">
@@ -273,6 +280,11 @@ export default {
     };
   },
   methods: {
+    onError(e) {
+      console.log(`Sending error to server`, e);
+      socket.emit('client_error', e);
+    },
+
     hardRefresh() {
       window.location.replace(window.location.href);
     },
@@ -329,6 +341,11 @@ export default {
           resolve(results);
         });
       });
+    },
+
+    onUserFeedback(e) {
+      console.log('userFeedback:', e);
+      socket.emit('userFeedback', e);
     },
 
     onVisitorDeletedVisit(e) {

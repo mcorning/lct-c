@@ -3,7 +3,7 @@
     <v-row class="fill-height">
       <v-col>
         <!-- calendar controls -->
-        <v-sheet height="64">
+        <v-sheet height="48">
           <v-toolbar flat>
             <v-icon medium @click="setToday"> mdi-calendar-today </v-icon>
             <v-btn fab text small color="grey darken-2" @click="prev">
@@ -140,10 +140,11 @@
         </v-sheet>
       </v-col>
     </v-row>
-    <v-row class="fill-height" no-gutters align="center">
+    <v-row no-gutters align="center">
       <v-col
         ><div class="pl-15">
-          <small>{{ status }}</small>
+          <!-- <small>{{ status }}</small> -->
+          {{ status }}
         </div></v-col
       >
     </v-row>
@@ -483,8 +484,6 @@ export default {
         this.saveVisits();
         this.$emit('logVisit', this.visit);
         this.confirm = false;
-
-        throw ('error', 'test');
       } catch (error) {
         this.$emit('error', error);
       }
@@ -573,8 +572,8 @@ export default {
     newEvent() {
       this.addEvent(Date.now());
       this.endDrag();
-      this.feedbackMessage = `Confirm (or move) the time to visit ${this.place}:`;
-      this.snackBarNew = true;
+      this.status = `Confirm (or move) the time to visit ${this.place}:`;
+      // this.snackBarNew = true;
     },
     myKeyPress(e) {
       var keynum;
@@ -611,6 +610,8 @@ export default {
           self.deleteVisit(); // calls confirmation with the Del key
         } else if (self.action === 'LOG') {
           self.logVisit(); // calls confirmation with the Del key
+        } else if (self.action === 'UPDATE') {
+          self.updateTime(); // calls confirmation with the Del key
         }
       } else if (ev.code == 'KeyN') {
         self.cancel();

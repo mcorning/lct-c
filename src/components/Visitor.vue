@@ -7,15 +7,13 @@
     <v-snackbar
       v-model="snackBar"
       :timeout="4000"
-      color="secondary"
+      :color="color"
       multi-line
       vertical
     >
       {{ feedbackMessage }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="snackBar = false">
-          Close
-        </v-btn>
+        <v-btn color="white" text v-bind="attrs" @click="act"> Close </v-btn>
       </template>
     </v-snackbar>
 
@@ -57,6 +55,7 @@
           :auditor="auditor"
           @roomLoggedVisit="onRoomLoggedVisit"
           @roomDeletedVisit="onRoomDeletedVisit"
+          @error="onError($event)"
         />
       </v-col>
     </v-row>
@@ -64,19 +63,29 @@
     <!-- likert -->
     <v-row no-gutters>
       <v-col>
-        <v-card class="overflow-hidden">
-          <v-card-subtitle class="text-center pa-0">
-            <a :href="feedbackMail"
-              >How are we doing on the Visitor experience?</a
+        <v-card tile class="overflow-hidden">
+          <v-row align="center" justfy="space-around">
+            <v-col class="text-center">
+              <v-btn text @click="emailDev(true)">
+                <v-icon color="primary" left> mdi-thumb-up </v-icon></v-btn
+              ></v-col
             >
-          </v-card-subtitle>
-          <v-rating
-            v-model="rating"
-            background-color="primary lighten-2"
-            color="primary"
-            large
-            class="text-center"
-          ></v-rating>
+            <v-spacer></v-spacer>
+            <v-col cols="6">
+              <v-rating
+                v-model="rating"
+                background-color="primary lighten-2"
+                color="primary"
+                class="text-center"
+              ></v-rating
+            ></v-col>
+            <v-spacer></v-spacer>
+            <v-col class="text-center">
+              <v-btn text @click="emailDev(false)">
+                <v-icon color="primary" right> mdi-thumb-down </v-icon></v-btn
+              ></v-col
+            >
+          </v-row>
         </v-card>
       </v-col>
     </v-row>
@@ -112,9 +121,8 @@ export default {
   },
 
   computed: {
-    feedbackMail() {
-      const feedbackMail = `mailto:mcorning@soteriaInstitute.org?subject=${this.rating} star feedback`;
-      return feedbackMail;
+    color() {
+      return this.error ? 'red' : 'secondary';
     },
 
     visits() {
@@ -157,23 +165,25 @@ export default {
   },
 
   data: () => ({
+    action: '',
+    error: false,
+    devs: 'mcorning@soteriaInstitute.org',
     dialog: false,
     entered: false,
     easing: 'easeInOutCubic',
     easings: Object.keys(easings),
 
     overlay: true,
-    snackBar: true,
+    snackBar: false,
     connectionMessage: 'Provide a name to Connect to the Server.',
     disconnectedFromServer: true,
     showEntryRoomCard: false,
-    feedbackMessage:
-      'Thanks for making us safer together using Local Contact Tracing...',
+    feedbackMessage: '',
     messageColor: 'secondary lighten-1',
     socketMessage: 'visitor',
     search: '',
 
-    rating: 3,
+    rating: 0,
     alertIcon: 'mdi-alert',
     alertColor: '',
     alertMessage: '',
@@ -188,7 +198,39 @@ export default {
   }),
 
   methods: {
-    emailDev() {},
+    act() {
+      if (this.action === 'ERROR') {
+        this.error = false;
+        this.action = '';
+      }
+      this.snackBar = false;
+    },
+
+    onError(e) {
+      this.auditor.logEntry(e, 'Error');
+      this.error = true;
+      this.action = 'ERROR';
+      this.feedbackMessage =
+        'Oops. We have logged an error and will get on it right away.';
+      this.snackBar = true;
+      this.$emit('error', e);
+    },
+
+    emailDev(good) {
+      switch (good) {
+        case true:
+          this.$emit('userFeedback', 'BZ');
+          window.location = `mailto:${this.devs}?subject=LCT user says, 'BZ'`;
+          break;
+        case false:
+          this.$emit('userFeedback', 'Boo');
+          window.location = `mailto:${this.devs}?subject=LCT user says, 'Boo'`;
+          break;
+        default:
+          this.$emit('userFeedback', `${this.rating}-Stars`);
+          window.location = `mailto:${this.devs}?subject=LCT gets ${this.rating}-Star feedback`;
+      }
+    },
 
     acknowledgeAlert() {
       this.dialog = false;
@@ -246,6 +288,9 @@ export default {
         setTimeout(() => {
           this.overlay = false;
         }, 10000);
+    },
+    rating() {
+      this.emailDev();
     },
   },
 
