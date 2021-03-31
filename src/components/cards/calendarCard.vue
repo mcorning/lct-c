@@ -154,8 +154,8 @@
 <script>
 import {
   showCurrentMilitaryTime,
-  formatSmallTime,
   formatTime,
+  formatSmallTime,
 } from '../../utils/luxonHelpers';
 import { error, success, highlight, warn, printJson } from '../../utils/colors';
 
@@ -176,21 +176,14 @@ export default {
   },
 
   data: () => ({
+    fixedStart: 0,
+    fixedEnd: 0,
+    changed: false,
     calendarElement: null,
     status: 'Ready',
     original: { start: 0, end: 0 },
     path: new Map(),
-    node: {
-      startDrag: 0,
-      startTime: 0,
-      movedTo: 0,
-      endDrag: 0,
-      changed: false,
-      showEvent: 0,
-      dragStarted: 0,
-      swipeRightStarted: 0,
-      swipeLeftStarted: 0,
-    },
+
     color: 'primary',
     action: '',
     confirm: false,
@@ -218,12 +211,16 @@ export default {
     createEvent: null,
     createStart: null,
     extendOriginal: null,
+    dragEnd: null,
     pointerType: '',
     //#endregion
   }),
   methods: {
     // called by event slot in calendar
     extendBottom(event) {
+      this.path.set('extendBottom', { start: event.start, end: event.end });
+      console.log('extendBottom - path:', printJson([...this.path]));
+
       this.createEvent = event;
       this.createStart = event.start;
       this.extendOriginal = event.end;
@@ -236,7 +233,7 @@ export default {
       this.selectedCalendarEvent = event;
       console.log(nativeEvent.type);
       //formatTime defaults to Date.now()
-      this.node.showEvent = formatTime();
+      this.path.set('showEvent', { start: event.start, end: event.end });
     },
 
     //#region  Drag and Drop
@@ -244,13 +241,13 @@ export default {
     // @mousedown:event="startDrag"
     // @touchstart:event="startDrag"
     startDrag({ nativeEvent, event, timed }) {
+      this.status = '';
       this.pointerType = nativeEvent.type;
       if (nativeEvent.type === 'touchstart') {
         nativeEvent.preventDefault();
       }
       if (event && timed) {
-        this.node.dragStarted = formatTime();
-        this.node.startDrag = formatTime(event.start);
+        this.path.set('startDrag', { mouse: event.start });
 
         this.dragEvent = event;
         this.dragTime = null;
@@ -267,13 +264,16 @@ export default {
     // can have any arbitrary value (depending only on mouse/finger position)
     startTime(tms) {
       const mouse = this.toTime(tms);
-      this.node.startTime = formatTime(mouse);
+      this.path.set('startTime', { mouse });
 
       // enable a drag of an existing event
       if (this.dragEvent && this.dragTime === null) {
-        const start = this.dragEvent.start;
+        // store the start value outside drag and drop so we don't log the wrong times to the server with swipeLeft
+        this.fixedStart = this.dragEvent.start;
+        this.fixedEnd = this.dragEvent.end;
 
-        this.dragTime = mouse - start;
+        this.dragTime = mouse - this.fixedStart;
+        console.log(highlight('dragtime', this.dragTime));
       }
       // new event specified by this.place
       else if (this.place) {
@@ -287,24 +287,31 @@ export default {
     mouseMove(tms) {
       // mouse can move all over the calendar...
       const mouse = this.toTime(tms);
-      this.node.movedTo = formatTime(mouse);
 
       //...but we care only if a dragEvent or createEvent exists
       if (this.dragEvent && this.dragTime !== null) {
         console.log(
           highlight('changing the time slot using', this.pointerType)
         );
-
         const start = this.dragEvent.start;
         const end = this.dragEvent.end;
         const duration = end - start;
         const newStartTime = mouse - this.dragTime;
         const newStart = this.roundTime(newStartTime);
         const newEnd = newStart + duration;
+        const delta = Math.abs(this.dragEvent.start - newStart);
+        this.status = `${delta}`;
+        if (delta > 890000) {
+          this.status = `${delta} is greater 15 minutes `;
 
-        this.dragEvent.start = newStart;
-        this.dragEvent.end = newEnd;
-        this.node.changed = true; //this.dragEvent.start !== newStart
+          this.dragEvent.start = newStart;
+          this.dragEvent.end = newEnd;
+          this.changed = true;
+
+          this.path.set('changed', { changed: true });
+        }
+        this.path.set('mouseMove', { mouse, delta });
+        console.log('mouse', this.path.get('mouseMove').mouse);
       } else if (this.createEvent && this.createStart !== null) {
         // changing the time
         console.log(highlight(`changing the slot's end time`));
@@ -314,7 +321,8 @@ export default {
 
         this.createEvent.start = min;
         this.createEvent.end = max;
-        this.node.changed = true;
+        this.changed = true;
+        this.path.set('changed', { changed: true });
       }
     },
 
@@ -331,10 +339,9 @@ export default {
         : this.dragEvent
         ? this.dragEvent.end
         : 0;
-      this.node.endDrag = formatTime(last);
-      this.path.set(this.selectedCalendarEvent?.name, this.node);
+      this.path.set('endDrag', { last });
 
-      if (this.node.changed) {
+      if (this.changed) {
         this.color = '';
         this.feedbackMessage = 'Ready to update the visit?';
         this.action = 'UPDATE';
@@ -346,8 +353,8 @@ export default {
 
     reset() {
       console.log(warn('Resetting these variables'));
-      this.path.set(this.selectedCalendarEvent?.name, this.node);
-      console.log('path:', printJson([...this.path]));
+      this.path.set('reset', true);
+      // console.log('reset - path:', printJson([...this.path]));
 
       this.calendarElement.style.overflowY = 'auto';
 
@@ -356,22 +363,13 @@ export default {
       this.createEvent = null;
       this.createStart = null;
       this.extendOriginal = null;
-      this.node = {
-        startDrag: 0,
-        startTime: 0,
-        movedTo: 0,
-        endDrag: 0,
-        changed: false,
-        showEvent: 0,
-        dragStarted: 0,
-        swipeRightStarted: 0,
-        swipeLeftStarted: 0,
-      };
+      this.changed = false;
     },
 
     // e.g., leaving calendar component
     cancelDrag() {
       console.log(highlight('cancelDrag '));
+      this.path.set('cancelDrag', true);
 
       if (this.createEvent) {
         if (this.extendOriginal) {
@@ -396,19 +394,25 @@ export default {
       this.action = 'DELETE';
       this.color = 'warning';
       this.confirm = true;
-      this.node.swipeRightStarted = formatSmallTime();
+      this.path.set('goRight', true);
     },
     goLeft() {
       if (this.isLogged) {
         this.status = `You have already logged this ${this.name} visit to the server.`;
         return;
       }
+      this.selectedCalendarEvent.start = this.fixedStart;
+      this.selectedCalendarEvent.end = this.fixedEnd;
       console.log('Going Left...');
-      this.feedbackMessage = `Are you sure you want to LOG ${this.name}`;
+      this.feedbackMessage = `Are you sure you want to LOG ${
+        this.name
+      } from ${formatTime(this.selectedCalendarEvent.start)} to ${formatTime(
+        this.selectedCalendarEvent.end
+      )} `;
       this.action = 'LOG';
       this.color = 'primary';
       this.confirm = true;
-      this.node.swipeLeftStarted = formatSmallTime();
+      this.path.set('goLeft', true);
     },
 
     act() {
@@ -425,8 +429,10 @@ export default {
           this.updateTime();
           break;
       }
-      this.path.set(this.selectedCalendarEvent?.name, this.node);
-      console.log('path:', printJson([...this.path]));
+      if (this.selectedCalendarEvent) {
+        this.path.set('act on', this.selectedCalendarEvent.name);
+        // console.log('act - path:', printJson([...this.path]));
+      }
     },
 
     arrayRemove(arr, value) {
@@ -446,9 +452,9 @@ export default {
         details: { logged: false },
       };
       this.visit = this.createEvent;
-      this.visit.interval = `${formatTime(
+      this.visit.interval = `${formatSmallTime(
         this.createEvent.start
-      )} to ${formatTime(this.createEvent.end)}`;
+      )} to ${formatSmallTime(this.createEvent.end)}`;
       this.visits.push(this.visit);
       this.saveVisits();
       this.place = '';
@@ -475,8 +481,10 @@ export default {
 
     logVisit() {
       try {
-        this.node.logStarted = formatTime();
-        console.log('path', printJson(this.node));
+        this.path.set('logVisit', {
+          start: this.selectedCalendarEvent.start,
+          end: this.selectedCalendarEvent.end,
+        });
         this.visit = this.selectedCalendarEvent;
         this.visit.details = { logged: true };
         this.visit.color = 'primary';
@@ -484,13 +492,18 @@ export default {
         this.saveVisits();
         this.$emit('logVisit', this.visit);
         this.confirm = false;
+        console.log('logVisit - path:', printJson([...this.path]));
       } catch (error) {
         this.$emit('error', error);
       }
     },
 
     deleteVisit() {
-      this.node.delStarted = formatTime();
+      this.path.set('deleteVisit', {
+        start: this.selectedCalendarEvent.start,
+        end: this.selectedCalendarEvent.end,
+      });
+      console.log('deleteVisit - path:', printJson([...this.path]));
 
       this.$emit('deleteVisit', this.selectedCalendarEvent);
       this.visits = this.arrayRemove(this.visits, this.selectedCalendarEvent);
@@ -501,9 +514,12 @@ export default {
     updateTime() {
       this.confirm = false;
       this.visit = this.selectedCalendarEvent;
-      this.visit.interval = `${formatTime(this.visit.start)} to ${formatTime(
-        this.visit.end
-      )}`;
+      this.visit.interval = `${formatSmallTime(
+        this.visit.start
+      )} to ${formatSmallTime(this.visit.end)}`;
+      this.path.set('updateTime', { interval: this.visit.interval });
+      console.log('updateTime - path:', printJson([...this.path]));
+
       console.log('updated Visit:', printJson(this.visit));
       this.saveVisits();
       this.selectedCalendarEvent = null;
