@@ -12,24 +12,46 @@ import store from './store';
 import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 
 import * as VueGoogleMaps from 'vue2-google-maps';
+import Geocoder from '@pderas/vue2-geocoder';
+
 import { MAP_API_KEY } from '../hidden.json';
 
+// TODO remove after testing ORM
 // ensure the calendarCard has an array to work with
-if (!localStorage.getItem('visits')) {
-  localStorage.setItem('visits', '[]');
-}
+// if (!localStorage.getItem('visits')) {
+//   localStorage.setItem('visits', '[]');
+// }
+
+Vue.use(Geocoder, {
+  defaultCountryCode: null, // e.g. 'CA'
+  defaultLanguage: null, // e.g. 'en'
+  defaultMode: 'address', // or 'lat-lng'
+  googleMapsApiKey: MAP_API_KEY,
+});
 
 Vue.use(VueGoogleMaps, {
   load: {
     key: MAP_API_KEY,
     libraries: 'places', //necessary for places input
   },
+  installComponents: true,
 });
 Vue.use(VueLuxon);
 
 Vue.component('soteria-icon', SoteriaIcon);
 
 Vue.config.productionTip = false;
+
+Vue.filter('capitalize', (value) => {
+  if (!value) return '';
+  value = value.toString();
+  return value.charAt(0).toUpperCase() + value.slice(1);
+});
+
+Vue.filter('shortDateTime', (time) => {
+  if (!time) return '';
+  return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_SHORT);
+});
 
 new Vue({
   vuetify,

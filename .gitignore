@@ -36,3 +36,6 @@ src/components/cards/calendarCardEvents.vue
 srv/sessions.json
 srv/alerts.json
 newfile.txt
+src/components/cards/GoogleMap3.vue
+src/components/cards/test.vue
+src/components/cards/calendarCard copy.vue

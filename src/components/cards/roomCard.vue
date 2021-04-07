@@ -1,5 +1,9 @@
 <template>
   <div>
+    <v-overlay :value="overlay">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
+
     <v-card class="overflow-hidden">
       <!-- Favorites List -->
       <v-card tile v-if="showCalendar" :height="ht">
@@ -104,7 +108,9 @@
         </v-card-text>
       </v-card>
     </v-card>
-    <div class="pl-5">{{ status }}</div>
+    <div class="pl-5">
+      <small>{{ status }}</small>
+    </div>
     <v-bottom-navigation
       :value="value"
       color="secondary"
@@ -128,6 +134,9 @@
         <span>Gathering</span>
         <v-icon>mdi-account-group</v-icon>
       </v-btn>
+      <v-btn fab color="red" dark @click="warnThem">
+        <v-icon dark> mdi-alert </v-icon></v-btn
+      >
     </v-bottom-navigation>
 
     <!-- Your Logs -->
@@ -142,14 +151,16 @@
 </template>
 
 <script>
-import { success, info, highlight, printJson } from '../../utils/colors';
+import { success, error, info, highlight, printJson } from '../../utils/colors';
 
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
 import GoogleMap from '@/components/cards/GoogleMap';
 import calendarCard from '@/components/cards/calendarCard';
 
-import { data } from '@/maps/communityData.json';
+import { data as communityData } from '@/maps/communityData.json';
+
+import Visit from '@/models/Visit';
 
 export default {
   // props passed in by Visitor.vue
@@ -186,14 +197,16 @@ export default {
 
     categories() {
       const x = [
-        ...new Set(data.filter((v) => v.category).map((v) => v.category)),
+        ...new Set(
+          communityData.filter((v) => v.category).map((v) => v.category)
+        ),
       ];
       console.log(info('Categories:', x));
       return x;
     },
 
     spaces() {
-      return data.map((v) => {
+      return communityData.map((v) => {
         return {
           name: v.id,
           id: v.code,
@@ -202,10 +215,16 @@ export default {
         };
       });
     },
+
+    visits() {
+      return Visit.all();
+    },
   },
 
   data() {
     return {
+      overlay: true,
+      showWarningButton: true,
       status: '',
 
       newUser: false,
@@ -239,8 +258,7 @@ export default {
     },
 
     getFavorites() {
-      const visits = JSON.parse(localStorage.getItem('visits')) || [];
-      this.favorites = [...new Set(visits.map((v) => v.name))];
+      this.favorites = [...new Set(this.visits.map((v) => v.name))];
       console.log('favorites', this.favorites);
       this.newUser = this.favorites.length === 0;
     },
@@ -281,6 +299,10 @@ export default {
     onDeleteVisit(e) {
       console.log(success('Deleted visit:', printJson(e)));
       this.$emit('roomDeletedVisit', e);
+    },
+
+    warnThem() {
+      this.$emit('exposureWarning');
     },
   },
 
@@ -329,11 +351,17 @@ export default {
   },
 
   created() {
-    this.getFavorites();
+    Visit.$fetch()
+      .then(() => {
+        this.getFavorites();
+        this.overlay = false;
+        console.log(success('Visits'), printJson(this.visits));
+      })
+      .catch((e) => console.log(error(`Error in roomCard: ${e}`)));
   },
 
   async mounted() {
-    this.places = data.filter((v) => v.position);
+    this.places = communityData.filter((v) => v.position);
     this.selectedSpace = {};
     this.favorite = -1;
     this.panelState = [0]; // open only the 0th element of expansion-panels

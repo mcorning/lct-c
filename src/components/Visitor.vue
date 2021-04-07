@@ -37,11 +37,11 @@
       </v-card>
     </v-dialog>
 
-    <diaryCard
+    <!-- <diaryCard
       :nickname="nickname"
       :hasMessages="!!messages.length"
       @exposureWarning="onExposureWarning"
-    />
+    /> -->
 
     <!-- roomCard -->
     <v-row no-gutters>
@@ -100,7 +100,8 @@ import * as easings from 'vuetify/es5/services/goto/easing-patterns';
 import { success, warn, info, printJson } from '../utils/colors.js';
 
 import Message from '@/models/Message';
-import diaryCard from '@/components/cards/diaryCard';
+import Visit from '@/models/Visit';
+// import diaryCard from '@/components/cards/diaryCard';
 
 import roomCard from '@/components/cards/roomCard';
 
@@ -116,7 +117,7 @@ export default {
   },
 
   components: {
-    diaryCard,
+    // diaryCard,
     roomCard,
   },
 
@@ -126,7 +127,7 @@ export default {
     },
 
     visits() {
-      return JSON.parse(localStorage.getItem('visits')) || [];
+      return Visit.all();
     },
 
     favorites() {

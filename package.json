@@ -1,6 +1,6 @@
 {
   "name": "lct-c",
-  "version": "3.31.14",
+  "version": "4.6.18",
   "authors": [
     "Damien Arrachequesne <damien.arrachequesne@gmail.com>",
     "Michael Corning <mcorning@soteriaInstitute.org>"
@@ -14,6 +14,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@pderas/vue2-geocoder": "^1.1.0",
     "@vuex-orm/core": "^0.36.3",
     "cli-color": "^2.0.0",
     "core-js": "^3.6.5",

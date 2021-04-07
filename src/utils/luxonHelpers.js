@@ -43,7 +43,7 @@ const formatTime = (time = Date.now()) => {
 };
 
 const formatSmallTime = (time = Date.now()) => {
-  let ds = DateTime.fromMillis(time).toLocaleString(DateTime.TIME_WITH_SECONDS);
+  let ds = DateTime.fromMillis(time).toLocaleString(DateTime.TIME_SIMPLE);
   return ds;
 };
 

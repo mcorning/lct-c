@@ -3,7 +3,9 @@
     <v-overlay :value="overlay">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
-
+    <v-card v-if="showBigQrCode" class="mt-15">
+      <v-img class="mt-15" src="../src/assets/lct-c2QR.jpeg"></v-img>
+    </v-card>
     <v-app-bar app color="primary" dense dark>
       <!-- <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon> -->
       <!-- <v-navigation-drawer v-model="drawer" app>
@@ -14,28 +16,29 @@
         <v-col>
           <v-tooltip left>
             <template v-slot:activator="{ on, attrs }">
-              <a
-                class="white--text"
-                href="https://soteriainstitute.org/safe-in-sisters/"
-                target="_blank"
-                rel="noopener"
-                style="text-decoration: none"
-              >
-                <v-img
-                  src="../src/assets/lct-c2QR.jpeg"
-                  width="48"
-                  height="48"
-                  v-bind="attrs"
-                  v-on="on"
-                ></v-img
-              ></a>
+              <v-img
+                src="../src/assets/lct-c2QR.jpeg"
+                width="48"
+                height="48"
+                v-bind="attrs"
+                v-on="on"
+                @click="showBigQrCode = !showBigQrCode"
+              ></v-img>
             </template>
             <span>Share LCT-C quickly</span></v-tooltip
           >
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="auto" class="text-right">
-          <v-card-title>Local Contact Tracing </v-card-title>
+          <a
+            class="white--text"
+            href="https://soteriainstitute.org/safe-in-sisters/"
+            target="_blank"
+            rel="noopener"
+            style="text-decoration: none"
+          >
+            <v-card-title>Local Contact Tracing </v-card-title> ></a
+          >
         </v-col>
       </v-row>
     </v-app-bar>
@@ -254,6 +257,7 @@ export default {
   },
   data() {
     return {
+      showBigQrCode: false,
       confirmationMessage: '',
       sessionID: '',
       userCount: 0,
