@@ -1,5 +1,9 @@
 <template>
   <div>
+    <v-overlay :value="loading">
+      <v-progress-circular indeterminate size="64"></v-progress-circular>
+    </v-overlay>
+
     <v-row class="fill-height">
       <v-col>
         <!-- calendar controls -->
@@ -178,7 +182,7 @@ import {
   formatTime,
   formatSmallTime,
 } from '../../utils/luxonHelpers';
-import { error, success, highlight, warn, printJson } from '../../utils/colors';
+import { success, highlight, warn, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -203,40 +207,23 @@ export default {
       return this.visit.name;
     },
 
-    visitCache: {
-      get() {
-        const all = Visit.all();
-        return all;
-      },
-      set(visit) {
-        const self = this;
-        // static update function on Message model
-        Visit.updatePromise(visit)
-          .then((p) => {
-            // p is an array of Visit entries. we only care about the first
-            const id = p[0].id;
-            console.log(success(`Visit saved with id ${id}`));
-            self.visit.id = id;
-            self.visits = Visit.all();
-          })
-          .catch((e) => console.log(error(e)));
-      },
+    visits() {
+      return Visit.all();
     },
   },
 
   data: () => ({
+    overlay: true,
     changed: false,
     calendarElement: null,
     status: 'Ready',
     original: { start: 0, end: 0 },
-    path: new Map(),
 
     color: 'primary',
     action: '',
     confirm: false,
     loading: true,
     visit: {},
-    visits: [],
     place: '',
     type: 'day',
     snackBar: false,
@@ -263,16 +250,20 @@ export default {
     pointerType: '',
     //#endregion
   }),
+
   methods: {
-    handleKey(ev) {
-      if (!ev) {
-        return;
-      }
-      if (ev.code == 'Delete') {
-        self.goRight(); // calls confirmation with the Del key
-      } else if (ev.code == 'Tab') {
-        self.goLeft(); // calls confirmation with the Enter key
-      }
+    updateVisitCache(visit) {
+      const self = this;
+      // static update function on Message model
+      Visit.updatePromise(visit).then((p) => {
+        // p is an array of Visit entries. we only care about the first
+        const id = p[0].id;
+        visit.id = id;
+        console.log(success(`Visit saved`, printJson(visit)));
+        console.log(
+          success(`Now there are ${self.visits.length} visits cached`)
+        );
+      });
     },
 
     undo() {
@@ -308,7 +299,7 @@ export default {
       this.createStart = event.start;
       this.extendOriginal = event.end;
       this.cachedCalendarEvent = this.createEvent;
-      this.original.starT = event.start;
+      this.original.start = event.start;
       this.original.end = event.end;
 
       this.visit = this.createEvent;
@@ -337,8 +328,6 @@ export default {
         nativeEvent.preventDefault();
       }
       if (event && timed) {
-        this.path.set('startDrag', { mouse: event.start });
-
         this.dragEvent = event;
         this.dragTime = null;
         this.extendOriginal = null;
@@ -355,7 +344,6 @@ export default {
     // can have any arbitrary value (depending only on mouse/finger position)
     startTime(tms) {
       const mouse = this.toTime(tms);
-      this.path.set('startTime', { mouse });
 
       // enable a drag of an existing event
       if (this.dragEvent && this.dragTime === null) {
@@ -475,7 +463,6 @@ export default {
       this.action = 'DELETE';
       this.color = 'warning';
       this.confirm = true;
-      this.path.set('goRight', true);
     },
     goLeft() {
       console.log('Going Left...');
@@ -493,7 +480,6 @@ export default {
       this.action = 'LOG';
       this.color = 'primary';
       this.confirm = true;
-      this.path.set('goLeft', true);
     },
 
     act() {
@@ -533,6 +519,12 @@ export default {
       return `${formatSmallTime(start)} - ${formatSmallTime(end)}`;
     },
 
+    purge() {
+      Visit.delete((visit) => {
+        return visit.start < 1617815700000;
+      });
+    },
+
     addEvent(time) {
       this.createStart = this.roundTime(time);
       this.createEvent = {
@@ -546,8 +538,8 @@ export default {
         timed: true,
         marked: getNow(),
         logged: '',
-        color: this.getEventPrimaryColor(false),
       };
+      // shallow copy so that next visit gets its own id from saveVisit()
       this.visit = { ...this.createEvent };
       this.saveVisit();
       this.place = '';
@@ -565,19 +557,8 @@ export default {
         console.log(warn('Nothing to save'));
         return;
       }
-
-      // update IndexedDB
-      const newVisit = {
-        id: this.visit.id,
-        marked: this.visit.marked,
-        name: this.visit.name,
-        start: this.visit.start,
-        end: this.visit.end,
-        interval: this.visit.interval,
-        logged: this.visit.logged,
-        color: this.getEventPrimaryColor(this.visit.logged),
-      };
-      this.visitCache = newVisit;
+      this.updateVisitCache(this.visit);
+      this.status = `SAVED: ${this.visit.name} ${this.visit.interval} id: ${this.visit.id}`;
     },
 
     logVisit() {
@@ -589,7 +570,6 @@ export default {
         this.$emit('logVisit', this.visit);
         this.confirm = false;
         this.status = 'Logged to server. Stay safe out there.';
-        console.log('logVisit - path:', printJson([...this.path]));
       } catch (error) {
         this.status =
           'Oops. We had trouble logging to server. Notified devs. Sorry.';
@@ -606,8 +586,9 @@ export default {
           const self = this;
           this.$emit('deleteVisit', self.visit);
           console.log(success(`Visit ${id} deleted.`));
+          this.status = `DELETED: ${self.visit.name} ${self.visit.interval} id: ${self.visit.id}`;
           self.confirm = false;
-          self.visits = self.visitCache;
+          console.log(`New Visit ct: ${self.visits.length} `);
         })
         .catch((e) => {
           this.status =
@@ -661,7 +642,7 @@ export default {
     newEvent() {
       this.addEvent(Date.now());
       this.endDrag();
-      this.status = `Confirm (or move) the time to visit ${this.place}:`;
+      this.status = `If necessary, move the time to visit ${this.visit.name}`;
     },
     myKeyPress(e) {
       var keynum;
@@ -683,11 +664,16 @@ export default {
     // 'visit.logged': function (newValue, oldValue) {
     //   console.log(error(newValue, oldValue));
     // },
+    place() {
+      console.log(this.place);
+    },
   },
 
   created() {
+    let self = this;
+
     Visit.$fetch().then(() => {
-      this.visits = this.visitCache;
+      self.loading = false;
     });
   },
 
@@ -730,12 +716,12 @@ export default {
     if (self.place) {
       self.newEvent();
     }
-    self.loading = false;
     // console.log('mounted calendarCard');
   },
 
   destroyed() {
     this.visit = null;
+    this.place = null;
   },
 };
 </script>
