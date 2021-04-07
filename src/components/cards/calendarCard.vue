@@ -203,20 +203,21 @@ export default {
       return this.visit.name;
     },
 
-    visited: {
+    visitCache: {
       get() {
         const all = Visit.all();
         return all;
       },
       set(visit) {
+        const self = this;
         // static update function on Message model
         Visit.updatePromise(visit)
           .then((p) => {
             // p is an array of Visit entries. we only care about the first
             const id = p[0].id;
             console.log(success(`Visit saved with id ${id}`));
-            this.visit.id = id;
-            this.visits = Visit.all();
+            self.visit.id = id;
+            self.visits = Visit.all();
           })
           .catch((e) => console.log(error(e)));
       },
@@ -263,6 +264,17 @@ export default {
     //#endregion
   }),
   methods: {
+    handleKey(ev) {
+      if (!ev) {
+        return;
+      }
+      if (ev.code == 'Delete') {
+        self.goRight(); // calls confirmation with the Del key
+      } else if (ev.code == 'Tab') {
+        self.goLeft(); // calls confirmation with the Enter key
+      }
+    },
+
     undo() {
       this.action = 'REVERT';
       this.feedbackMessage = this.updateFeedbackMessage;
@@ -276,10 +288,11 @@ export default {
     },
 
     darkenSelectedEvent(event) {
+      console.assert(this.visit, warn('The current visit is null.'));
       const defaultColor = event.logged ? 'primary' : 'secondary';
       this.original.start = event.start;
       this.original.end = event.end;
-      return event.id == this.visit.id
+      return this.visit?.id === event.id
         ? `${defaultColor} darken-1`
         : defaultColor;
     },
@@ -536,7 +549,6 @@ export default {
         color: this.getEventPrimaryColor(false),
       };
       this.visit = { ...this.createEvent };
-      this.visits.push(this.visit);
       this.saveVisit();
       this.place = '';
     },
@@ -565,7 +577,7 @@ export default {
         logged: this.visit.logged,
         color: this.getEventPrimaryColor(this.visit.logged),
       };
-      this.visited = newVisit;
+      this.visitCache = newVisit;
     },
 
     logVisit() {
@@ -587,16 +599,15 @@ export default {
 
     deleteVisit() {
       this.$emit('deleteVisit', this.visit);
-      // this.visits = this.arrayRemove(this.visits, this.selectedCalendarEvent);
-      this.saveVisit();
       this.confirm = false;
       const id = this.visit.id;
       Visit.deletePromise(id)
         .then(() => {
-          this.$emit('deleteVisit', this.visit);
+          const self = this;
+          this.$emit('deleteVisit', self.visit);
           console.log(success(`Visit ${id} deleted.`));
-          this.confirm = false;
-          this.visits = this.visited;
+          self.confirm = false;
+          self.visits = self.visitCache;
         })
         .catch((e) => {
           this.status =
@@ -676,7 +687,7 @@ export default {
 
   created() {
     Visit.$fetch().then(() => {
-      this.visits = this.visited;
+      this.visits = this.visitCache;
     });
   },
 
@@ -684,7 +695,12 @@ export default {
     let self = this;
     self.calendarElement = document.getElementById('calendar-target');
 
+    // these are window event listeners
+    // so we need to restrict them to the calendarCard
     window.addEventListener('keydown', function (ev) {
+      if (!self.visit) {
+        return;
+      }
       if (ev.code == 'Delete') {
         self.goRight(); // calls confirmation with the Del key
       } else if (ev.code == 'Tab') {
@@ -693,6 +709,9 @@ export default {
     });
     // you lose visibility into this if you move listeners into code
     window.addEventListener('keypress', function (ev) {
+      if (!self.visit) {
+        return;
+      }
       if (ev.code == 'KeyY' || ev.code == 'Enter') {
         if (self.action === 'DELETE') {
           self.deleteVisit(); // calls confirmation with the Del key
@@ -701,7 +720,7 @@ export default {
         } else if (self.action === 'UPDATE') {
           self.saveVisit();
         }
-      } else if (ev.code == 'KeyN') {
+      } else if (ev.code == 'KeyN' || ev.code == 'Esc') {
         self.cancel();
       }
     });
@@ -716,7 +735,7 @@ export default {
   },
 
   destroyed() {
-    this.saveVisit();
+    this.visit = null;
   },
 };
 </script>
