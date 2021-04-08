@@ -267,7 +267,6 @@ export default {
       this.$emit('visitorLoggedVisit', visit);
     },
     onRoomDeletedVisit(e) {
-      console.log(success('Deleted Visit:', printJson(e)));
       // cache the visit in Messages
       let msg = {
         visitor: this.nickname,

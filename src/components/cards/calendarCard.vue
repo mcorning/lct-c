@@ -74,10 +74,10 @@
           dark
           centered
           absolute
+          vertical
+          multi-line
         >
           {{ feedbackMessage }}
-          <br />
-          <small>Enter for Yes. Esc for No.</small>
           <template v-slot:action="{ attrs }">
             <v-btn
               dark
@@ -86,9 +86,9 @@
               @click="act"
               elevation="10"
             >
-              Yes
+              Yes (Enter)
             </v-btn>
-            <v-btn dark v-bind="attrs" @click="cancel"> No </v-btn>
+            <v-btn dark v-bind="attrs" @click="cancel"> No (Esc)</v-btn>
           </template>
         </v-snackbar>
 
@@ -171,8 +171,8 @@
 </template>
 
 <script>
-// import crypto from 'crypto';
-// const randomId = () => crypto.randomBytes(8).toString('hex');
+import crypto from 'crypto';
+const randomId = () => crypto.randomBytes(8).toString('hex');
 
 import Visit from '@/models/Visit';
 
@@ -207,12 +207,13 @@ export default {
       return this.visit.name;
     },
 
-    visits() {
+    visitCache() {
       return Visit.all();
     },
   },
 
   data: () => ({
+    visitId: '',
     overlay: true,
     changed: false,
     calendarElement: null,
@@ -224,6 +225,7 @@ export default {
     confirm: false,
     loading: true,
     visit: {},
+    visits: [],
     place: '',
     type: 'day',
     snackBar: false,
@@ -252,20 +254,6 @@ export default {
   }),
 
   methods: {
-    updateVisitCache(visit) {
-      const self = this;
-      // static update function on Message model
-      Visit.updatePromise(visit).then((p) => {
-        // p is an array of Visit entries. we only care about the first
-        const id = p[0].id;
-        visit.id = id;
-        console.log(success(`Visit saved`, printJson(visit)));
-        console.log(
-          success(`Now there are ${self.visits.length} visits cached`)
-        );
-      });
-    },
-
     undo() {
       this.action = 'REVERT';
       this.feedbackMessage = this.updateFeedbackMessage;
@@ -279,11 +267,11 @@ export default {
     },
 
     darkenSelectedEvent(event) {
-      console.assert(this.visit, warn('The current visit is null.'));
+      console.assert(this.visitId, warn('The current visit is null.'));
       const defaultColor = event.logged ? 'primary' : 'secondary';
       this.original.start = event.start;
       this.original.end = event.end;
-      return this.visit?.id === event.id
+      return this.visitId === event.id
         ? `${defaultColor} darken-1`
         : defaultColor;
     },
@@ -293,7 +281,7 @@ export default {
     // @touchstart.stop
     // extenstion stops in endDrag()
     extendBottom(event) {
-      this.changed = false;
+      this.visitId = event.id;
 
       this.createEvent = event;
       this.createStart = event.start;
@@ -302,7 +290,9 @@ export default {
       this.original.start = event.start;
       this.original.end = event.end;
 
-      this.visit = this.createEvent;
+      this.changed = false;
+
+      // this.visit = this.createEvent;
     },
 
     // @click:event="showEvent"
@@ -311,7 +301,10 @@ export default {
       this.status = `Selected: ${name} at ${formatTime(start)} [id: ${id}]`;
 
       // // shallow clone so reset() does not effect visit indirectly
-      this.visit = { ...event };
+      // this.visit = { ...event };
+
+      this.visitId = event.id;
+
       console.log(nativeEvent.type);
     },
 
@@ -328,13 +321,15 @@ export default {
         nativeEvent.preventDefault();
       }
       if (event && timed) {
+        this.visitId = event.id;
+
         this.dragEvent = event;
         this.dragTime = null;
         this.extendOriginal = null;
         this.original.start = this.dragEvent.start;
         this.original.end = this.dragEvent.end;
         this.cachedCalendarEvent = this.dragEvent;
-        this.visit = this.dragEvent;
+        // this.visit = this.dragEvent;
       }
     },
 
@@ -373,6 +368,7 @@ export default {
         console.log(
           highlight('changing the time slot using', this.pointerType)
         );
+        this.visitId = this.dragEvent.id;
         const start = this.dragEvent.start;
         const end = this.dragEvent.end;
         const duration = end - start;
@@ -390,7 +386,7 @@ export default {
             this.dragEvent.start,
             this.dragEvent.end
           );
-          this.visit = { ...this.dragEvent };
+          // this.visit = { ...this.dragEvent };
           this.feedbackMessage = this.updateFeedbackMessage;
           this.changed = true;
         }
@@ -398,10 +394,12 @@ export default {
       // change the (start and) end time on the lower edge of the event
       else if (this.createEvent && this.createStart !== null) {
         console.log(highlight(`changing the slot's end time`));
+
         const mouseRounded = this.roundTime(mouse, false);
         const min = Math.min(mouseRounded, this.createStart);
         const max = Math.max(mouseRounded, this.createStart);
 
+        this.visitId = this.createEvent.id;
         this.createEvent.start = min;
         this.createEvent.end = max;
         this.createEvent.interval = this.getInterval(
@@ -421,7 +419,7 @@ export default {
     // called by drag or extendBottom
     endDrag() {
       if (this.changed) {
-        this.saveVisit();
+        this.saveVisit(this.getVisit());
       }
 
       this.reset();
@@ -443,14 +441,18 @@ export default {
         if (this.extendOriginal) {
           this.createEvent.end = this.extendOriginal;
         } else {
-          const i = this.visits.indexOf(this.createEvent);
-          if (i !== -1) {
-            this.visits.splice(i, 1);
-          }
+          this.removeVisit(this.createEvent);
         }
       }
 
       this.reset();
+    },
+
+    removeVisit(event) {
+      const i = this.visits.indexOf(event);
+      if (i !== -1) {
+        this.visits.splice(i, 1);
+      }
     },
     //#endregion Drag and Drop
 
@@ -472,11 +474,12 @@ export default {
         return;
       }
       this.status = 'Logging visit on the server...';
-      this.visit.start = this.original.start;
-      this.visit.end = this.original.end;
+      let visit = this.getVisit();
+      visit.start = this.original.start;
+      visit.end = this.original.end;
       this.feedbackMessage = `Are you sure you want to LOG ${
         this.name
-      } from ${formatTime(this.visit.start)} to ${formatTime(this.visit.end)} `;
+      } from ${formatTime(visit.start)} to ${formatTime(visit.end)} `;
       this.action = 'LOG';
       this.color = 'primary';
       this.confirm = true;
@@ -494,7 +497,7 @@ export default {
           }
           break;
         case 'UPDATE':
-          this.saveVisit();
+          this.saveVisit(this.getVisit());
           break;
         case 'REVERT':
           this.revert();
@@ -509,9 +512,11 @@ export default {
       this.saveVisit();
     },
 
-    arrayRemove(arr, value) {
+    arrayRemove(arr, value, prop = 'id') {
+      // console.log(value);
       return arr.filter((ele) => {
-        return ele != value;
+        // console.log(ele[prop]);
+        return ele[prop] != value;
       });
     },
 
@@ -519,15 +524,34 @@ export default {
       return `${formatSmallTime(start)} - ${formatSmallTime(end)}`;
     },
 
+    // TODO Test this before using it (duh)
     purge() {
       Visit.delete((visit) => {
         return visit.start < 1617815700000;
       });
     },
 
+    getVisit(id = this.visitId) {
+      const x = this.visits.reduce((a, c) => {
+        if (c.id === id) {
+          return c;
+        }
+      }, {});
+      return x;
+    },
+
+    updateVisitCache(visit) {
+      // static update function on Message model
+      Visit.updatePromise(visit).then(() => {
+        console.log(success(`New Visit:`, printJson(visit)));
+      });
+    },
+
     addEvent(time) {
+      this.visitId = randomId();
       this.createStart = this.roundTime(time);
       this.createEvent = {
+        id: this.visitId,
         name: this.place,
         start: this.createStart,
         end: this.createStart + this.avgStay,
@@ -537,37 +561,50 @@ export default {
         ),
         timed: true,
         marked: getNow(),
-        logged: '',
+        logged: '', // this will contain the internal id of the relationship in redisGraph
       };
-      // shallow copy so that next visit gets its own id from saveVisit()
-      this.visit = { ...this.createEvent };
-      this.saveVisit();
+      this.updateVisitCache(this.createEvent);
+
+      let x = this.visits.length;
+      this.visits.push(this.createEvent);
+      console.assert(
+        this.visits.length - 1 === x,
+        'Visit ct unchanged after push()'
+      );
       this.place = '';
     },
 
-    cancel() {
+    deleteVisit() {
       this.confirm = false;
-      this.visit = this.cachedCalendarEvent;
-      this.reset();
-    },
+      const id = this.visitId;
+      Visit.deletePromise(id)
+        .then(() => {
+          const self = this;
+          let visits = self.visits;
+          self.visits = self.arrayRemove(visits, self.visitId);
 
-    saveVisit() {
-      this.confirm = false;
-      if (!(this.visit?.start && this.visit?.end)) {
-        console.log(warn('Nothing to save'));
-        return;
-      }
-      this.updateVisitCache(this.visit);
-      this.status = `SAVED: ${this.visit.name} ${this.visit.interval} id: ${this.visit.id}`;
+          console.log(success(`Visit ${id} deleted.`));
+          self.status = `DELETED: ${self.visit.name} ${self.visit.interval} id: ${self.visit.id}`;
+          self.confirm = false;
+          console.log(`New Visit ct: ${self.visits.length} `);
+
+          self.$emit('deleteVisit', self.visit);
+        })
+        .catch((e) => {
+          this.status =
+            'Oops. We had trouble logging to server. Notified devs. Sorry.';
+          this.$emit('error', e);
+        });
     },
 
     logVisit() {
       try {
-        this.visit.logged - getNow();
-        this.visit.color = this.getEventPrimaryColor(true);
-        console.log(success('Logging visit:', printJson(this.visit)));
+        let visit = this.getVisit();
+        visit.logged - getNow();
+        visit.color = this.getEventPrimaryColor(true);
+        console.log(success('Logging visit:', printJson(visit)));
         this.saveVisit();
-        this.$emit('logVisit', this.visit);
+        this.$emit('logVisit', visit);
         this.confirm = false;
         this.status = 'Logged to server. Stay safe out there.';
       } catch (error) {
@@ -577,24 +614,18 @@ export default {
       }
     },
 
-    deleteVisit() {
-      this.$emit('deleteVisit', this.visit);
+    cancel() {
       this.confirm = false;
-      const id = this.visit.id;
-      Visit.deletePromise(id)
-        .then(() => {
-          const self = this;
-          this.$emit('deleteVisit', self.visit);
-          console.log(success(`Visit ${id} deleted.`));
-          this.status = `DELETED: ${self.visit.name} ${self.visit.interval} id: ${self.visit.id}`;
-          self.confirm = false;
-          console.log(`New Visit ct: ${self.visits.length} `);
-        })
-        .catch((e) => {
-          this.status =
-            'Oops. We had trouble logging to server. Notified devs. Sorry.';
-          this.$emit('error', e);
-        });
+      // this.visit = this.cachedCalendarEvent;
+      this.reset();
+    },
+
+    saveVisit(visit = this.getVisit()) {
+      this.confirm = false;
+
+      this.updateVisitCache(visit);
+
+      this.status = `SAVED: ${visit.name} ${visit.interval} id: ${visit.id}`;
     },
 
     changeType(type) {
@@ -629,6 +660,7 @@ export default {
         ? time - (time % roundDownTime)
         : time + (roundDownTime - (time % roundDownTime));
     },
+
     toTime(tms) {
       return new Date(
         tms.year,
@@ -641,21 +673,8 @@ export default {
 
     newEvent() {
       this.addEvent(Date.now());
-      this.endDrag();
+      // this.endDrag();
       this.status = `If necessary, move the time to visit ${this.visit.name}`;
-    },
-    myKeyPress(e) {
-      var keynum;
-
-      if (window.event) {
-        // IE
-        keynum = e.keyCode;
-      } else if (e.which) {
-        // Netscape/Firefox/Opera
-        keynum = e.which;
-      }
-
-      alert(String.fromCharCode(keynum));
     },
   },
 
@@ -664,22 +683,25 @@ export default {
     // 'visit.logged': function (newValue, oldValue) {
     //   console.log(error(newValue, oldValue));
     // },
-    place() {
-      console.log(this.place);
-    },
   },
 
-  created() {
-    let self = this;
+  created() {},
+
+  mounted() {
+    const self = this;
 
     Visit.$fetch().then(() => {
       self.loading = false;
-    });
-  },
+      self.visits = self.visitCache;
 
-  mounted() {
-    let self = this;
-    self.calendarElement = document.getElementById('calendar-target');
+      self.calendarElement = document.getElementById('calendar-target');
+
+      self.place = self.selectedSpaceName;
+      self.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
+      if (self.place) {
+        self.newEvent();
+      }
+    });
 
     // these are window event listeners
     // so we need to restrict them to the calendarCard
@@ -687,35 +709,37 @@ export default {
       if (!self.visit) {
         return;
       }
-      if (ev.code == 'Delete') {
-        self.goRight(); // calls confirmation with the Del key
-      } else if (ev.code == 'Tab') {
-        self.goLeft(); // calls confirmation with the Enter key
-      }
-    });
-    // you lose visibility into this if you move listeners into code
-    window.addEventListener('keypress', function (ev) {
-      if (!self.visit) {
-        return;
-      }
-      if (ev.code == 'KeyY' || ev.code == 'Enter') {
-        if (self.action === 'DELETE') {
-          self.deleteVisit(); // calls confirmation with the Del key
-        } else if (self.action === 'LOG') {
-          self.logVisit(); // calls confirmation with the Tab key
-        } else if (self.action === 'UPDATE') {
-          self.saveVisit();
-        }
-      } else if (ev.code == 'KeyN' || ev.code == 'Esc') {
-        self.cancel();
+      console.log(highlight('key/action'), ev.code, self.action);
+      switch (ev.code) {
+        case 'Delete':
+          self.goRight(); // calls confirmation with the Del key
+          break;
+
+        case 'KeyY':
+        case 'Enter':
+          switch (self.action) {
+            case 'DELETE':
+              self.deleteVisit(); // calls confirmation with the Del key
+              break;
+
+            case 'LOG':
+              self.logVisit(); // calls confirmation with the Tab key
+              self.action = '';
+              break;
+
+            default:
+              self.goLeft(); // brings up the log confirmation dialog
+              break;
+          }
+          break;
+
+        case 'KeyN':
+        case 'Escape':
+          self.cancel(); // calls confirmation with the Del key
+          break;
       }
     });
 
-    self.place = self.selectedSpaceName;
-    self.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
-    if (self.place) {
-      self.newEvent();
-    }
     // console.log('mounted calendarCard');
   },
 

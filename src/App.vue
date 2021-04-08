@@ -4,7 +4,18 @@
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
     <v-card v-if="showBigQrCode" class="mt-15">
-      <v-img class="mt-15" src="../src/assets/lct-c2QR.jpeg"></v-img>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-img
+            class="mt-5"
+            src="../src/assets/lct-c2QR.jpeg"
+            v-bind="attrs"
+            v-on="on"
+            @click="showBigQrCode = false"
+          ></v-img>
+        </template>
+        <span>Click to dismiss</span></v-tooltip
+      >
     </v-card>
     <v-app-bar app color="primary" dense dark>
       <!-- <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon> -->
@@ -25,19 +36,21 @@
                 @click="showBigQrCode = !showBigQrCode"
               ></v-img>
             </template>
-            <span>Share LCT-C quickly</span></v-tooltip
+            <span>Toggle QR to share LCT</span></v-tooltip
           >
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="auto" class="text-right">
-          <a
-            class="white--text"
-            href="https://soteriainstitute.org/safe-in-sisters/"
-            target="_blank"
-            rel="noopener"
-            style="text-decoration: none"
+          <v-card-title>
+            <a
+              class="white--text"
+              href="https://soteriainstitute.org/safe-in-sisters/"
+              target="_blank"
+              rel="noopener"
+              style="text-decoration: none"
+              >Local Contact Tracing
+            </a></v-card-title
           >
-            <v-card-title>Local Contact Tracing </v-card-title> ></a
           >
         </v-col>
       </v-row>

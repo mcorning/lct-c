@@ -30,6 +30,7 @@ export default class Visit extends Model {
   }
   static updatePromise(val) {
     return new Promise((resolve, reject) => {
+      console.log('update Visit with', JSON.stringify(val, null, 3));
       this.$create({
         data: val,
       })
@@ -45,6 +46,7 @@ export default class Visit extends Model {
 
   static deletePromise(val) {
     return new Promise((resolve, reject) => {
+      console.log(`Deleting Visit id ${val}`);
       this.$delete(val)
         .then((p) => {
           if (p) {

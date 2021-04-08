@@ -135,6 +135,7 @@
         <v-icon>mdi-account-group</v-icon>
       </v-btn>
       <v-btn fab color="red" dark @click="warnThem">
+        <span>Warn</span>
         <v-icon dark> mdi-alert </v-icon></v-btn
       >
     </v-bottom-navigation>
@@ -217,7 +218,8 @@ export default {
     },
 
     visits() {
-      return Visit.all();
+      const v = Visit.all();
+      return v;
     },
   },
 
@@ -297,7 +299,6 @@ export default {
       this.$emit('roomLoggedVisit', data);
     },
     onDeleteVisit(e) {
-      console.log(success('Deleted visit:', printJson(e)));
       this.$emit('roomDeletedVisit', e);
     },
 
@@ -314,7 +315,12 @@ export default {
       }
     },
 
-    show(newVal) {
+    show(newVal, oldVal) {
+      if (oldVal === 2) {
+        this.favorite = -1;
+        console.log(this.favorite);
+        this.selectedSpace.name = '';
+      }
       this.getFavorites();
       switch (newVal) {
         case 0:
@@ -352,19 +358,25 @@ export default {
 
   created() {
     Visit.$fetch()
-      .then(() => {
+      .then((all) => {
+        console.log(all);
         this.getFavorites();
+        this.show = this.visits.length ? 0 : 1;
         this.overlay = false;
         console.log(success('Visits'), printJson(this.visits));
       })
       .catch((e) => console.log(error(`Error in roomCard: ${e}`)));
   },
 
-  async mounted() {
+  mounted() {
     this.places = communityData.filter((v) => v.position);
     this.selectedSpace = {};
     this.favorite = -1;
     this.panelState = [0]; // open only the 0th element of expansion-panels
+  },
+
+  destroyed() {
+    this.selectedSpace = null;
   },
 };
 </script>
