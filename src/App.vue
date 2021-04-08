@@ -24,23 +24,7 @@
       </v-navigation-drawer> -->
 
       <v-row align="center" no-gutters>
-        <v-col>
-          <v-tooltip left>
-            <template v-slot:activator="{ on, attrs }">
-              <v-img
-                src="../src/assets/lct-c2QR.jpeg"
-                width="48"
-                height="48"
-                v-bind="attrs"
-                v-on="on"
-                @click="showBigQrCode = !showBigQrCode"
-              ></v-img>
-            </template>
-            <span>Toggle QR to share LCT</span></v-tooltip
-          >
-        </v-col>
-        <v-spacer></v-spacer>
-        <v-col cols="auto" class="text-right">
+        <v-col class="text-left">
           <v-card-title>
             <a
               class="white--text"
@@ -157,14 +141,18 @@
 
     <v-system-bar app window dense color="primary" dark>
       <v-tooltip bottom>
-        <template v-slot:activator="{ on, attrs }"
-          ><v-btn small text @click="hardRefresh"
-            ><v-icon v-bind="attrs" v-on="on">mdi-refresh</v-icon>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            icon
+            v-bind="attrs"
+            v-on="on"
+            @click="showBigQrCode = !showBigQrCode"
+          >
+            <v-icon>mdi-qrcode</v-icon>
           </v-btn>
         </template>
-        <span>Hard refesh</span></v-tooltip
+        <span>Toggle QR to share LCT</span></v-tooltip
       >
-
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
           <span v-bind="attrs" v-on="on">LCT v.{{ build }} </span>

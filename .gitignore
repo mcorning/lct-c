@@ -40,3 +40,4 @@ src/components/cards/GoogleMap3.vue
 src/components/cards/test.vue
 src/components/cards/calendarCard copy.vue
 srv/lab.js
+srv/lab2.js

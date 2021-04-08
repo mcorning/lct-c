@@ -332,7 +332,7 @@ export default {
           break;
         case 2:
           this.status =
-            'New events default to the current time. Move, as necessary.';
+            'Touch and hold event, then move up/dn or change width. Move left to log, right to del.';
           break;
         case 3:
           this.status = 'Gatherings is currently under construction...';

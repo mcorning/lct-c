@@ -103,7 +103,7 @@
             :type="type"
             :events="visits"
             :event-ripple="false"
-            :event-color="darkenSelectedEvent"
+            :event-color="getEventColor"
             @mousedown:event="startDrag"
             @touchstart:event="startDrag"
             @mousedown:time="startTime"
@@ -122,7 +122,7 @@
             }"
           >
             <template v-slot:event="{ event, timed, eventSummary }">
-              <v-tooltip top>
+              <v-tooltip bottom>
                 <template v-slot:activator="{ on, attrs }">
                   <div
                     v-bind="attrs"
@@ -182,7 +182,7 @@ import {
   formatTime,
   formatSmallTime,
 } from '../../utils/luxonHelpers';
-import { success, highlight, warn, printJson } from '../../utils/colors';
+import { success, highlight, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -199,20 +199,13 @@ export default {
       )}?`;
     },
 
-    eventLogged() {
-      return this.visit.logged;
-    },
-
-    name() {
-      return this.visit.name;
-    },
-
     visitCache() {
       return Visit.all();
     },
   },
 
   data: () => ({
+    onCalendar: true,
     visitId: '',
     overlay: true,
     changed: false,
@@ -224,7 +217,6 @@ export default {
     action: '',
     confirm: false,
     loading: true,
-    visit: {},
     visits: [],
     place: '',
     type: 'day',
@@ -266,8 +258,9 @@ export default {
       this.changed = false;
     },
 
-    darkenSelectedEvent(event) {
-      console.assert(this.visitId, warn('The current visit is null.'));
+    // called by event-color calendar event
+    getEventColor(event) {
+      // console.assert(this.visitId, warn('No selected visit.'));
       const defaultColor = event.logged ? 'primary' : 'secondary';
       this.original.start = event.start;
       this.original.end = event.end;
@@ -291,8 +284,6 @@ export default {
       this.original.end = event.end;
 
       this.changed = false;
-
-      // this.visit = this.createEvent;
     },
 
     // @click:event="showEvent"
@@ -301,7 +292,6 @@ export default {
       this.status = `Selected: ${name} at ${formatTime(start)} [id: ${id}]`;
 
       // // shallow clone so reset() does not effect visit indirectly
-      // this.visit = { ...event };
 
       this.visitId = event.id;
 
@@ -329,7 +319,6 @@ export default {
         this.original.start = this.dragEvent.start;
         this.original.end = this.dragEvent.end;
         this.cachedCalendarEvent = this.dragEvent;
-        // this.visit = this.dragEvent;
       }
     },
 
@@ -376,7 +365,6 @@ export default {
         const newStart = this.roundTime(newStartTime);
         const newEnd = newStart + duration;
         const delta = Math.abs(this.dragEvent.start - newStart);
-        this.status = `${delta}`;
 
         // update event in 15 minute increments
         if (delta > 890000) {
@@ -386,7 +374,6 @@ export default {
             this.dragEvent.start,
             this.dragEvent.end
           );
-          // this.visit = { ...this.dragEvent };
           this.feedbackMessage = this.updateFeedbackMessage;
           this.changed = true;
         }
@@ -460,25 +447,25 @@ export default {
 
     goRight() {
       console.log('Going Right...');
-
-      this.feedbackMessage = `Are you sure you want to DELETE ${this.name}`;
+      const visit = this.getVisit();
+      this.feedbackMessage = `Are you sure you want to DELETE ${visit.name}`;
       this.action = 'DELETE';
       this.color = 'warning';
       this.confirm = true;
     },
+
     goLeft() {
       console.log('Going Left...');
+      const visit = this.getVisit();
 
-      if (this.eventLogged) {
-        this.status = `You have already logged this ${this.name} visit to the server.`;
+      if (visit.logged) {
+        this.status = `You have already logged this ${visit.name} visit to the server.`;
         return;
       }
       this.status = 'Logging visit on the server...';
-      let visit = this.getVisit();
-      visit.start = this.original.start;
-      visit.end = this.original.end;
+
       this.feedbackMessage = `Are you sure you want to LOG ${
-        this.name
+        visit.name
       } from ${formatTime(visit.start)} to ${formatTime(visit.end)} `;
       this.action = 'LOG';
       this.color = 'primary';
@@ -492,12 +479,10 @@ export default {
           this.deleteVisit();
           break;
         case 'LOG':
-          if (!this.eventLogged) {
-            this.logVisit();
-          }
+          this.logVisit();
           break;
         case 'UPDATE':
-          this.saveVisit(this.getVisit());
+          this.saveVisit();
           break;
         case 'REVERT':
           this.revert();
@@ -532,11 +517,12 @@ export default {
     },
 
     getVisit(id = this.visitId) {
-      const x = this.visits.reduce((a, c) => {
-        if (c.id === id) {
+      const x = this.visits
+        .slice(0) // create copy of "array" for iterating
+        .reduce((a, c, i, arr) => {
+          if (c.id === id) arr.splice(1);
           return c;
-        }
-      }, {});
+        }, {});
       return x;
     },
 
@@ -576,19 +562,21 @@ export default {
 
     deleteVisit() {
       this.confirm = false;
-      const id = this.visitId;
+      const visit = this.getVisit();
+      const id = visit.id;
+      const self = this;
+
       Visit.deletePromise(id)
         .then(() => {
-          const self = this;
+          self.confirm = false;
           let visits = self.visits;
-          self.visits = self.arrayRemove(visits, self.visitId);
+          self.visits = self.arrayRemove(visits, id);
 
           console.log(success(`Visit ${id} deleted.`));
-          self.status = `DELETED: ${self.visit.name} ${self.visit.interval} id: ${self.visit.id}`;
-          self.confirm = false;
+          self.status = `DELETED: ${visit.name} ${visit.interval} id: ${visit.id}`;
           console.log(`New Visit ct: ${self.visits.length} `);
 
-          self.$emit('deleteVisit', self.visit);
+          self.$emit('deleteVisit', visit);
         })
         .catch((e) => {
           this.status =
@@ -600,7 +588,10 @@ export default {
     logVisit() {
       try {
         let visit = this.getVisit();
-        visit.logged - getNow();
+        if (visit.logged) {
+          return;
+        }
+        visit.logged = getNow(); // replace date with redisGraph node internal id
         visit.color = this.getEventPrimaryColor(true);
         console.log(success('Logging visit:', printJson(visit)));
         this.saveVisit();
@@ -616,13 +607,12 @@ export default {
 
     cancel() {
       this.confirm = false;
-      // this.visit = this.cachedCalendarEvent;
       this.reset();
     },
 
     saveVisit(visit = this.getVisit()) {
       this.confirm = false;
-
+      console.log(printJson(visit));
       this.updateVisitCache(visit);
 
       this.status = `SAVED: ${visit.name} ${visit.interval} id: ${visit.id}`;
@@ -673,8 +663,39 @@ export default {
 
     newEvent() {
       this.addEvent(Date.now());
-      // this.endDrag();
-      this.status = `If necessary, move the time to visit ${this.visit.name}`;
+      this.endDrag();
+    },
+
+    handleKeydown(ev) {
+      console.log(highlight('key/action'), ev.code, this.action);
+      switch (ev.code) {
+        case 'Delete':
+          this.goRight(); // calls confirmation with the Del key
+          break;
+
+        case 'KeyY':
+        case 'Enter':
+          switch (this.action) {
+            case 'DELETE':
+              this.deleteVisit(); // calls confirmation with the Del key
+              break;
+
+            case 'LOG':
+              this.logVisit(); // calls confirmation with the Enter key
+              this.action = '';
+              break;
+
+            default:
+              this.goLeft(); // brings up the log confirmation dialog
+              break;
+          }
+          break;
+
+        case 'KeyN':
+        case 'Escape':
+          this.cancel(); // calls confirmation with the Escape key
+          break;
+      }
     },
   },
 
@@ -705,47 +726,13 @@ export default {
 
     // these are window event listeners
     // so we need to restrict them to the calendarCard
-    window.addEventListener('keydown', function (ev) {
-      if (!self.visit) {
-        return;
-      }
-      console.log(highlight('key/action'), ev.code, self.action);
-      switch (ev.code) {
-        case 'Delete':
-          self.goRight(); // calls confirmation with the Del key
-          break;
+    window.addEventListener('keydown', this.handleKeydown);
 
-        case 'KeyY':
-        case 'Enter':
-          switch (self.action) {
-            case 'DELETE':
-              self.deleteVisit(); // calls confirmation with the Del key
-              break;
-
-            case 'LOG':
-              self.logVisit(); // calls confirmation with the Tab key
-              self.action = '';
-              break;
-
-            default:
-              self.goLeft(); // brings up the log confirmation dialog
-              break;
-          }
-          break;
-
-        case 'KeyN':
-        case 'Escape':
-          self.cancel(); // calls confirmation with the Del key
-          break;
-      }
-    });
-
-    // console.log('mounted calendarCard');
+    console.log('mounted calendarCard');
   },
 
   destroyed() {
-    this.visit = null;
-    this.place = null;
+    window.removeEventListener('keydown', this.handleKeydown);
   },
 };
 </script>
