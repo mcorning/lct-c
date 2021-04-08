@@ -216,6 +216,7 @@ function logVisit(data) {
         let id = x.get('id(r)');
         const stats = results._statistics._raw;
         console.log(`stats: ${printJson(stats)}`);
+        console.log(`New Visit graph ID: ${printJson(id)}`);
         resolve({ logged: true, id: id });
       })
       .catch((error) => {

@@ -38,6 +38,17 @@ export default class Visit extends Model {
         .catch((e) => reject(e));
     });
   }
+  static updateVisitPromise(id, val) {
+    return new Promise((resolve, reject) => {
+      console.log('update Visit with', JSON.stringify(val, null, 3));
+      this.$update({
+        where: id,
+        data: { logged: val },
+      })
+        .then((p) => resolve(p))
+        .catch((e) => reject(e));
+    });
+  }
 
   static async delete(val) {
     let p = await this.$delete(val);

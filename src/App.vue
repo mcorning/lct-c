@@ -206,12 +206,14 @@
 import crypto from 'crypto';
 const randomId = () => crypto.randomBytes(8).toString('hex');
 
+import Visit from '@/models/Visit';
+
 import Visitor from './components/Visitor';
 import Welcome from './components/Welcome';
 // import Chat from './components/Chat';
 
 import socket from './socket';
-import { printJson, highlight } from './utils/colors';
+import { printJson, highlight, success } from './utils/colors';
 import update from '@/mixins/update.js';
 import helpers from '@/mixins/helpers.js';
 
@@ -321,7 +323,10 @@ export default {
       this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
 
       // send the visit to the server
-      this.addVisitToGraph(query, visit).then((results) => {
+      this.addVisitToGraph(query).then((results) => {
+        Visit.updateVisitPromise(visit.id, results.id).then(() => {
+          console.log(success(`Logged Visit:`, printJson(visit)));
+        });
         console.log('addVisitToGraph', visit.name, results);
         // let v = JSON.parse(localStorage.getItem('visits'));
         // let x = v.filter(
@@ -500,6 +505,7 @@ export default {
   },
 
   async mounted() {
+    Visit.$fetch();
     this.overlay = false;
     console.log('Visitor.vue mounted');
   },
