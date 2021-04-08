@@ -48,7 +48,7 @@
               target="_blank"
               rel="noopener"
               style="text-decoration: none"
-              >Local Contact Tracing
+              >Local Contact Tracing - {{ namespace }}
             </a></v-card-title
           >
           >
@@ -270,6 +270,7 @@ export default {
   },
   data() {
     return {
+      namespace: 'Sisters', // move this to a global config file
       showBigQrCode: false,
       confirmationMessage: '',
       sessionID: '',
