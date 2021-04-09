@@ -253,7 +253,7 @@ export default {
     },
 
     onRoomLoggedVisit(visit) {
-      console.log(success('Visit:', printJson(visit)));
+      // console.log(success('Visit:', printJson(visit)));
       // cache the visit in Messages
       let msg = {
         visitor: this.nickname,

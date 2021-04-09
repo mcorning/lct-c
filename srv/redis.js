@@ -1,12 +1,12 @@
 //https://github.com/RedisGraph/redisgraph.js
 const RedisGraph = require('redisgraph.js').Graph;
-const hostOld = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
+// const hostOld = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
 const host = 'redis-16914.c53.west-us.azure.cloud.redislabs.com';
-const optionsOld = {
-  host: host,
-  port: 11939,
-  password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
-};
+// const optionsOld = {
+//   host: host,
+//   port: 11939,
+//   password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
+// };
 const options = {
   host: host,
   port: 16914,
@@ -197,18 +197,27 @@ function onExposureWarning(userID) {
 }
 
 // delegated in index.js to handle socket.on('logVisit')
+// Can add a visit to the graph or can edit the time(s) of a logged visit [when the data includes the logged field (which is the id of the Relationship)]
 // Example query:
+// MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{start:'1615856400000'}]->(s)
 // MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{start:'1615856400000'}]->(s)
 function logVisit(data) {
   return new Promise((resolve, reject) => {
-    const { username, userID, selectedSpace, start, end } = data;
+    const { username, userID, selectedSpace, start, end, logged } = data;
     const duration = `${formatTime(start)} TO ${formatTime(end)}`;
     console.log(highlight(duration));
+    // if data includes logged, we update
 
-    let query = `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
-  MERGE (s:space{ name: "${selectedSpace}"}) 
-  MERGE (v)-[r:visited{start:${start}, end:${end}, 
-    duration: '${duration}'}]->(s) RETURN id(r)`;
+    let query = logged
+      ? `MATCH ()-[v:visited]->() where id(v)=${logged} 
+      SET v.start=${start}, v.end=${end},  v.duration= '${duration}' 
+      WITH v AS old
+      DELETE old`
+      : `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
+      MERGE (s:space{ name: "${selectedSpace}"}) 
+      MERGE (v)-[r:visited{start:${start}, end:${end}, 
+        duration: '${duration}'}]->(s) RETURN id(r)`;
+
     console.log(warn('Visit query:', query));
     Graph.query(query)
       .then((results) => {
@@ -221,7 +230,7 @@ function logVisit(data) {
       })
       .catch((error) => {
         console.log(error);
-        reject({ logged: true, error: error });
+        reject({ logged: false, error: error });
       });
   });
 }
@@ -255,26 +264,25 @@ function deleteVisit(data) {
 
 //#region Cheatsheet
 /*
-See all NODES:
-MATCH n=() RETURN n
-
-See node by internal id:
-MATCH p=()-[*]->() RETURN [node IN nodes(p) WHERE id(node)=13]
-
-See all RELATIONSHIPs:
-MATCH p=()-[*]->() RETURN p
-
-See specified RELATIONSHIP
-MATCH  (v:visitor{id:1})-[:visited]->(:space) RETURN  v.id, v.name
-
-
 CREATE a RELATIONSHIP between MATCHed nodes:
 MATCH (a:visitor), (b:room) WHERE (a.name = "" AND b.name="" ) CREATE (a)-[:visited]->(b)
 
+READ all NODES:
+MATCH n=() RETURN n
 
-Filter RELATIONSHIP based on its property
-MATCH p=(visitor{name:'klm'})-[*]-() WHERE any(edge IN relationships(p) WHERE edge.date>=\"1/27\") RETURN p
+READ all RELATIONSHIPs:
+MATCH p=()-[*]->() RETURN p
 
+READ Exposed Visitors:
+MATCH  (:visitor{name:'Phone'})-[v:visited]->(s:space) RETURN  s.name, id(s), v.start
+
+
+FILTER graph by RELATIONSHIP internal id:
+MATCH p=()-[v:visited]->() where id(v)=9 RETURN p
+
+
+UPDATE existing RELATIONSHIP
+MATCH ()-[v:visited]->() where id(v)=0 set v.start=1617911100000, v.end=1617912000000
 
 
 DELETE 
@@ -283,21 +291,10 @@ MATCH  (:visitor{name:"Tab hunter"})-[v:visited{start:'3/11/2021'}]->(:space) DE
 property:
 MATCH (n { name: 'Jim' }) SET n.name = NULL
 
-SET property on: 
-node:
-MATCH  (s:space{name:"undefined"}) SET s.name="Fika Sisters"
-MATCH ()-[v:visited{start:"3/10/2021"}]->() SET v.start='1615515300000'
-
-relationship:
-MATCH  (:room{name:"The Secret Room of the Ogre King"})-[c:contains]->(:monster{name:"Ralph the Ogre King"}) SET c.visible="0"
-
-Exposed Visitors:
-Spaces visited:
-MATCH  (:visitor{name:'Phone'})-[v:visited]->(s:space) RETURN  s.name, id(s), v.start
 
 
-MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Mphone' AND eexposed.name <> 'Mpnone' AND v.start='3/10/2021' RETURN eexposed.name, s.name
-useing DateTime:
-MATCH (a1:visitor)-[v:visited]->(s:space)<-[:visited]-(a2:visitor) WHERE a1.name = 'Tab hunter' AND eexposed.name <> 'Tab hunter' AND v.start='1615516200000' RETURN eexposed.name, s.name
+
+
 */
+
 //#endregion

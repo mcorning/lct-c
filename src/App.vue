@@ -32,9 +32,9 @@
               target="_blank"
               rel="noopener"
               style="text-decoration: none"
-              >Local Contact Tracing - {{ namespace }}
+            >
+              Local Contact Tracing - {{ namespace }}
             </a></v-card-title
-          >
           >
         </v-col>
       </v-row>
@@ -168,7 +168,8 @@
           </v-icon>
         </template>
         <span
-          >Your unique userId: {{ userID ? userID : 'is unavailable' }}</span
+          >{{ showUsername }} unique userId:
+          {{ userID ? userID : 'is unavailable' }}</span
         >
       </v-tooltip>
 
@@ -247,6 +248,10 @@ export default {
     Welcome,
   },
   computed: {
+    showUsername() {
+      return this.username ? `${this.username}'s` : '';
+    },
+
     connectIcon() {
       return this.userID ? 'mdi-lan-connect' : 'mdi-lan-disconnect';
     },
@@ -310,43 +315,55 @@ export default {
       socket.connect();
     },
 
-    onVisitorLoggedVisit(visit) {
-      this.selectedSpace = visit;
+    onVisitorEditedLoggedVisit(visit) {
       const query = {
-        username: this.username,
-        userID: socket.userID,
-        selectedSpace: visit.name,
+        logged: visit.logged,
         start: visit.start,
         end: visit.end,
       };
-      console.log(highlight(`Visit query: ${printJson(query)}`, 'Log Visit'));
-      this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
-
-      // send the visit to the server
-      this.addVisitToGraph(query).then((results) => {
+      console.log(highlight(`Edited Visit query: ${printJson(query)}`));
+      this.updateVisitOnGraph(query).then((results) => {
         Visit.updateVisitPromise(visit.id, results.id).then(() => {
           console.log(success(`Logged Visit:`, printJson(visit)));
         });
-        console.log('addVisitToGraph', visit.name, results);
-        // let v = JSON.parse(localStorage.getItem('visits'));
-        // let x = v.filter(
-        //   (v) =>
-        //     v.name === visit.name &&
-        //     v.start === visit.start &&
-        //     v.end === visit.end
-        // )[0];
+      });
+    },
 
-        // x.details.id = 10;
+    onVisitorLoggedVisit(visit) {
+      const { id, name, start, end, logged } = visit;
+      this.selectedSpace = visit;
+      const query = logged
+        ? { logged, start, end }
+        : {
+            username: this.username,
+            userID: socket.userID,
+            selectedSpace: name,
+            start: start,
+            end: end,
+          };
+      console.log(highlight(`App.js: Visit: ${printJson(visit)}`));
+      console.log(highlight(`App.js: Visit query: ${printJson(query)}`));
+      this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
+
+      // send the visit to the server
+      this.updateVisitOnGraph(query).then((results) => {
+        Visit.updateVisitPromise(id, results.id).then(() => {
+          console.log(success(`Logged Visit:`, printJson(visit)));
+        });
+
+        console.log('updateVisitOnGraph', name, results);
+
         this.auditor.logEntry(
           `Log Visit Results: ${printJson(results)}`,
           'Log Visit'
         );
+
         this.confirmationMessage = `You have logged ${this.selectedSpace.name}`;
         this.hasSaved = true;
       });
     },
 
-    addVisitToGraph(query) {
+    updateVisitOnGraph(query) {
       return new Promise((resolve) => {
         socket.emit('logVisit', query, (results) => {
           resolve(results);

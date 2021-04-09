@@ -295,7 +295,7 @@ export default {
     },
 
     onLogVisit(data) {
-      console.log(success('Logging visit:', printJson(data)));
+      // console.log(success('Logging visit:', printJson(data)));
       this.$emit('roomLoggedVisit', data);
     },
     onDeleteVisit(e) {

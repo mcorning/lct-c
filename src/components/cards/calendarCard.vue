@@ -458,11 +458,9 @@ export default {
       console.log('Going Left...');
       const visit = this.getVisit();
 
-      if (visit.logged) {
-        this.status = `You have already logged this ${visit.name} visit to the server.`;
-        return;
-      }
-      this.status = 'Logging visit on the server...';
+      this.status = visit.logged
+        ? `Updating a previously logged ${visit.name} visit on the server.`
+        : 'Logging visit on the server...';
 
       this.feedbackMessage = `Are you sure you want to LOG ${
         visit.name
@@ -588,12 +586,13 @@ export default {
     logVisit() {
       try {
         let visit = this.getVisit();
+        // const logType=visit.logged?'':''
         if (visit.logged) {
-          return;
+          // return;
         }
-        visit.logged = getNow(); // replace date with redisGraph node internal id
-        visit.color = this.getEventPrimaryColor(true);
-        console.log(success('Logging visit:', printJson(visit)));
+        console.log(
+          success('CalendarCard.js: Logging visit:', printJson(visit))
+        );
         this.saveVisit();
         this.$emit('logVisit', visit);
         this.confirm = false;
