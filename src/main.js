@@ -11,6 +11,11 @@ import './registerServiceWorker';
 import store from './store';
 import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 
+// for leafletCard.vue
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-geosearch/dist/geosearch.css';
+
+// for googleMap.vue
 import * as VueGoogleMaps from 'vue2-google-maps';
 import Geocoder from '@pderas/vue2-geocoder';
 
@@ -41,17 +46,6 @@ Vue.use(VueLuxon);
 Vue.component('soteria-icon', SoteriaIcon);
 
 Vue.config.productionTip = false;
-
-Vue.filter('capitalize', (value) => {
-  if (!value) return '';
-  value = value.toString();
-  return value.charAt(0).toUpperCase() + value.slice(1);
-});
-
-Vue.filter('shortDateTime', (time) => {
-  if (!time) return '';
-  return DateTime.fromMillis(time).toLocaleString(DateTime.DATETIME_SHORT);
-});
 
 new Vue({
   vuetify,

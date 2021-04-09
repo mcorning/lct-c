@@ -1,4 +1,4 @@
-const { DateTime, Interval } = require('luxon');
+const { DateTime, Interval } = require('vue-luxon');
 const visitFormat = 'HH:mm ccc, DD';
 const calendarFormat = 'yyyy-LL-dd hh:mm';
 

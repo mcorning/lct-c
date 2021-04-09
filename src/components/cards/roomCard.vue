@@ -40,52 +40,63 @@
         <div class="px-3 pt-1">
           <v-row no-gutters>
             <v-col cols="12">
-              <GoogleMap
-                :selectedSpace="selectedSpace"
-                :favoritePlaces="places"
-                @addedPlace="onAddedPlace"
-            /></v-col>
+              <v-sheet v-if="google">
+                <GoogleMap
+                  v-model="location"
+                  :selectedSpace="selectedSpace"
+                  :favoritePlaces="places"
+                  @addedPlace="onAddedPlace"
+                />
+              </v-sheet>
+              <v-sheet v-else>
+                <div style="width: 100%; height: 500px">
+                  <GeolocationSelectorMap v-model="location" />
+                </div>
+              </v-sheet>
+            </v-col>
           </v-row>
           <v-divider class="my-2"></v-divider>
-          <v-row no-gutters>
-            Or select a category
-            <v-col cols="12">
-              <v-chip-group
-                v-model="selectedCategory"
-                mandatory
-                color="primary"
-              >
-                <v-chip filter>
-                  <v-icon>mdi-store</v-icon>
-                </v-chip>
-                <v-chip filter>
-                  <v-icon>mdi-silverware</v-icon>
-                </v-chip>
+          <div v-if="byCategory">
+            <v-row no-gutters>
+              Or select a category
+              <v-col cols="12">
+                <v-chip-group
+                  v-model="selectedCategory"
+                  mandatory
+                  color="primary"
+                >
+                  <v-chip filter>
+                    <v-icon>mdi-store</v-icon>
+                  </v-chip>
+                  <v-chip filter>
+                    <v-icon>mdi-silverware</v-icon>
+                  </v-chip>
 
-                <v-chip filter>
-                  <v-icon>mdi-bed</v-icon>
-                </v-chip>
-                <v-chip filter>
-                  <v-icon>mdi-theater</v-icon>
-                </v-chip>
-              </v-chip-group>
-            </v-col>
-          </v-row>
-          <v-row no-gutters>
-            {{ spaceLabel }}:
-            <v-col cols="12">
-              <v-autocomplete
-                v-model="selectedSpace"
-                :items="filteredSpaces"
-                :filter="customFilter"
-                item-text="name"
-                item-value="id"
-                return-object
-                clearable
-                class="pt-1"
-              ></v-autocomplete>
-            </v-col>
-          </v-row>
+                  <v-chip filter>
+                    <v-icon>mdi-bed</v-icon>
+                  </v-chip>
+                  <v-chip filter>
+                    <v-icon>mdi-theater</v-icon>
+                  </v-chip>
+                </v-chip-group>
+              </v-col>
+            </v-row>
+            <v-row no-gutters>
+              {{ spaceLabel }}:
+              <v-col cols="12">
+                <v-autocomplete
+                  v-model="selectedSpace"
+                  :items="filteredSpaces"
+                  :filter="customFilter"
+                  item-text="name"
+                  item-value="id"
+                  return-object
+                  clearable
+                  class="pt-1"
+                ></v-autocomplete>
+              </v-col>
+            </v-row>
+          </div>
         </div>
       </v-card>
       <!-- Spaces form -->
@@ -110,6 +121,10 @@
     </v-card>
     <div class="pl-5">
       <small>{{ status }}</small>
+      <v-radio-group v-model="radioGroup">
+        <v-radio label="Google"></v-radio>
+        <v-radio label="Leaflet"></v-radio>
+      </v-radio-group>
     </div>
     <v-bottom-navigation
       :value="value"
@@ -156,8 +171,9 @@ import { success, error, info, highlight, printJson } from '../../utils/colors';
 
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
-import GoogleMap from '@/components/cards/GoogleMap';
+// import GoogleMap from '@/components/cards/GoogleMap';
 import calendarCard from '@/components/cards/calendarCard';
+import GeolocationSelectorMap from './GeolocationSelectorMap';
 
 import { data as communityData } from '@/maps/communityData.json';
 
@@ -175,10 +191,15 @@ export default {
   components: {
     // warnRoomCard,
     logsCard,
-    GoogleMap,
+    // GoogleMap,
     calendarCard,
+    GeolocationSelectorMap,
   },
   computed: {
+    google() {
+      return this.radioGroup === 0;
+    },
+
     showFavorites() {
       return this.show == 0;
     },
@@ -225,6 +246,11 @@ export default {
 
   data() {
     return {
+      maps: ['google', 'leaflet'],
+      byCategory: false,
+      radioGroup: 1,
+      key: 1,
+      location: {},
       overlay: true,
       showWarningButton: true,
       status: '',

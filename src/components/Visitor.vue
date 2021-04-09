@@ -97,7 +97,7 @@ import crypto from 'crypto';
 const randomId = () => crypto.randomBytes(8).toString('hex');
 
 import * as easings from 'vuetify/es5/services/goto/easing-patterns';
-import { success, warn, info, printJson } from '../utils/colors.js';
+import { warn, info } from '../utils/colors.js';
 
 import Message from '@/models/Message';
 import Visit from '@/models/Visit';
