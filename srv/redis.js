@@ -209,14 +209,19 @@ function logVisit(data) {
     // if data includes logged, we update
 
     let query = logged
-      ? `MATCH ()-[v:visited]->() where id(v)=${logged} 
+      ? // Deleting may not be necessary if we use locally cached node ID to verify alerts received
+        // this means, of course, we send the graph relationship ids in the alerts
+        // ? `MATCH ()-[v:visited]->() where id(v)=${logged}
+        // SET v.start=${start}, v.end=${end},  v.duration= '${duration}'
+        // WITH v AS old
+        // DELETE old`
+        `MATCH ()-[v:visited]->() where id(v)=${logged} 
       SET v.start=${start}, v.end=${end},  v.duration= '${duration}' 
-      WITH v AS old
-      DELETE old`
+      RETURN id(r)`
       : `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
       MERGE (s:space{ name: "${selectedSpace}"}) 
-      MERGE (v)-[r:visited{start:${start}, end:${end}, 
-        duration: '${duration}'}]->(s) RETURN id(r)`;
+      MERGE (v)-[r:visited{start:${start}, end:${end}, duration: '${duration}'}]->(s)
+        RETURN id(r)`;
 
     console.log(warn('Visit query:', query));
     Graph.query(query)

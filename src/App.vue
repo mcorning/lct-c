@@ -341,14 +341,14 @@ export default {
             start: start,
             end: end,
           };
-      console.log(highlight(`App.js: Visit: ${printJson(visit)}`));
+      console.log(highlight(`App.js: Visit to process: ${printJson(visit)}`));
       console.log(highlight(`App.js: Visit query: ${printJson(query)}`));
       this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
 
       // send the visit to the server
       this.updateVisitOnGraph(query).then((results) => {
         Visit.updateVisitPromise(id, results.id).then(() => {
-          console.log(success(`Logged Visit:`, printJson(visit)));
+          console.log(success(`Upadated Visit to:`, printJson(visit)));
         });
 
         console.log('updateVisitOnGraph', name, results);

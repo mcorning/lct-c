@@ -563,6 +563,7 @@ export default {
       const visit = this.getVisit();
       const id = visit.id;
       const self = this;
+      this.action = '';
 
       Visit.deletePromise(id)
         .then(() => {
@@ -584,6 +585,8 @@ export default {
     },
 
     logVisit() {
+      this.action = '';
+
       try {
         let visit = this.getVisit();
         // const logType=visit.logged?'':''
@@ -681,7 +684,6 @@ export default {
 
             case 'LOG':
               this.logVisit(); // calls confirmation with the Enter key
-              this.action = '';
               break;
 
             default:

@@ -40,7 +40,10 @@ export default class Visit extends Model {
   }
   static updateVisitPromise(id, val) {
     return new Promise((resolve, reject) => {
-      console.log('update Visit with', JSON.stringify(val, null, 3));
+      console.log(
+        `Update Visit ${id} logged field with`,
+        JSON.stringify(val, null, 3)
+      );
       this.$update({
         where: id,
         data: { logged: val },
