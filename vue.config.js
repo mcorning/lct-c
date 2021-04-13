@@ -27,8 +27,4 @@ module.exports = {
   //   },
   // },
   outputDir: path.resolve(__dirname, './srv/dist'),
-  publicPath:
-    process.env.NODE_ENV === 'production'
-      ? '/vue-leaflet-geolocation-selector/'
-      : '/',
 };

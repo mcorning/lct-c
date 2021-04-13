@@ -182,7 +182,7 @@ import {
   formatTime,
   formatSmallTime,
 } from '../../utils/luxonHelpers';
-import { success, highlight, printJson } from '../../utils/colors';
+import { error, success, highlight, printJson } from '../../utils/colors';
 
 export default {
   name: 'VisitLog',
@@ -201,6 +201,17 @@ export default {
 
     visitCache() {
       return Visit.all();
+    },
+
+    // TODO move this to computed?
+    getVisit(id = this.visitId) {
+      const x = this.visits
+        .slice(0) // create copy of "array" for iterating
+        .reduce((a, c, i, arr) => {
+          if (c.id === id) arr.splice(1);
+          return c;
+        }, {});
+      return x;
     },
   },
 
@@ -260,19 +271,12 @@ export default {
 
     // called by event-color calendar event
     getEventColor(event) {
-      // console.assert(this.visitId, warn('No selected visit.'));
-      const defaultColor = event.logged ? 'primary' : 'secondary';
-      this.original.start = event.start;
-      this.original.end = event.end;
-      return this.visitId === event.id
-        ? `${defaultColor} darken-1`
-        : defaultColor;
+      return event.color;
     },
 
     // called by event slot in calendar
     // @mousedown.stop=
     // @touchstart.stop
-    // extenstion stops in endDrag()
     extendBottom(event) {
       this.visitId = event.id;
 
@@ -283,6 +287,7 @@ export default {
       this.original.start = event.start;
       this.original.end = event.end;
 
+      // extenstion stops in endDrag(), and that's where we set changed
       this.changed = false;
     },
 
@@ -406,7 +411,39 @@ export default {
     // called by drag or extendBottom
     endDrag() {
       if (this.changed) {
-        this.saveVisit(this.getVisit());
+        console.log(this.visitId);
+        console.log('original:');
+        console.log(
+          this.original.start,
+          formatTime(this.original.start),
+          this.original.end,
+          formatTime(this.original.end)
+        );
+
+        if (this.dragEvent) {
+          console.log('dragEvent:');
+          console.log(
+            this.dragEvent.start,
+            formatTime(this.dragEvent.start),
+            this.dragEvent.end,
+            formatTime(this.dragEvent.end)
+          );
+          this.dragEvent.oldStart = this.original.start;
+          this.dragEvent.oldEnd = this.original.end;
+        }
+
+        if (this.createEvent) {
+          console.log('createEvent:');
+          console.log(
+            this.createEvent.start,
+            formatTime(this.createEvent.start),
+            this.createEvent.end,
+            formatTime(this.createEvent.end)
+          );
+          this.createEvent.oldStart = this.original.start;
+          this.createEvent.oldEnd = this.original.end;
+        }
+        this.updateLoggedVisit();
       }
 
       this.reset();
@@ -447,7 +484,7 @@ export default {
 
     goRight() {
       console.log('Going Right...');
-      const visit = this.getVisit();
+      const visit = this.getVisit;
       this.feedbackMessage = `Are you sure you want to DELETE ${visit.name}`;
       this.action = 'DELETE';
       this.color = 'warning';
@@ -456,7 +493,7 @@ export default {
 
     goLeft() {
       console.log('Going Left...');
-      const visit = this.getVisit();
+      const visit = this.getVisit;
 
       this.status = visit.logged
         ? `Updating a previously logged ${visit.name} visit on the server.`
@@ -514,23 +551,6 @@ export default {
       });
     },
 
-    getVisit(id = this.visitId) {
-      const x = this.visits
-        .slice(0) // create copy of "array" for iterating
-        .reduce((a, c, i, arr) => {
-          if (c.id === id) arr.splice(1);
-          return c;
-        }, {});
-      return x;
-    },
-
-    updateVisitCache(visit) {
-      // static update function on Message model
-      Visit.updatePromise(visit).then(() => {
-        console.log(success(`New Visit:`, printJson(visit)));
-      });
-    },
-
     addEvent(time) {
       this.visitId = randomId();
       this.createStart = this.roundTime(time);
@@ -545,22 +565,27 @@ export default {
         ),
         timed: true,
         marked: getNow(),
+        color: 'secondary',
         logged: '', // this will contain the internal id of the relationship in redisGraph
       };
-      this.updateVisitCache(this.createEvent);
+      // this.visits.push(this.createEvent);
 
-      let x = this.visits.length;
-      this.visits.push(this.createEvent);
-      console.assert(
-        this.visits.length - 1 === x,
-        'Visit ct unchanged after push()'
-      );
+      // let z = this.visits.length;
+
+      Visit.updatePromise(this.createEvent)
+        .then((p) => {
+          console.log('Added visit to cache', printJson(p));
+        })
+        .catch((e) => {
+          console.log(error(e));
+        });
+
       this.place = '';
     },
 
     deleteVisit() {
       this.confirm = false;
-      const visit = this.getVisit();
+      const visit = this.getVisit;
       const id = visit.id;
       const self = this;
       this.action = '';
@@ -588,21 +613,46 @@ export default {
       this.action = '';
 
       try {
-        let visit = this.getVisit();
+        let visit = this.getVisit;
         // const logType=visit.logged?'':''
         if (visit.logged) {
-          // return;
+          this.status = 'You already logged this event to the server';
+          return;
         }
+
         console.log(
           success('CalendarCard.js: Logging visit:', printJson(visit))
         );
-        this.saveVisit();
+        this.saveVisit(visit);
+
+        // when App.vue sees the callback it will call the Visit entity to update the logged field to the internal ID of the relationship node and the color to primary
         this.$emit('logVisit', visit);
         this.confirm = false;
         this.status = 'Logged to server. Stay safe out there.';
       } catch (error) {
         this.status =
-          'Oops. We had trouble logging to server. Notified devs. Sorry.';
+          'Oops. We had trouble logging to server. Devs notified. Sorry.';
+        this.$emit('error', error);
+      }
+    },
+
+    updateLoggedVisit() {
+      this.action = '';
+
+      try {
+        // visit was updated in endDrag() and called from there
+        let visit = this.getVisit;
+
+        console.log(
+          success('CalendarCard.js: Updating logged visit:', printJson(visit))
+        );
+        this.saveVisit(visit);
+        this.$emit('updateLoggedVisit', visit);
+        this.confirm = false;
+        this.status = 'Updated server. Stay safe out there.';
+      } catch (error) {
+        this.status =
+          'Oops. We had trouble updating server. Devs notified. Sorry.';
         this.$emit('error', error);
       }
     },
@@ -612,10 +662,12 @@ export default {
       this.reset();
     },
 
-    saveVisit(visit = this.getVisit()) {
+    saveVisit(visit = this.getVisit) {
       this.confirm = false;
       console.log(printJson(visit));
-      this.updateVisitCache(visit);
+      Visit.updatePromise(visit).then(() => {
+        console.log(success(`New Visit:`, printJson(visit)));
+      });
 
       this.status = `SAVED: ${visit.name} ${visit.interval} id: ${visit.id}`;
     },
@@ -702,9 +754,22 @@ export default {
 
   watch: {
     // example of a nested watcher:
-    // 'visit.logged': function (newValue, oldValue) {
-    //   console.log(error(newValue, oldValue));
+    // 'createEvent.start': function (newValue, oldValue) {
+    //   console.log('createEvent.start n/o:', newValue, oldValue);
     // },
+    // 'dragEvent.start': function (newValue, oldValue) {
+    //   console.log('dragEvent.start n/o:', newValue, oldValue);
+    // },
+    visitCache(newVal) {
+      console.log(highlight('visitCache changed'));
+      this.visits = newVal;
+      console.log(
+        'visits',
+        this.visits.length,
+        'cache',
+        this.visitCache.length
+      );
+    },
   },
 
   created() {},

@@ -54,6 +54,7 @@
           :showLogs="showLogs"
           :auditor="auditor"
           @roomLoggedVisit="onRoomLoggedVisit"
+          @roomUpdateLoggedVisit="onRoomUpdateLoggedVisit"
           @roomDeletedVisit="onRoomDeletedVisit"
           @error="onError($event)"
         />
@@ -266,6 +267,22 @@ export default {
       // notify App.vue so it can send event to server
       this.$emit('visitorLoggedVisit', visit);
     },
+
+    onRoomUpdateLoggedVisit(visit) {
+      // console.log(success('Visit:', printJson(visit)));
+      // cache the visit in Messages
+      let msg = {
+        visitor: this.nickname,
+        room: visit.name,
+        message: 'Updated',
+        sentTime: new Date().toISOString(),
+      };
+      this.messages = msg;
+
+      // notify App.vue so it can send event to server
+      this.$emit('visitorUpdateLoggedVisit', visit);
+    },
+
     onRoomDeletedVisit(e) {
       // cache the visit in Messages
       let msg = {

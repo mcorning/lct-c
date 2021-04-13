@@ -3,6 +3,69 @@
     <v-overlay :value="overlay">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
+
+    <v-system-bar app window dense color="primary" dark>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            icon
+            v-bind="attrs"
+            v-on="on"
+            @click="showBigQrCode = !showBigQrCode"
+          >
+            <v-icon>mdi-qrcode</v-icon>
+          </v-btn>
+        </template>
+        <span>Toggle QR to share LCT</span></v-tooltip
+      >
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <span v-bind="attrs" v-on="on">LCT v.{{ build }} </span>
+        </template>
+        <span>Version of LCT-C</span></v-tooltip
+      >
+
+      <v-spacer></v-spacer>
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon class="pr-3" v-bind="attrs" v-on="on"
+            >{{ connectIcon }}
+          </v-icon>
+        </template>
+        <span
+          >{{ showUsername }} unique userId:
+          {{ userID ? userID : 'is unavailable' }}</span
+        >
+      </v-tooltip>
+
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon class="pr-3" v-bind="attrs" v-on="on"
+            >{{ userCount }}
+          </v-icon>
+        </template>
+        <span>Total number of LCT-C users</span>
+      </v-tooltip>
+
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon class="pr-3" v-bind="attrs" v-on="on">mdi-graphql </v-icon>
+        </template>
+        <span
+          >Name of exposure alert graph:
+          {{ graphName ? graphName : 'is not available' }}
+        </span></v-tooltip
+      >
+      <v-tooltip top>
+        <template v-slot:activator="{ on, attrs }">
+          <v-icon v-bind="attrs" v-on="on" @click="showLogs = !showLogs"
+            >mdi-console</v-icon
+          >
+        </template>
+        <span>Review Audit Trail </span></v-tooltip
+      >
+    </v-system-bar>
+
     <v-card v-if="showBigQrCode" class="mt-15">
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
@@ -127,6 +190,7 @@
             :auditor="auditor"
             @sendExposureWarning="onSendExposureWarning"
             @visitorLoggedVisit="onVisitorLoggedVisit"
+            @visitorUpdateLoggedVisit="onVisitorLoggedVisit"
             @visitorDeletedVisit="onVisitorDeletedVisit"
             @userFeedback="onUserFeedback"
             @error="onError($event)"
@@ -138,68 +202,6 @@
         </v-snackbar>
       </v-row>
     </v-main>
-
-    <v-system-bar app window dense color="primary" dark>
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            icon
-            v-bind="attrs"
-            v-on="on"
-            @click="showBigQrCode = !showBigQrCode"
-          >
-            <v-icon>mdi-qrcode</v-icon>
-          </v-btn>
-        </template>
-        <span>Toggle QR to share LCT</span></v-tooltip
-      >
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on, attrs }">
-          <span v-bind="attrs" v-on="on">LCT v.{{ build }} </span>
-        </template>
-        <span>Version of LCT-C</span></v-tooltip
-      >
-
-      <v-spacer></v-spacer>
-      <v-tooltip top>
-        <template v-slot:activator="{ on, attrs }">
-          <v-icon class="pr-3" v-bind="attrs" v-on="on"
-            >{{ connectIcon }}
-          </v-icon>
-        </template>
-        <span
-          >{{ showUsername }} unique userId:
-          {{ userID ? userID : 'is unavailable' }}</span
-        >
-      </v-tooltip>
-
-      <v-tooltip top>
-        <template v-slot:activator="{ on, attrs }">
-          <v-icon class="pr-3" v-bind="attrs" v-on="on"
-            >{{ userCount }}
-          </v-icon>
-        </template>
-        <span>Total number of LCT-C users</span>
-      </v-tooltip>
-
-      <v-tooltip top>
-        <template v-slot:activator="{ on, attrs }">
-          <v-icon class="pr-3" v-bind="attrs" v-on="on">mdi-graphql </v-icon>
-        </template>
-        <span
-          >Name of exposure alert graph:
-          {{ graphName ? graphName : 'is not available' }}
-        </span></v-tooltip
-      >
-      <v-tooltip top>
-        <template v-slot:activator="{ on, attrs }">
-          <v-icon v-bind="attrs" v-on="on" @click="showLogs = !showLogs"
-            >mdi-console</v-icon
-          >
-        </template>
-        <span>Review Audit Trail </span></v-tooltip
-      >
-    </v-system-bar>
   </v-app>
 </template>
 
@@ -315,46 +317,35 @@ export default {
       socket.connect();
     },
 
-    onVisitorEditedLoggedVisit(visit) {
-      const query = {
-        logged: visit.logged,
-        start: visit.start,
-        end: visit.end,
-      };
-      console.log(highlight(`Edited Visit query: ${printJson(query)}`));
-      this.updateVisitOnGraph(query).then((results) => {
-        Visit.updateVisitPromise(visit.id, results.id).then(() => {
-          console.log(success(`Logged Visit:`, printJson(visit)));
-        });
-      });
-    },
-
     onVisitorLoggedVisit(visit) {
-      const { id, name, start, end, logged } = visit;
+      const { id, name, start, end, logged, oldStart, oldEnd } = visit;
       this.selectedSpace = visit;
-      const query = logged
-        ? { logged, start, end }
-        : {
-            username: this.username,
-            userID: socket.userID,
-            selectedSpace: name,
-            start: start,
-            end: end,
-          };
+      const query = {
+        username: this.username,
+        userID: socket.userID,
+        selectedSpace: name,
+        start: start,
+        end: end,
+        logged: logged,
+        oldStart: oldStart,
+        oldEnd: oldEnd,
+      };
       console.log(highlight(`App.js: Visit to process: ${printJson(visit)}`));
       console.log(highlight(`App.js: Visit query: ${printJson(query)}`));
       this.auditor.logEntry(`Visit query: ${printJson(query)}`, 'Log Visit');
 
       // send the visit to the server
-      this.updateVisitOnGraph(query).then((results) => {
-        Visit.updateVisitPromise(id, results.id).then(() => {
-          console.log(success(`Upadated Visit to:`, printJson(visit)));
+      this.updateVisitOnGraph(query).then((node) => {
+        // here's where we update the logged field to the id of the graph node
+        Visit.updateLoggedPromise(id, node.id).then((v) => {
+          console.log(success(`Returned Visit:`, printJson(v)));
+          console.log(highlight(`Updated Visit to:`, printJson(visit)));
         });
 
-        console.log('updateVisitOnGraph', name, results);
+        console.log('updateVisitOnGraph', name, node);
 
         this.auditor.logEntry(
-          `Log Visit Results: ${printJson(results)}`,
+          `Log Visit Results: ${printJson(node)}`,
           'Log Visit'
         );
 
@@ -364,6 +355,7 @@ export default {
     },
 
     updateVisitOnGraph(query) {
+      console.log('query to update graph:', printJson(query));
       return new Promise((resolve) => {
         socket.emit('logVisit', query, (results) => {
           resolve(results);

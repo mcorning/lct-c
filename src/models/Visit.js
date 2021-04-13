@@ -38,7 +38,7 @@ export default class Visit extends Model {
         .catch((e) => reject(e));
     });
   }
-  static updateVisitPromise(id, val) {
+  static updateLoggedPromise(id, val) {
     return new Promise((resolve, reject) => {
       console.log(
         `Update Visit ${id} logged field with`,
@@ -46,7 +46,7 @@ export default class Visit extends Model {
       );
       this.$update({
         where: id,
-        data: { logged: val },
+        data: { logged: val, color: 'primary' },
       })
         .then((p) => resolve(p))
         .catch((e) => reject(e));

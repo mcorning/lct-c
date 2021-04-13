@@ -2,6 +2,15 @@
 
 LCT works through a node server that renders compiled Javascript built by Vue-CLI and sent the srv/dist folder.
 
+## Troubleshooting
+
+Before debugging, be sure the version running in the browser is the same as in the srv/dist folder.
+
+> In other words, do a hard refresh on the browser to clear the cache of old code.
+
+
+If the code is not the same, you will not see bound breakpoints in the debugger client-side.
+
 ## tl;dr
 
 Start the debugger for index.js

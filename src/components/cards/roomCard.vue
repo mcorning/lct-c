@@ -11,6 +11,7 @@
           :avgStay="avgStay"
           :selectedSpaceName="selectedSpace.name"
           @logVisit="onLogVisit"
+          @updateLoggedVisit="onUpdateLoggedVisit"
           @deleteVisit="onDeleteVisit"
           @error="onError($event)"
         />
@@ -48,11 +49,11 @@
                   @addedPlace="onAddedPlace"
                 />
               </v-sheet>
-              <v-sheet v-else>
+              <!-- <v-sheet v-else>
                 <div style="width: 100%; height: 500px">
                   <GeolocationSelectorMap v-model="location" />
                 </div>
-              </v-sheet>
+              </v-sheet> -->
             </v-col>
           </v-row>
           <v-divider class="my-2"></v-divider>
@@ -119,13 +120,7 @@
         </v-card-text>
       </v-card>
     </v-card>
-    <div class="pl-5">
-      <small>{{ status }}</small>
-      <v-radio-group v-model="radioGroup">
-        <v-radio label="Google"></v-radio>
-        <v-radio label="Leaflet"></v-radio>
-      </v-radio-group>
-    </div>
+
     <v-bottom-navigation
       :value="value"
       color="secondary"
@@ -171,9 +166,9 @@ import { success, error, info, highlight, printJson } from '../../utils/colors';
 
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
-// import GoogleMap from '@/components/cards/GoogleMap';
+import GoogleMap from '@/components/cards/GoogleMap';
 import calendarCard from '@/components/cards/calendarCard';
-import GeolocationSelectorMap from './GeolocationSelectorMap';
+// import GeolocationSelectorMap from './GeolocationSelectorMap';
 
 import { data as communityData } from '@/maps/communityData.json';
 
@@ -191,9 +186,9 @@ export default {
   components: {
     // warnRoomCard,
     logsCard,
-    // GoogleMap,
+    GoogleMap,
     calendarCard,
-    GeolocationSelectorMap,
+    // GeolocationSelectorMap,
   },
   computed: {
     google() {
@@ -248,7 +243,7 @@ export default {
     return {
       maps: ['google', 'leaflet'],
       byCategory: false,
-      radioGroup: 1,
+      radioGroup: 0,
       key: 1,
       location: {},
       overlay: true,
@@ -324,6 +319,12 @@ export default {
       // console.log(success('Logging visit:', printJson(data)));
       this.$emit('roomLoggedVisit', data);
     },
+
+    onUpdateLoggedVisit(data) {
+      // console.log(success('Logging visit:', printJson(data)));
+      this.$emit('roomUpdateLoggedVisit', data);
+    },
+
     onDeleteVisit(e) {
       this.$emit('roomDeletedVisit', e);
     },

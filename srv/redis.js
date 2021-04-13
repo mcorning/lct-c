@@ -196,6 +196,10 @@ function onExposureWarning(userID) {
   }
 }
 
+function getDuration(start, end) {
+  return formatTime(start) - formatTime(end);
+}
+
 // delegated in index.js to handle socket.on('logVisit')
 // Can add a visit to the graph or can edit the time(s) of a logged visit [when the data includes the logged field (which is the id of the Relationship)]
 // Example query:
@@ -203,24 +207,37 @@ function onExposureWarning(userID) {
 // MERGE (v:visitor{ name: 'hero', userID: '439ae5f4946d2d5d'}) MERGE (s:space{ name: 'Fika Sisters Coffeehouse'}) MERGE (v)-[:visited{start:'1615856400000'}]->(s)
 function logVisit(data) {
   return new Promise((resolve, reject) => {
-    const { username, userID, selectedSpace, start, end, logged } = data;
-    const duration = `${formatTime(start)} TO ${formatTime(end)}`;
-    console.log(highlight(duration));
-    // if data includes logged, we update
+    const {
+      username,
+      userID,
+      selectedSpace,
+      start,
+      end,
+      logged,
+      oldStart,
+      oldEnd,
+    } = data;
 
+    if (logged) {
+      console.log(getDuration(oldStart, oldEnd));
+    }
+
+    // if data includes logged, we update
     let query = logged
-      ? // Deleting may not be necessary if we use locally cached node ID to verify alerts received
-        // this means, of course, we send the graph relationship ids in the alerts
-        // ? `MATCH ()-[v:visited]->() where id(v)=${logged}
-        // SET v.start=${start}, v.end=${end},  v.duration= '${duration}'
-        // WITH v AS old
-        // DELETE old`
-        `MATCH ()-[v:visited]->() where id(v)=${logged} 
-      SET v.start=${start}, v.end=${end},  v.duration= '${duration}' 
-      RETURN id(r)`
-      : `MERGE (v:visitor{ name: "${username}", userID: '${userID}'}) 
-      MERGE (s:space{ name: "${selectedSpace}"}) 
-      MERGE (v)-[r:visited{start:${start}, end:${end}, duration: '${duration}'}]->(s)
+      ? // updated event
+        `MATCH (v:visitor{ name: '${username}', userID: '${userID}'})-[r:visited{start:${oldStart}, end:${oldEnd}, duration: '${formatTime(
+          oldStart
+        )}-${formatTime(oldEnd)}'}]->(s:space{ name: '${selectedSpace}'}) 
+      SET r.start=${start}, r.end=${end}, r.duration='${formatTime(
+          start
+        )}-${formatTime(end)}'
+        RETURN id(r)`
+      : // first log
+        `MERGE (v:visitor{ name: '${username}', userID: '${userID}'}) 
+      MERGE (s:space{ name: '${selectedSpace}'}) 
+      MERGE (v)-[r:visited{start:${start}, end:${end}, duration: '${formatTime(
+          start
+        )}-${formatTime(end)}'}]->(s)
         RETURN id(r)`;
 
     console.log(warn('Visit query:', query));
@@ -288,15 +305,13 @@ MATCH p=()-[v:visited]->() where id(v)=9 RETURN p
 
 UPDATE existing RELATIONSHIP
 MATCH ()-[v:visited]->() where id(v)=0 set v.start=1617911100000, v.end=1617912000000
+MATCH (v:visitor{ name: 'dciFoyle', userID: 'dab6b36ae9a3b438'})-[r:visited{start:1618257600000, end:1618261200000, duration:'4/12/2021, 1:00 PM TO 4/12/2021, 2:00 PM'}]->(s:space{ name: 'Sisters'}) SET r.start=1618261200000, r.end=1618264800000, r.duration='hour later'"
+
 
 
 DELETE 
 relationship:
-MATCH  (:visitor{name:"Tab hunter"})-[v:visited{start:'3/11/2021'}]->(:space) DELETE v
-property:
-MATCH (n { name: 'Jim' }) SET n.name = NULL
-
-
+MATCH ()-[v:visited]->() WHERE id(v)=0 DELETE v
 
 
 

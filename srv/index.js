@@ -37,15 +37,15 @@ console.log(highlight(new Date().toLocaleString()));
 console.log(highlight('social graph:', graphName));
 console.log(highlight('redis host:', host));
 console.log(highlight('pwd:', dirPath));
-// list past sessions (all should be connected:false)
-sessionCache.print(null, 'Past Sessions:');
 
 const server = express()
   .use(serveStatic(dirPath))
-  .listen(PORT, () =>
-    console.log(highlight(`Listening on http://localhost:${PORT}`))
-  );
-
+  .listen(PORT, () => {
+    console.log(highlight(`Listening on http://localhost:${PORT}`));
+    console.log('');
+    sessionCache.print(null, 'Past Sessions:');
+  });
+// list past sessions (all should be connected:false)
 const io = socketIO(server);
 
 io.use((socket, next) => {
