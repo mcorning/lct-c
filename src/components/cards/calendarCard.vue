@@ -202,17 +202,6 @@ export default {
     visitCache() {
       return Visit.all();
     },
-
-    // TODO move this to computed?
-    getVisit(id = this.visitId) {
-      const x = this.visits
-        .slice(0) // create copy of "array" for iterating
-        .reduce((a, c, i, arr) => {
-          if (c.id === id) arr.splice(1);
-          return c;
-        }, {});
-      return x;
-    },
   },
 
   data: () => ({
@@ -257,6 +246,16 @@ export default {
   }),
 
   methods: {
+    getVisit(id = this.visitId) {
+      const x = this.visits
+        .slice(0) // create copy of "array" for iterating
+        .reduce((a, c, i, arr) => {
+          if (c.id === id) arr.splice(1);
+          return c;
+        }, {});
+      return x;
+    },
+
     undo() {
       this.action = 'REVERT';
       this.feedbackMessage = this.updateFeedbackMessage;
@@ -430,6 +429,7 @@ export default {
           );
           this.dragEvent.oldStart = this.original.start;
           this.dragEvent.oldEnd = this.original.end;
+          this.dragEvent.id;
         }
 
         if (this.createEvent) {
@@ -442,8 +442,10 @@ export default {
           );
           this.createEvent.oldStart = this.original.start;
           this.createEvent.oldEnd = this.original.end;
+          this.visitId = this.createEvent.id;
         }
-        this.updateLoggedVisit();
+        this.confirmUpdate(this.dragEvent || this.createEvent);
+        return;
       }
 
       this.reset();
@@ -484,7 +486,7 @@ export default {
 
     goRight() {
       console.log('Going Right...');
-      const visit = this.getVisit;
+      const visit = this.getVisit();
       this.feedbackMessage = `Are you sure you want to DELETE ${visit.name}`;
       this.action = 'DELETE';
       this.color = 'warning';
@@ -493,7 +495,7 @@ export default {
 
     goLeft() {
       console.log('Going Left...');
-      const visit = this.getVisit;
+      const visit = this.getVisit();
 
       this.status = visit.logged
         ? `Updating a previously logged ${visit.name} visit on the server.`
@@ -517,7 +519,7 @@ export default {
           this.logVisit();
           break;
         case 'UPDATE':
-          this.saveVisit();
+          this.updateLoggedVisit();
           break;
         case 'REVERT':
           this.revert();
@@ -585,7 +587,7 @@ export default {
 
     deleteVisit() {
       this.confirm = false;
-      const visit = this.getVisit;
+      const visit = this.getVisit();
       const id = visit.id;
       const self = this;
       this.action = '';
@@ -613,7 +615,7 @@ export default {
       this.action = '';
 
       try {
-        let visit = this.getVisit;
+        let visit = this.getVisit();
         // const logType=visit.logged?'':''
         if (visit.logged) {
           this.status = 'You already logged this event to the server';
@@ -636,12 +638,24 @@ export default {
       }
     },
 
+    confirmUpdate(visit) {
+      console.assert(error('wrong visit'), (visit = this.getVisit()));
+
+      this.feedbackMessage = `Are you sure you want to UPDATE a logged visit to ${this.getInterval(
+        visit.start,
+        visit.end
+      )}?`;
+      this.action = 'UPDATE';
+      this.color = 'warning';
+      this.confirm = true;
+    },
+
     updateLoggedVisit() {
       this.action = '';
 
       try {
         // visit was updated in endDrag() and called from there
-        let visit = this.getVisit;
+        let visit = this.getVisit();
 
         console.log(
           success('CalendarCard.js: Updating logged visit:', printJson(visit))
@@ -662,7 +676,7 @@ export default {
       this.reset();
     },
 
-    saveVisit(visit = this.getVisit) {
+    saveVisit(visit = this.getVisit()) {
       this.confirm = false;
       console.log(printJson(visit));
       Visit.updatePromise(visit).then(() => {

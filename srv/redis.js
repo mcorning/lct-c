@@ -219,7 +219,18 @@ function logVisit(data) {
     } = data;
 
     if (logged) {
-      console.log(getDuration(oldStart, oldEnd));
+      if (oldStart && oldEnd) {
+        console.log(getDuration(oldStart, oldEnd));
+      } else {
+        console.log(
+          warn(
+            'We are logged, but may not have enough data (oldStart, oldEnd):'
+          ),
+          oldStart,
+          oldEnd
+        );
+        return
+      }
     }
 
     // if data includes logged, we update

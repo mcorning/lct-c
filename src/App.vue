@@ -87,7 +87,7 @@
       </v-navigation-drawer> -->
 
       <v-row align="center" no-gutters>
-        <v-col class="text-left">
+        <v-col cols="auto" class="text-left">
           <v-card-title>
             <a
               class="white--text"
@@ -100,6 +100,8 @@
             </a></v-card-title
           >
         </v-col>
+        <v-spacer></v-spacer>
+        <v-col class="text-right">{{ username }}</v-col>
       </v-row>
     </v-app-bar>
 
@@ -197,7 +199,14 @@
           />
         </v-col>
         <!-- Logged Visit confirmation -->
-        <v-snackbar v-model="hasSaved" :timeout="4000" bottom left>
+        <v-snackbar
+          v-model="hasSaved"
+          :timeout="4000"
+          bottom
+          left
+          absolute
+          :color="confirmationColor"
+        >
           {{ confirmationMessage }}
         </v-snackbar>
       </v-row>
@@ -267,6 +276,7 @@ export default {
   },
   data() {
     return {
+      confirmationColor: '',
       namespace: 'Sisters', // move this to a global config file
       showBigQrCode: false,
       confirmationMessage: '',
@@ -318,6 +328,12 @@ export default {
     },
 
     onVisitorLoggedVisit(visit) {
+      if (!socket.userID) {
+        this.confirmationColor = 'orange';
+        this.confirmationMessage = `You are not connected to the server`;
+        this.hasSaved = true;
+        return;
+      }
       const { id, name, start, end, logged, oldStart, oldEnd } = visit;
       this.selectedSpace = visit;
       const query = {
@@ -349,6 +365,7 @@ export default {
           'Log Visit'
         );
 
+        this.confirmationColor = '';
         this.confirmationMessage = `You have logged ${this.selectedSpace.name}`;
         this.hasSaved = true;
       });

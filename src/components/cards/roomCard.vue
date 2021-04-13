@@ -140,10 +140,10 @@
         <span>Calendar</span>
         <v-icon>mdi-calendar</v-icon>
       </v-btn>
-      <v-btn @click="show = 3">
+      <!-- <v-btn @click="show = 3">
         <span>Gathering</span>
         <v-icon>mdi-account-group</v-icon>
-      </v-btn>
+      </v-btn> -->
       <v-btn fab color="red" dark @click="warnThem">
         <span>Warn</span>
         <v-icon dark> mdi-alert </v-icon></v-btn
