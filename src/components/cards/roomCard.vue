@@ -258,7 +258,7 @@ export default {
       categoryLabel: '',
       places: [],
       spaceLabel: '',
-      show: 0,
+      show: 1,
       ht: '520px',
       value: 0,
       selectedCategory: '',

@@ -6,7 +6,6 @@
       style="width: 100%; height: 400px"
       ref="mapRef"
       @click="getMarker($event)"
-      @rightclick="mapRclicked"
     >
       <gmap-info-window
         :options="infoOptions"
@@ -15,11 +14,11 @@
         @closeclick="infoWinOpen = false"
       >
         <v-card>
-          <v-card-title>{{ infoContent.name }}</v-card-title>
-          <v-card-subtitle>{{ infoContent.formatted_address }}</v-card-subtitle>
+          <v-card-title>{{ currentPlaceInfo.name }}</v-card-title>
+          <v-card-subtitle>{{ currentPlaceInfo.address }}</v-card-subtitle>
           <v-card-text
-            >Place ID: {{ infoContent.place_id }} <br />
-            Location: {{ currLoc }}
+            >Place ID: {{ currentPlaceInfo.placeId }} <br />
+            Position: {{ currentPlaceInfo.position }}
           </v-card-text>
           <v-card-actions>
             <v-tooltip bottom>
@@ -110,13 +109,16 @@ export default {
   },
 
   computed: {
+    currentPlaceInfo() {
+      return this.currentPlace ? this.currentPlace : '';
+    },
+
     options() {
       return { fields: ['address_components', 'geometry', 'icon', 'name'] };
     },
 
     infowindow() {
-      // eslint-disable-next-line
-      const x = new google.maps.InfoWindow({ content: this.content });
+      const x = new window.google.maps.InfoWindow({ content: this.content });
       return x;
     },
   },
@@ -161,21 +163,10 @@ export default {
   },
 
   methods: {
-    onMarkerClick(m) {
-      this.center = m.position;
-    },
-
-    mapRclicked(mouseArgs) {
-      const createdMarker = this.addMarker();
-      createdMarker.position.lat = mouseArgs.latLng.lat();
-      createdMarker.position.lng = mouseArgs.latLng.lng();
-    },
-
     // click the map, mark the place, get a marker there
     // space is this.$event (and includes the placeId string and the latLng object)
     getMarker(space) {
       console.log('placeId:', space.placeId);
-      this.geocodePlaceId(space.placeId);
       this.getPlaceDetails(space.placeId);
     },
 
@@ -196,13 +187,12 @@ export default {
       const lng = this.currentPlace
         ? this.currentPlace.geometry.location.lng()
         : this.center.lng;
-      const marker = {
-        lat: lat,
-        lng: lng,
-      };
+
       this.markers.push({
-        id: this.lastId,
-        position: marker,
+        position: {
+          lat: lat,
+          lng: lng,
+        },
       });
       return this.markers[this.markers.length - 1];
     },
@@ -234,8 +224,7 @@ export default {
       const self = this;
       return new Promise(function (resolve, reject) {
         self.$gmapApiPromiseLazy().then(() => {
-          // eslint-disable-next-line
-          const geocoder = new google.maps.Geocoder();
+          const geocoder = new window.google.maps.Geocoder();
           geocoder.geocode(geocoderRequest, function (results, status) {
             if (status === 'OK') {
               resolve(results);
@@ -249,7 +238,7 @@ export default {
 
     toggleInfoWindow: function (marker, idx) {
       this.infoWindowPos = marker.position;
-      // this.infoContent = marker.infoText;
+      this.currentPlace = marker;
 
       //check if its the same marker that was selected if yes toggle
       if (this.currentMidx == idx) {
@@ -266,15 +255,12 @@ export default {
       const self = this;
       return new Promise(function (resolve, reject) {
         self.$gmapApiPromiseLazy().then(() => {
-          // eslint-disable-next-line
           const map = self.map;
-          // eslint-disable-next-line
-          const service = new google.maps.places.PlacesService(map);
+          const service = new window.google.maps.places.PlacesService(map);
 
           service.getDetails(request, (place, status) => {
             if (
-              // eslint-disable-next-line
-              status === google.maps.places.PlacesServiceStatus.OK &&
+              status === window.google.maps.places.PlacesServiceStatus.OK &&
               place &&
               place.geometry &&
               place.geometry.location
@@ -296,20 +282,22 @@ export default {
         placeId: placeId,
         fields: ['name', 'formatted_address', 'place_id', 'geometry'],
       };
+      const self = this;
       this.placeDetailsPromise(request).then((place) => {
         console.log(info('Place:'), printJson(place));
-        // this.setPlace(place);
+        self.markers.push({
+          // for tooltips and visible marker labels
+          title: place.name,
+          label: 'V' + self.markers.length,
 
-        this.lastId++;
-        this.markers.push({
-          id: this.lastId,
-          position: place.geometry.location,
+          // to cache place data for logging
           name: place.name,
+          placeId: place.place_id,
+          address: place.formatted_address,
+          position: place.geometry.location,
         });
-        this.currentPlace = place;
-        this.currLoc = place.geometry.location;
-        this.infoContent = place;
-        this.infoWinOpen = true;
+        self.currentPlace = place;
+        self.currLoc = place.geometry.location;
       });
     },
 
