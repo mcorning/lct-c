@@ -167,6 +167,7 @@ import { success, error, info, highlight, printJson } from '../../utils/colors';
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
 import GoogleMap from '@/components/cards/GoogleMap';
+// import GoogleMap from './googleMapsBare';
 import calendarCard from '@/components/cards/calendarCard';
 // import GeolocationSelectorMap from './GeolocationSelectorMap';
 

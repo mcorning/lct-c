@@ -14,33 +14,43 @@
         :opened="infoWinOpen"
         @closeclick="infoWinOpen = false"
       >
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn small fab v-bind="attrs" v-on="on" color="orange">
-              <v-icon>mdi-account-group</v-icon>
-            </v-btn>
-          </template>
-          <span>Mark your calendar with a Gathering </span></v-tooltip
-        >
-        {{ infoContent }}
-
-        <v-tooltip top>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              v-bind="attrs"
-              v-on="on"
-              color="success"
-              fab
-              small
-              dark
-              class="ml-5"
-              @click="addVisit"
+        <v-card>
+          <v-card-title>{{ infoContent.name }}</v-card-title>
+          <v-card-subtitle>{{ infoContent.formatted_address }}</v-card-subtitle>
+          <v-card-text
+            >Place ID: {{ infoContent.place_id }} <br />
+            Location: {{ currLoc }}
+          </v-card-text>
+          <v-card-actions>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn small fab v-bind="attrs" v-on="on" color="orange">
+                  <v-icon>mdi-account-group</v-icon>
+                </v-btn>
+              </template>
+              <span>Mark your calendar with a Gathering </span></v-tooltip
             >
-              <v-icon>mdi-calendar</v-icon>
-            </v-btn>
-          </template>
-          <span>Mark your calendar with a Visit</span></v-tooltip
-        >
+            <v-spacer></v-spacer>
+
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  v-bind="attrs"
+                  v-on="on"
+                  color="success"
+                  fab
+                  small
+                  dark
+                  class="ml-5"
+                  @click="addVisit"
+                >
+                  <v-icon>mdi-calendar</v-icon>
+                </v-btn>
+              </template>
+              <span>Mark your calendar with a Visit</span></v-tooltip
+            >
+          </v-card-actions>
+        </v-card>
       </gmap-info-window>
 
       <gmap-marker
@@ -49,7 +59,9 @@
         :position="m.position"
         @click="toggleInfoWindow(m, index)"
       >
-        <gmap-info-window :opened="m.ifw">{{ m.ifw2text }}</gmap-info-window>
+        <!-- <gmap-info-window :opened="m.ifw"
+          >{{ m.name }}<br />{{ m.position }}</gmap-info-window
+        > -->
       </gmap-marker>
     </gmap-map>
 
@@ -57,6 +69,7 @@
       @place_changed="setPlace"
       autofocus
       auto-select-first
+      :options="options"
       style="width: 70%; border: orange; border-width: 2px; border-style: solid"
     >
     </gmap-autocomplete>
@@ -97,17 +110,21 @@ export default {
   },
 
   computed: {
+    options() {
+      return { fields: ['address_components', 'geometry', 'icon', 'name'] };
+    },
+
     infowindow() {
       // eslint-disable-next-line
-      return new google.maps.InfoWindow({ content: this.content });
-    },
-    image() {
-      return 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
+      const x = new google.maps.InfoWindow({ content: this.content });
+      return x;
     },
   },
 
   data() {
     return {
+      currLoc: '',
+      map: null,
       infoContent: 'Your selected space is here',
       infoWindowPos: null,
       infoWinOpen: false,
@@ -126,6 +143,7 @@ export default {
       markers: [],
       places: [],
       currentPlace: null,
+      placeName: '',
       lastId: 1,
       ifw: true,
       ifw2text: '',
@@ -158,6 +176,7 @@ export default {
     getMarker(space) {
       console.log('placeId:', space.placeId);
       this.geocodePlaceId(space.placeId);
+      this.getPlaceDetails(space.placeId);
     },
 
     addVisit() {
@@ -184,9 +203,6 @@ export default {
       this.markers.push({
         id: this.lastId,
         position: marker,
-        icon: this.image,
-        // ifw: true,
-        // ifw2text: this.currentPlace ? 'Visiting' : 'A Gathering',
       });
       return this.markers[this.markers.length - 1];
     },
@@ -206,20 +222,8 @@ export default {
         .then((results) => {
           const spot = results[0];
           this.zoom = 18;
-          this.currentPlace = spot.formatted_address;
+          this.currentPlace = spot;
           this.center = spot.geometry.location;
-          const marker = spot.geometry.location;
-          this.markers.push({
-            id: this.lastId,
-            position: marker,
-            icon: this.image,
-
-            // ifw: true,
-            // ifw2text: `<h3>${
-            //   this.currentPlace ? 'Visiting' : 'A Gathering at'
-            // }</h3>
-            // ${spot.formatted_address}`,
-          });
           this.infoContent = this.currentPlace;
           this.infoWinOpen = true;
         })
@@ -258,6 +262,57 @@ export default {
       }
     },
 
+    placeDetailsPromise(request) {
+      const self = this;
+      return new Promise(function (resolve, reject) {
+        self.$gmapApiPromiseLazy().then(() => {
+          // eslint-disable-next-line
+          const map = self.map;
+          // eslint-disable-next-line
+          const service = new google.maps.places.PlacesService(map);
+
+          service.getDetails(request, (place, status) => {
+            if (
+              // eslint-disable-next-line
+              status === google.maps.places.PlacesServiceStatus.OK &&
+              place &&
+              place.geometry &&
+              place.geometry.location
+            ) {
+              resolve(place);
+            } else {
+              reject(status);
+            }
+          });
+        });
+      });
+    },
+
+    getPlaceDetails(placeId) {
+      if (!placeId) {
+        return;
+      }
+      const request = {
+        placeId: placeId,
+        fields: ['name', 'formatted_address', 'place_id', 'geometry'],
+      };
+      this.placeDetailsPromise(request).then((place) => {
+        console.log(info('Place:'), printJson(place));
+        // this.setPlace(place);
+
+        this.lastId++;
+        this.markers.push({
+          id: this.lastId,
+          position: place.geometry.location,
+          name: place.name,
+        });
+        this.currentPlace = place;
+        this.currLoc = place.geometry.location;
+        this.infoContent = place;
+        this.infoWinOpen = true;
+      });
+    },
+
     init() {
       this.geoCodePromise(this.geocoderRequest).then((r) => {
         console.log('default request:', printJson(r));
@@ -272,24 +327,14 @@ export default {
     currentPlace(n, o) {
       console.log('currentPlace new/old', n, o);
     },
-
-    selectedSpace(newVal) {
-      if (newVal.position) {
-        console.log(info(printJson(newVal)));
-        const { position } = newVal;
-        const marker = {
-          lat: position[0],
-          lng: position[1],
-        };
-        this.markers.push({ position: marker });
-        this.center = marker;
-      }
-    },
   },
 
   mounted() {
     const self = this;
-    self.geolocate();
+    self.$refs.mapRef.$mapPromise.then((map) => {
+      self.map = map;
+    });
+    // self.geolocate();
     self.init();
     const createdMarker = self.addMarker();
     createdMarker.position.lat = this.center.lat;

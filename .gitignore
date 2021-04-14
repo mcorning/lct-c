@@ -41,3 +41,7 @@ src/components/cards/test.vue
 src/components/cards/calendarCard copy.vue
 srv/lab.js
 srv/lab2.js
+src/components/cards/googleMapsBare.vue
+src/components/cards/googleMapSimple.vue
+src/components/cards/googleMapsUom.vue
+src/utils/gmaps.js
