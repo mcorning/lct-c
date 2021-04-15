@@ -14,7 +14,13 @@
         @closeclick="infoWinOpen = false"
       >
         <v-card>
-          <v-card-title>{{ currentPlaceInfo.name }}</v-card-title>
+          <v-card-title>
+            <v-text-field
+              v-model="currentPlaceInfo.name"
+              dense
+              hide-details
+            ></v-text-field>
+          </v-card-title>
           <v-card-subtitle>{{ currentPlaceInfo.address }}</v-card-subtitle>
           <v-card-text
             >Place ID: {{ currentPlaceInfo.placeId }} <br />
@@ -23,14 +29,38 @@
           <v-card-actions>
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
-                <v-btn small fab v-bind="attrs" v-on="on" color="orange">
-                  <v-icon>mdi-account-group</v-icon>
+                <v-btn
+                  small
+                  fab
+                  v-bind="attrs"
+                  v-on="on"
+                  dark
+                  color="blue"
+                  @click="editName"
+                >
+                  <v-icon>mdi-pencil-outline</v-icon>
                 </v-btn>
               </template>
-              <span>Mark your calendar with a Gathering </span></v-tooltip
+              <span>Edit the name</span></v-tooltip
             >
             <v-spacer></v-spacer>
-
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  small
+                  fab
+                  v-bind="attrs"
+                  v-on="on"
+                  dark
+                  color="orange"
+                  @click="removeMarker"
+                >
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
+              </template>
+              <span>Remove marker</span></v-tooltip
+            >
+            <v-spacer></v-spacer>
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -58,9 +88,6 @@
         :position="m.position"
         @click="toggleInfoWindow(m, index)"
       >
-        <!-- <gmap-info-window :opened="m.ifw"
-          >{{ m.name }}<br />{{ m.position }}</gmap-info-window
-        > -->
       </gmap-marker>
     </gmap-map>
 
@@ -126,6 +153,7 @@ export default {
 
   data() {
     return {
+      edit: true,
       infoWindowLatLang: null,
       currLoc: '',
       map: null,
@@ -168,46 +196,79 @@ export default {
     // click the map, mark the place, get a marker there
     // space is this.$event (and includes the placeId string and the latLng object)
     getMarker(space) {
-      console.log('placeId:', space.placeId);
-      this.getPlaceDetails(space.placeId);
+      console.log('placeId:', printJson(space));
+      this.getSpaceDetails(space);
     },
 
-    addVisit() {
-      this.$emit('addedPlace', this.currentPlace);
+    getSpaceDetails(space) {
+      if (!space.placeId) {
+        this.getSpotDetails(space.latLng);
+      } else {
+        this.getPlaceDetails(space.placeId);
+      }
     },
 
-    setPlace(place) {
-      this.currentPlace = place;
-      this.addMarker();
+    getSpotDetails(latLng) {
+      const self = this;
+
+      if (this.infoWindowLatLang) this.infoWindowLatLang.close();
+      this.geoCodePromise({ latLng: latLng })
+        .then((results) => {
+          const spot = results[results.length - 1];
+          self.infoWindowLatLang = new window.google.maps.InfoWindow({
+            position: latLng,
+          });
+          self.infoWindowLatLang.setContent(
+            '<h3>Place ID</h3>' +
+              '<p>' +
+              spot.place_id +
+              '<p/>' +
+              '<h3>Plus Codes</h3>' +
+              '<p><strong>Local code:</strong> ' +
+              spot.plus_code.compound_code +
+              '<br/>' +
+              '<strong>Global code:</strong> ' +
+              spot.plus_code.global_code +
+              '</p>' +
+              '<h3>Position</h3>' +
+              '<p><strong>Latitude:</strong> ' +
+              spot.geometry.location.lat() +
+              '<br/>' +
+              '<strong>Longitude:</strong> ' +
+              spot.geometry.location.lng() +
+              '</p>'
+          );
+          this.addAmarker({
+            name: formatTime() + ' Gathering',
+            placeId: spot.place_id,
+            address: spot.formatted_address,
+            position: spot.geometry.location,
+          });
+
+          self.currentPlace = spot;
+          self.infoWindowLatLang.open(this.map);
+        })
+        .catch((e) => console.log(e));
     },
 
-    addMarker: function addMarker() {
-      this.lastId++;
-      const lat = this.currentPlace
-        ? this.currentPlace.geometry.location.lat()
-        : this.center.lat;
-      const lng = this.currentPlace
-        ? this.currentPlace.geometry.location.lng()
-        : this.center.lng;
-
-      this.markers.push({
-        position: {
-          lat: lat,
-          lng: lng,
-        },
+    getPlaceDetails(placeId) {
+      const self = this;
+      const request = {
+        placeId: placeId,
+        fields: ['name', 'formatted_address', 'place_id', 'geometry'],
+      };
+      this.placeDetailsPromise(request).then((place) => {
+        console.log(info('Place:'), printJson(place));
+        this.addAmarker({
+          name: place.name,
+          placeId: place.place_id,
+          address: place.formatted_address,
+          position: place.geometry.location,
+        });
+        self.currentPlace = place;
+        self.currLoc = place.geometry.location;
       });
-      return this.markers[this.markers.length - 1];
     },
-
-    geolocate: function () {
-      navigator.geolocation.getCurrentPosition((position) => {
-        this.center = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-      });
-    },
-
     geocodePlaceId(placeId) {
       const geocoderRequest = { placeId: placeId };
       this.geoCodePromise(geocoderRequest)
@@ -221,6 +282,7 @@ export default {
         })
         .catch((e) => console.log(e));
     },
+
     geocodeLatLng(latLng) {
       const geocoderRequest = { latLng: latLng };
       this.geoCodePromise(geocoderRequest)
@@ -266,6 +328,7 @@ export default {
       }
     },
 
+    // request includes placeId
     placeDetailsPromise(request) {
       const self = this;
       return new Promise(function (resolve, reject) {
@@ -289,31 +352,71 @@ export default {
       });
     },
 
-    getPlaceDetails(placeId) {
-      if (!placeId) {
-        return;
-      }
-      const request = {
-        placeId: placeId,
-        fields: ['name', 'formatted_address', 'place_id', 'geometry'],
-      };
-      const self = this;
-      this.placeDetailsPromise(request).then((place) => {
-        console.log(info('Place:'), printJson(place));
-        self.markers.push({
-          // for tooltips and visible marker labels
-          title: place.name,
-          label: 'V' + self.markers.length,
-
-          // to cache place data for logging
-          name: place.name,
-          placeId: place.place_id,
-          address: place.formatted_address,
-          position: place.geometry.location,
-        });
-        self.currentPlace = place;
-        self.currLoc = place.geometry.location;
+    geolocate: function () {
+      navigator.geolocation.getCurrentPosition((position) => {
+        this.center = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
       });
+    },
+
+    editName() {
+      this.edit = true;
+    },
+    newName(val) {
+      this.currentPlaceInfo.name = val;
+      this.edit = false;
+    },
+
+    addVisit() {
+      this.$emit('addedPlace', this.currentPlace);
+    },
+
+    setPlace(place) {
+      this.currentPlace = place;
+      this.addMarker();
+    },
+
+    addAmarker({ name, placeId, address, position }) {
+      const marker = new window.google.maps.Marker({
+        map: this.map,
+        // for tooltips and visible marker labels
+        title: 'Gathering',
+        label: 'V' + this.markers.length,
+
+        // to cache place data for logging
+        name,
+        placeId,
+        address,
+        position,
+      });
+      this.markers.push(marker);
+    },
+
+    addMarker: function addMarker() {
+      this.lastId++;
+      const lat = this.currentPlace
+        ? this.currentPlace.geometry.location.lat()
+        : this.center.lat;
+      const lng = this.currentPlace
+        ? this.currentPlace.geometry.location.lng()
+        : this.center.lng;
+
+      this.markers.push({
+        position: {
+          lat: lat,
+          lng: lng,
+        },
+      });
+      return this.markers[this.markers.length - 1];
+    },
+
+    removeMarker() {
+      const marker = this.markers[this.currentMidx];
+      marker.setMap(null);
+      this.markers.splice(this.currentMidx, 1);
+      this.infoWinOpen = false;
     },
 
     init() {
@@ -335,53 +438,6 @@ export default {
   mounted() {
     const self = this;
     self.$refs.mapRef.$mapPromise.then((map) => {
-      map.addListener('click', function (mapsMouseEvent) {
-        if (self.infoWindowLatLang) self.infoWindowLatLang.close();
-
-        const geocoderRequest = { latLng: mapsMouseEvent.latLng };
-        self
-          .geoCodePromise(geocoderRequest)
-          .then((results) => {
-            const spot = results[results.length - 1];
-            self.infoWindowLatLang = new window.google.maps.InfoWindow({
-              position: mapsMouseEvent.latLng,
-            });
-            self.infoWindowLatLang.setContent(
-              '<h3>Place ID</h3>' +
-                '<p>' +
-                spot.place_id +
-                '<p/>' +
-                '<h3>Plus Codes</h3>' +
-                '<p><strong>Local code:</strong> ' +
-                spot.plus_code.compound_code +
-                '<br/>' +
-                '<strong>Global code:</strong> ' +
-                spot.plus_code.global_code +
-                '</p>' +
-                '<h3>Position</h3>' +
-                '<p><strong>Latitude:</strong> ' +
-                spot.geometry.location.lat() +
-                '<br/>' +
-                '<strong>Longitude:</strong> ' +
-                spot.geometry.location.lng() +
-                '</p>'
-            );
-            self.markers.push({
-              // for tooltips and visible marker labels
-              title: 'Gathering',
-              label: 'V' + self.markers.length,
-
-              // to cache place data for logging
-              name: formatTime() + ' Gathering',
-              placeId: spot.place_id,
-              address: spot.formatted_address,
-              position: spot.geometry.location,
-            });
-            self.currentPlace = spot;
-            self.infoWindowLatLang.open(map);
-          })
-          .catch((e) => console.log(e));
-      });
       self.map = map;
     });
 

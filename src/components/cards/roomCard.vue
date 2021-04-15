@@ -6,35 +6,6 @@
 
     <v-card class="overflow-hidden">
       <!-- Favorites List -->
-      <v-card tile v-if="showCalendar" :height="ht">
-        <calendarCard
-          :avgStay="avgStay"
-          :selectedSpaceName="selectedSpace.name"
-          @logVisit="onLogVisit"
-          @updateLoggedVisit="onUpdateLoggedVisit"
-          @deleteVisit="onDeleteVisit"
-          @error="onError($event)"
-        />
-      </v-card>
-
-      <v-card tile v-if="showFavorites" :height="ht">
-        <v-card-title>Recent Visits, {{ nickname }}:</v-card-title>
-        <v-card-subtitle v-model="newUser"
-          >Go to the <strong>Spaces</strong> page to add visits</v-card-subtitle
-        >
-        <v-card-text>
-          <v-list dense shaped max-width="300">
-            <v-divider></v-divider>
-            <v-list-item-group v-model="favorite" color="secondary">
-              <v-list-item v-for="(item, i) in favorites" :key="i">
-                <v-list-item-content>
-                  <v-list-item-title v-text="item"></v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-card-text>
-      </v-card>
 
       <!-- Spaces form -->
       <v-card v-if="showSpaces">
@@ -102,22 +73,33 @@
       </v-card>
       <!-- Spaces form -->
 
-      <!-- Getherings form button click -->
-      <v-card v-if="showGatherings" :height="ht">
-        <v-card-title>Identify the gathering</v-card-title>
+      <v-card tile v-if="showFavorites" :height="ht">
+        <v-card-title>Recent Visits, {{ nickname }}:</v-card-title>
+        <v-card-subtitle v-model="newUser"
+          >Go to the <strong>Spaces</strong> page to add visits</v-card-subtitle
+        >
         <v-card-text>
-          <v-row no-gutters>
-            <v-col cols="10" md="4">
-              <v-text-field
-                v-model="selectedSpace"
-                hint="Use a name others in the gathering would use"
-                persistent-hint
-                clearable
-                autofocus
-              ></v-text-field
-            ></v-col>
-          </v-row>
+          <v-list dense shaped max-width="300">
+            <v-divider></v-divider>
+            <v-list-item-group v-model="favorite" color="secondary">
+              <v-list-item v-for="(item, i) in favorites" :key="i">
+                <v-list-item-content>
+                  <v-list-item-title v-text="item"></v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
         </v-card-text>
+      </v-card>
+      <v-card tile v-if="showCalendar" :height="ht">
+        <calendarCard
+          :avgStay="avgStay"
+          :selectedSpaceName="selectedSpace.name"
+          @logVisit="onLogVisit"
+          @updateLoggedVisit="onUpdateLoggedVisit"
+          @deleteVisit="onDeleteVisit"
+          @error="onError($event)"
+        />
       </v-card>
     </v-card>
 
@@ -128,13 +110,12 @@
       dark
     >
       <v-btn @click="show = 0">
-        <span>Recent</span>
-        <v-icon>mdi-heart</v-icon>
-      </v-btn>
-
-      <v-btn @click="show = 1">
         <span>Spaces</span>
         <v-icon>mdi-map-marker</v-icon>
+      </v-btn>
+      <v-btn @click="show = 1">
+        <span>Recent</span>
+        <v-icon>mdi-heart</v-icon>
       </v-btn>
       <v-btn @click="show = 2">
         <span>Calendar</span>
@@ -167,9 +148,7 @@ import { success, error, info, highlight, printJson } from '../../utils/colors';
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
 import GoogleMap from '@/components/cards/GoogleMap';
-// import GoogleMap from './googleMapsBare';
 import calendarCard from '@/components/cards/calendarCard';
-// import GeolocationSelectorMap from './GeolocationSelectorMap';
 
 import { data as communityData } from '@/maps/communityData.json';
 
@@ -189,7 +168,6 @@ export default {
     logsCard,
     GoogleMap,
     calendarCard,
-    // GeolocationSelectorMap,
   },
   computed: {
     google() {
@@ -242,7 +220,6 @@ export default {
 
   data() {
     return {
-      maps: ['google', 'leaflet'],
       byCategory: false,
       radioGroup: 0,
       key: 1,
@@ -258,7 +235,7 @@ export default {
       categoryLabel: '',
       places: [],
       spaceLabel: '',
-      show: 1,
+      show: 0,
       ht: '520px',
       value: 0,
       selectedCategory: '',
@@ -346,18 +323,19 @@ export default {
     show(newVal, oldVal) {
       if (oldVal === 2) {
         this.favorite = -1;
-        console.log(this.favorite);
         this.selectedSpace.name = '';
       }
       this.getFavorites();
       switch (newVal) {
         case 0:
+          this.status = 'Type a place name. Hit tab. Hit Enter.';
+          break;
+
+        case 1:
           this.status =
             'Thanks for being safer together using Local Contact Tracing.';
           break;
-        case 1:
-          this.status = 'Type a place name. Hit tab. Hit Enter.';
-          break;
+
         case 2:
           this.status =
             'Touch and hold event, then move up/dn or change width. Move left to log, right to del.';
