@@ -95,6 +95,7 @@
 
 <script>
 import { info, printJson } from '../../utils/colors';
+import { formatTime } from '../../utils/luxonHelpers';
 
 import { defaultLocation } from '../../maps/mapconfig.json';
 console.log(defaultLocation);
@@ -125,6 +126,7 @@ export default {
 
   data() {
     return {
+      infoWindowLatLang: null,
       currLoc: '',
       map: null,
       infoContent: 'Your selected space is here',
@@ -215,6 +217,19 @@ export default {
           this.currentPlace = spot;
           this.center = spot.geometry.location;
           this.infoContent = this.currentPlace;
+          this.infoWinOpen = true;
+        })
+        .catch((e) => console.log(e));
+    },
+    geocodeLatLng(latLng) {
+      const geocoderRequest = { latLng: latLng };
+      this.geoCodePromise(geocoderRequest)
+        .then((results) => {
+          const spot = results[0];
+          this.zoom = 18;
+          this.currentPlace = spot;
+          this.center = spot.geometry.location;
+
           this.infoWinOpen = true;
         })
         .catch((e) => console.log(e));
@@ -320,8 +335,56 @@ export default {
   mounted() {
     const self = this;
     self.$refs.mapRef.$mapPromise.then((map) => {
+      map.addListener('click', function (mapsMouseEvent) {
+        if (self.infoWindowLatLang) self.infoWindowLatLang.close();
+
+        const geocoderRequest = { latLng: mapsMouseEvent.latLng };
+        self
+          .geoCodePromise(geocoderRequest)
+          .then((results) => {
+            const spot = results[results.length - 1];
+            self.infoWindowLatLang = new window.google.maps.InfoWindow({
+              position: mapsMouseEvent.latLng,
+            });
+            self.infoWindowLatLang.setContent(
+              '<h3>Place ID</h3>' +
+                '<p>' +
+                spot.place_id +
+                '<p/>' +
+                '<h3>Plus Codes</h3>' +
+                '<p><strong>Local code:</strong> ' +
+                spot.plus_code.compound_code +
+                '<br/>' +
+                '<strong>Global code:</strong> ' +
+                spot.plus_code.global_code +
+                '</p>' +
+                '<h3>Position</h3>' +
+                '<p><strong>Latitude:</strong> ' +
+                spot.geometry.location.lat() +
+                '<br/>' +
+                '<strong>Longitude:</strong> ' +
+                spot.geometry.location.lng() +
+                '</p>'
+            );
+            self.markers.push({
+              // for tooltips and visible marker labels
+              title: 'Gathering',
+              label: 'V' + self.markers.length,
+
+              // to cache place data for logging
+              name: formatTime() + ' Gathering',
+              placeId: spot.place_id,
+              address: spot.formatted_address,
+              position: spot.geometry.location,
+            });
+            self.currentPlace = spot;
+            self.infoWindowLatLang.open(map);
+          })
+          .catch((e) => console.log(e));
+      });
       self.map = map;
     });
+
     // self.geolocate();
     self.init();
     const createdMarker = self.addMarker();
