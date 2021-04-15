@@ -3,7 +3,6 @@
     <v-overlay :value="overlay">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
-
     <v-card class="overflow-hidden">
       <!-- Favorites List -->
 
@@ -12,7 +11,7 @@
         <div class="px-3 pt-1">
           <v-row no-gutters>
             <v-col cols="12">
-              <v-sheet v-if="google">
+              <v-sheet>
                 <GoogleMap
                   v-model="location"
                   :selectedSpace="selectedSpace"
@@ -20,11 +19,6 @@
                   @addedPlace="onAddedPlace"
                 />
               </v-sheet>
-              <!-- <v-sheet v-else>
-                <div style="width: 100%; height: 500px">
-                  <GeolocationSelectorMap v-model="location" />
-                </div>
-              </v-sheet> -->
             </v-col>
           </v-row>
           <v-divider class="my-2"></v-divider>
@@ -170,21 +164,14 @@ export default {
     calendarCard,
   },
   computed: {
-    google() {
-      return this.radioGroup === 0;
-    },
-
     showFavorites() {
-      return this.show == 0;
+      return this.show == this.FAVORITES;
     },
     showSpaces() {
-      return this.show == 1;
+      return this.show == this.SPACES;
     },
     showCalendar() {
-      return this.show == 2;
-    },
-    showGatherings() {
-      return this.show == 3;
+      return this.show == this.CALENDAR;
     },
 
     selectedFavorite() {
@@ -220,6 +207,9 @@ export default {
 
   data() {
     return {
+      SPACES: 0,
+      FAVORITES: 1,
+      CALENDAR: 2,
       byCategory: false,
       radioGroup: 0,
       key: 1,
@@ -321,27 +311,24 @@ export default {
     },
 
     show(newVal, oldVal) {
-      if (oldVal === 2) {
+      if (oldVal === this.CALENDAR) {
         this.favorite = -1;
         this.selectedSpace.name = '';
       }
       this.getFavorites();
       switch (newVal) {
-        case 0:
+        case this.SPACES:
           this.status = 'Type a place name. Hit tab. Hit Enter.';
           break;
 
-        case 1:
+        case this.FAVORITES:
           this.status =
             'Thanks for being safer together using Local Contact Tracing.';
           break;
 
-        case 2:
+        case this.CALENDAR:
           this.status =
             'Touch and hold event, then move up/dn or change width. Move left to log, right to del.';
-          break;
-        case 3:
-          this.status = 'Gatherings is currently under construction...';
           break;
       }
     },

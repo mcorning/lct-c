@@ -3,7 +3,7 @@
     <gmap-map
       :center="center"
       :zoom="zoom"
-      style="width: 100%; height: 400px"
+      style="width: 100%; height: 375px"
       ref="mapRef"
       @click="getMarker($event)"
     >
@@ -153,6 +153,7 @@ export default {
 
   data() {
     return {
+      markersData: [],
       edit: true,
       infoWindowLatLang: null,
       currLoc: '',
@@ -238,7 +239,9 @@ export default {
               spot.geometry.location.lng() +
               '</p>'
           );
-          this.addAmarker({
+          this.addMarker({
+            title: 'Gathering',
+            label: 'V' + this.markers.length,
             name: formatTime() + ' Gathering',
             placeId: spot.place_id,
             address: spot.formatted_address,
@@ -259,7 +262,9 @@ export default {
       };
       this.placeDetailsPromise(request).then((place) => {
         console.log(info('Place:'), printJson(place));
-        this.addAmarker({
+        this.addMarker({
+          title: 'Place',
+          label: 'V' + this.markers.length,
           name: place.name,
           placeId: place.place_id,
           address: place.formatted_address,
@@ -375,15 +380,19 @@ export default {
 
     setPlace(place) {
       this.currentPlace = place;
-      this.addMarker();
+      // TODO chech later if autocomplete needs to add a marker
+      // this.addMarker();
     },
 
-    addAmarker({ name, placeId, address, position }) {
+    addMarker({ title, label, name, placeId, address, position }) {
+      this.markersData.push({ title, label, name, placeId, address, position });
+      localStorage.setItem('markersData', JSON.stringify(this.markersData));
+
       const marker = new window.google.maps.Marker({
         map: this.map,
         // for tooltips and visible marker labels
-        title: 'Gathering',
-        label: 'V' + this.markers.length,
+        title: title,
+        label: label,
 
         // to cache place data for logging
         name,
@@ -394,24 +403,6 @@ export default {
       this.markers.push(marker);
     },
 
-    addMarker: function addMarker() {
-      this.lastId++;
-      const lat = this.currentPlace
-        ? this.currentPlace.geometry.location.lat()
-        : this.center.lat;
-      const lng = this.currentPlace
-        ? this.currentPlace.geometry.location.lng()
-        : this.center.lng;
-
-      this.markers.push({
-        position: {
-          lat: lat,
-          lng: lng,
-        },
-      });
-      return this.markers[this.markers.length - 1];
-    },
-
     removeMarker() {
       const marker = this.markers[this.currentMidx];
       marker.setMap(null);
@@ -420,6 +411,21 @@ export default {
     },
 
     init() {
+      const map = this.map;
+      this.markers = this.markersData
+        ? this.markersData.map((c) => {
+            const marker = new window.google.maps.Marker({
+              title: c.title,
+              label: c.label,
+              name: c.name,
+              placeId: c.placeId,
+              address: c.address,
+              position: c.position,
+              map: map,
+            });
+            return marker;
+          })
+        : [];
       this.geoCodePromise(this.geocoderRequest).then((r) => {
         console.log('default request:', printJson(r));
       });
@@ -437,15 +443,13 @@ export default {
 
   mounted() {
     const self = this;
+    const data = localStorage.getItem('markersData');
+    self.markersData = data ? JSON.parse(data) : [];
+
     self.$refs.mapRef.$mapPromise.then((map) => {
       self.map = map;
+      self.init();
     });
-
-    // self.geolocate();
-    self.init();
-    const createdMarker = self.addMarker();
-    createdMarker.position.lat = this.center.lat;
-    createdMarker.position.lng = this.center.lng;
   },
 };
 </script>
