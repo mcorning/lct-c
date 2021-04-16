@@ -26,6 +26,7 @@
       >
 
       <v-spacer></v-spacer>
+
       <v-tooltip top>
         <template v-slot:activator="{ on, attrs }">
           <v-icon class="pr-3" v-bind="attrs" v-on="on"

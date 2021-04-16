@@ -1,75 +1,63 @@
 <template>
-  <div>
-    <v-overlay :value="overlay">
-      <v-progress-circular indeterminate size="64"></v-progress-circular>
-    </v-overlay>
-    <v-card class="overflow-hidden">
-      <!-- Spaces form -->
-      <v-card v-if="showSpaces">
-        <div class="px-3 pt-1">
-          <v-row no-gutters>
-            <v-col cols="12">
-              <v-sheet>
-                <GoogleMap v-model="location" @addedPlace="onAddedPlace" />
-              </v-sheet>
-            </v-col>
-          </v-row>
-          <v-divider class="my-2"></v-divider>
-          <div v-if="byCategory">
-            <v-row no-gutters>
-              Or select a category
-              <v-col cols="12">
-                <v-chip-group
-                  v-model="selectedCategory"
-                  mandatory
-                  color="primary"
-                >
-                  <v-chip filter>
-                    <v-icon>mdi-store</v-icon>
-                  </v-chip>
-                  <v-chip filter>
-                    <v-icon>mdi-silverware</v-icon>
-                  </v-chip>
+  <div height="600" class="overflow-hidden fill-height">
+    <!-- Spaces form -->
+    <!-- <v-card v-if="showSpaces"> -->
+    <div v-if="showSpaces" class="px-3 pt-1">
+      <v-row no-gutters>
+        <v-col cols="12">
+          <GoogleMap v-model="location" @addedPlace="onAddedPlace" />
+        </v-col>
+      </v-row>
+      <div v-if="byCategory">
+        <v-row no-gutters>
+          Or select a category
+          <v-col cols="12">
+            <v-chip-group v-model="selectedCategory" mandatory color="primary">
+              <v-chip filter>
+                <v-icon>mdi-store</v-icon>
+              </v-chip>
+              <v-chip filter>
+                <v-icon>mdi-silverware</v-icon>
+              </v-chip>
 
-                  <v-chip filter>
-                    <v-icon>mdi-bed</v-icon>
-                  </v-chip>
-                  <v-chip filter>
-                    <v-icon>mdi-theater</v-icon>
-                  </v-chip>
-                </v-chip-group>
-              </v-col>
-            </v-row>
-            <v-row no-gutters>
-              {{ spaceLabel }}:
-              <v-col cols="12">
-                <v-autocomplete
-                  v-model="selectedSpace"
-                  :items="filteredSpaces"
-                  :filter="customFilter"
-                  item-text="name"
-                  item-value="id"
-                  return-object
-                  clearable
-                  class="pt-1"
-                ></v-autocomplete>
-              </v-col>
-            </v-row>
-          </div>
-        </div>
-      </v-card>
-      <!-- Spaces form -->
+              <v-chip filter>
+                <v-icon>mdi-bed</v-icon>
+              </v-chip>
+              <v-chip filter>
+                <v-icon>mdi-theater</v-icon>
+              </v-chip>
+            </v-chip-group>
+          </v-col>
+        </v-row>
+        <v-row no-gutters>
+          {{ spaceLabel }}:
+          <v-col cols="12">
+            <v-autocomplete
+              v-model="selectedSpace"
+              :items="filteredSpaces"
+              :filter="customFilter"
+              item-text="name"
+              item-value="id"
+              return-object
+              clearable
+              class="pt-1"
+            ></v-autocomplete>
+          </v-col>
+        </v-row>
+      </div>
+    </div>
+    <!-- </v-card> -->
+    <!-- Spaces form -->
 
-      <v-card tile v-if="showCalendar">
-        <calendarCard
-          :avgStay="avgStay"
-          :selectedSpaceName="selectedSpace.name"
-          @logVisit="onLogVisit"
-          @updateLoggedVisit="onUpdateLoggedVisit"
-          @deleteVisit="onDeleteVisit"
-          @error="onError($event)"
-        />
-      </v-card>
+    <v-card tile v-if="showCalendar">
+      <calendarCard
+        :avgStay="avgStay"
+        :selectedSpaceName="selectedSpace.name"
+        @logVisit="onLogVisit"
+        @updateLoggedVisit="onUpdateLoggedVisit"
+        @deleteVisit="onDeleteVisit"
+        @error="onError($event)"
+      />
     </v-card>
 
     <v-bottom-navigation
@@ -85,17 +73,19 @@
         <v-icon>mdi-map-marker</v-icon>
       </v-btn>
 
-      <v-btn @click="show = CALENDAR">
-        <span>Calendar</span>
-        <v-icon>mdi-calendar</v-icon>
-      </v-btn>
-
       <v-spacer></v-spacer>
 
       <v-btn fab color="red" dark @click="warnThem">
         <span>Warn</span>
         <v-icon dark> mdi-alert </v-icon></v-btn
       >
+      <v-spacer></v-spacer>
+
+      <v-btn @click="show = CALENDAR">
+        <span>Calendar</span>
+        <v-icon>mdi-calendar</v-icon>
+      </v-btn>
+      <v-spacer></v-spacer>
     </v-bottom-navigation>
 
     <!-- Your Logs -->

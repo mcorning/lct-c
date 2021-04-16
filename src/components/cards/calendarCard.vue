@@ -1,10 +1,11 @@
 <template>
-  <div>
-    <v-overlay :value="loading">
-      <v-progress-circular indeterminate size="64"></v-progress-circular>
-    </v-overlay>
-
-    <v-row class="fill-height">
+  <v-sheet
+    height="600"
+    class="overflow-hidden fill-height"
+    style="position: relative"
+  >
+    <!-- <v-container class="fill-height"> -->
+    <v-row>
       <v-col>
         <!-- calendar controls -->
         <v-sheet height="48">
@@ -94,7 +95,7 @@
 
         <!-- calendar -->
         <!-- do not change the calendar sheet's height. if you do, you will lose scrollToTime, and you will lose hours on the calendar -->
-        <v-sheet height="400">
+        <v-sheet height="500">
           <v-calendar
             id="calendar-target"
             ref="calendar"
@@ -167,7 +168,8 @@
         ></v-col
       >
     </v-row>
-  </div>
+    <!-- </v-container> -->
+  </v-sheet>
 </template>
 
 <script>
@@ -216,7 +218,7 @@ export default {
     color: 'primary',
     action: '',
     confirm: false,
-    loading: true,
+    loading: false,
     visits: [],
     place: '',
     type: 'day',

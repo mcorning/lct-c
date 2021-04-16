@@ -1,9 +1,39 @@
 <template>
-  <div>
+  <v-sheet
+    height="600"
+    class="overflow-hidden fill-height"
+    style="position: relative"
+  >
+    <v-navigation-drawer v-model="drawer" absolute temporary>
+      <v-list-item>
+        <v-list-item-avatar>
+          <v-img src="https://randomuser.me/api/portraits/men/78.jpg"></v-img>
+        </v-list-item-avatar>
+
+        <v-list-item-content>
+          <v-list-item-title>{{ username }}'s Recent Visits</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+
+      <v-divider></v-divider>
+
+      <v-list dense>
+        <v-list-item v-for="visit in getFavorites()" :key="visit.name" link>
+          <v-list-item-icon>
+            <v-icon>{{ getIcon(visit) }}</v-icon>
+          </v-list-item-icon>
+
+          <v-list-item-content>
+            <v-list-item-title>{{ visit }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
     <gmap-map
       :center="center"
       :zoom="zoom"
-      style="width: 100%; height: 375px"
+      style="width: 100%; height: 525px"
       ref="mapRef"
       @click="getMarker($event)"
     >
@@ -31,27 +61,6 @@
             >
           </v-card-text>
           <v-card-actions class="pb-1">
-            <!-- <v-row no-gutters dense class="pb-3">
-            <v-col> -->
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                  small
-                  fab
-                  v-bind="attrs"
-                  v-on="on"
-                  dark
-                  color="blue"
-                  @click="editName"
-                >
-                  <v-icon>mdi-pencil-outline</v-icon>
-                </v-btn>
-              </template>
-              <span>Edit the name</span></v-tooltip
-            >
-            <!-- </v-col> -->
-            <v-spacer></v-spacer>
-            <!-- <v-col> -->
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -68,9 +77,7 @@
               </template>
               <span>Remove marker</span></v-tooltip
             >
-            <!-- </v-col> -->
             <v-spacer></v-spacer>
-            <!-- <v-col> -->
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -88,8 +95,6 @@
               </template>
               <span>Mark your calendar with a Visit</span></v-tooltip
             >
-            <!-- </v-col>
-          </v-row> -->
           </v-card-actions>
         </v-card>
       </gmap-info-window>
@@ -98,14 +103,14 @@
         :key="index"
         v-for="(m, index) in markers"
         :position="m.position"
+        :draggable="true"
         @click="toggleInfoWindow(m, index)"
-      >
+        >{{ m.title }}
       </gmap-marker>
     </gmap-map>
 
     <gmap-autocomplete
       @place_changed="setPlace"
-      autofocus
       auto-select-first
       :options="options"
       style="width: 70%; border: orange; border-width: 2px; border-style: solid"
@@ -129,10 +134,12 @@
       </template>
       <span>Mark your calendar </span></v-tooltip
     >
-  </div>
+  </v-sheet>
 </template>
 
 <script>
+import Visit from '@/models/Visit';
+
 import { info, printJson } from '../../utils/colors';
 import { formatTime } from '../../utils/luxonHelpers';
 
@@ -144,6 +151,10 @@ export default {
   name: 'GoogleMap',
 
   computed: {
+    username() {
+      return localStorage.getItem('username');
+    },
+
     currentPlaceInfo() {
       return this.currentPlace ? this.currentPlace : '';
     },
@@ -160,6 +171,9 @@ export default {
 
   data() {
     return {
+      loading: false,
+      drawer: null,
+
       markersData: [],
       edit: true,
       infoWindowLatLang: null,
@@ -200,6 +214,31 @@ export default {
   },
 
   methods: {
+    getFavorites() {
+      const visits = Visit.all();
+      return [...new Set(visits.map((v) => v.name))];
+    },
+
+    getIcon() {
+      return 'mdi-account-group';
+    },
+
+    toggleInfoWindow: function (marker, idx) {
+      this.infoWindowPos = marker.position;
+      this.currentPlace = marker;
+      this.map.panTo(marker.position);
+
+      //check if its the same marker that was selected if yes toggle
+      if (this.currentMidx == idx) {
+        this.infoWinOpen = !this.infoWinOpen;
+      }
+      //if different marker set infowindow to open and reset current marker index
+      else {
+        this.infoWinOpen = true;
+        this.currentMidx = idx;
+      }
+    },
+
     // click the map, mark the place, get a marker there
     // space is this.$event (and includes the placeId string and the latLng object)
     getMarker(space) {
@@ -284,6 +323,7 @@ export default {
         self.currLoc = place.geometry.location;
       });
     },
+
     geocodePlaceId(placeId) {
       const geocoderRequest = { placeId: placeId };
       this.geoCodePromise(geocoderRequest)
@@ -328,22 +368,6 @@ export default {
       });
     },
 
-    toggleInfoWindow: function (marker, idx) {
-      this.infoWindowPos = marker.position;
-      this.currentPlace = marker;
-      this.map.panTo(marker.position);
-
-      //check if its the same marker that was selected if yes toggle
-      if (this.currentMidx == idx) {
-        this.infoWinOpen = !this.infoWinOpen;
-      }
-      //if different marker set infowindow to open and reset current marker index
-      else {
-        this.infoWinOpen = true;
-        this.currentMidx = idx;
-      }
-    },
-
     // request includes placeId
     placeDetailsPromise(request) {
       const self = this;
@@ -375,14 +399,6 @@ export default {
           lng: position.coords.longitude,
         };
       });
-    },
-
-    editName() {
-      this.edit = true;
-    },
-    newName(val) {
-      this.currentPlaceInfo.name = val;
-      this.edit = false;
     },
 
     addVisit() {
@@ -436,7 +452,7 @@ export default {
         map: this.map,
         // for tooltips and visible marker labels
         title: title,
-        label: label,
+        label: { text: label, color: 'white' },
 
         // to cache place data for logging
         name,
@@ -458,55 +474,39 @@ export default {
     },
 
     recentsControl(controlDiv) {
+      // Set CSS for the control border.
       const controlUI = document.createElement('div');
       controlUI.style.backgroundColor = '#fff';
-      controlUI.style.border = '2px solid #fff';
+      controlUI.style.border = '3px solid #fff';
       controlUI.style.borderRadius = '3px';
       controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
       controlUI.style.cursor = 'pointer';
-      controlUI.style.padding = '8px';
       controlUI.style.marginTop = '8px';
       controlUI.style.marginBottom = '22px';
       controlUI.style.textAlign = 'center';
       controlUI.title = 'Click to recenter the map';
       controlDiv.appendChild(controlUI);
-
       // Set CSS for the control interior.
       const controlText = document.createElement('div');
       controlText.style.color = 'rgb(25,25,25)';
       controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-      controlText.style.fontSize = '18px';
+      controlText.style.fontSize = '16px';
+      controlText.style.fontWeight = '200';
       controlText.style.lineHeight = '38px';
       controlText.style.paddingLeft = '5px';
       controlText.style.paddingRight = '5px';
-      controlText.innerHTML = 'Recent Visits';
+      controlText.innerHTML = 'See Recent Visits';
       controlUI.appendChild(controlText);
-
-      const controlList = document.createElement('ul');
-      controlUI.appendChild(controlList);
-      this.markersData.forEach((item) => {
-        const listItem = document.createElement('li');
-        listItem.style.fontSize = '16px';
-        listItem.style.textAlign = 'left';
-        listItem.style.lineHeight = 1.5;
-        listItem.innerHTML = item.name;
-        controlList.appendChild(listItem);
-      });
-
-      const self = this;
-      controlUI.addEventListener('click', (item) => {
-        const name = item.target.textContent;
-        const x = self.markersData.filter((v) => v.name === name)[0];
-        alert('Marking your calendar with ' + x.name + ' ' + x.placeId);
-        this.currentPlace = { name: x.name, placeId: x.placeId };
-        this.addVisit();
+      // Setup the click event listeners: it talks to Vue, not the map.
+      controlUI.addEventListener('click', () => {
+        this.drawer = !this.drawer;
       });
     },
 
     init() {
       const recentsControlDiv = document.createElement('div');
       this.recentsControl(recentsControlDiv);
-      this.map.controls[window.google.maps.ControlPosition.LEFT_CENTER].push(
+      this.map.controls[window.google.maps.ControlPosition.LEFT_BOTTOM].push(
         recentsControlDiv
       );
       const map = this.map;
@@ -536,6 +536,8 @@ export default {
     const self = this;
     const data = localStorage.getItem('markersData');
     self.markersData = data ? JSON.parse(data) : [];
+
+    Visit.$fetch();
 
     self.$refs.mapRef.$mapPromise.then((map) => {
       self.map = map;
