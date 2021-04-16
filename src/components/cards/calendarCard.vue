@@ -272,7 +272,10 @@ export default {
 
     // called by event-color calendar event
     getEventColor(event) {
-      return event.color;
+      const c =
+        this.visitId === event.id ? `${event.color} darken-1` : event.color;
+      console.log(c);
+      return c;
     },
 
     // called by event slot in calendar
@@ -300,7 +303,6 @@ export default {
       // // shallow clone so reset() does not effect visit indirectly
 
       this.visitId = event.id;
-
       console.log(nativeEvent.type);
     },
 
