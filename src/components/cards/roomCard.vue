@@ -4,20 +4,13 @@
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
     <v-card class="overflow-hidden">
-      <!-- Favorites List -->
-
       <!-- Spaces form -->
       <v-card v-if="showSpaces">
         <div class="px-3 pt-1">
           <v-row no-gutters>
             <v-col cols="12">
               <v-sheet>
-                <GoogleMap
-                  v-model="location"
-                  :selectedSpace="selectedSpace"
-                  :favoritePlaces="places"
-                  @addedPlace="onAddedPlace"
-                />
+                <GoogleMap v-model="location" @addedPlace="onAddedPlace" />
               </v-sheet>
             </v-col>
           </v-row>
@@ -67,25 +60,7 @@
       </v-card>
       <!-- Spaces form -->
 
-      <v-card tile v-if="showFavorites" :height="ht">
-        <v-card-title>Recent Visits, {{ nickname }}:</v-card-title>
-        <v-card-subtitle v-model="newUser"
-          >Go to the <strong>Spaces</strong> page to add visits</v-card-subtitle
-        >
-        <v-card-text>
-          <v-list dense shaped max-width="300">
-            <v-divider></v-divider>
-            <v-list-item-group v-model="favorite" color="secondary">
-              <v-list-item v-for="(item, i) in favorites" :key="i">
-                <v-list-item-content>
-                  <v-list-item-title v-text="item"></v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-card-text>
-      </v-card>
-      <v-card tile v-if="showCalendar" :height="ht">
+      <v-card tile v-if="showCalendar">
         <calendarCard
           :avgStay="avgStay"
           :selectedSpaceName="selectedSpace.name"
@@ -103,22 +78,20 @@
       background-color="primary"
       dark
     >
-      <v-btn @click="show = 0">
+      <v-spacer></v-spacer>
+
+      <v-btn @click="show = SPACES">
         <span>Spaces</span>
         <v-icon>mdi-map-marker</v-icon>
       </v-btn>
-      <v-btn @click="show = 1">
-        <span>Recent</span>
-        <v-icon>mdi-heart</v-icon>
-      </v-btn>
-      <v-btn @click="show = 2">
+
+      <v-btn @click="show = CALENDAR">
         <span>Calendar</span>
         <v-icon>mdi-calendar</v-icon>
       </v-btn>
-      <!-- <v-btn @click="show = 3">
-        <span>Gathering</span>
-        <v-icon>mdi-account-group</v-icon>
-      </v-btn> -->
+
+      <v-spacer></v-spacer>
+
       <v-btn fab color="red" dark @click="warnThem">
         <span>Warn</span>
         <v-icon dark> mdi-alert </v-icon></v-btn
@@ -164,18 +137,11 @@ export default {
     calendarCard,
   },
   computed: {
-    showFavorites() {
-      return this.show == this.FAVORITES;
-    },
     showSpaces() {
       return this.show == this.SPACES;
     },
     showCalendar() {
       return this.show == this.CALENDAR;
-    },
-
-    selectedFavorite() {
-      return this.favorites[this.favorite];
     },
 
     categories() {
@@ -208,8 +174,7 @@ export default {
   data() {
     return {
       SPACES: 0,
-      FAVORITES: 1,
-      CALENDAR: 2,
+      CALENDAR: 1,
       byCategory: false,
       radioGroup: 0,
       key: 1,
@@ -219,7 +184,6 @@ export default {
       status: '',
 
       newUser: false,
-      favorites: [],
       // TODO make avgStay configurable by admin or user
       avgStay: 3600000,
       categoryLabel: '',
@@ -234,7 +198,6 @@ export default {
       panelState: [],
       sheet: false,
       dialog: false,
-      favorite: -1,
       nsp: 'Sisters',
       filteredSpaces: [],
       categorySelected: '',
@@ -246,12 +209,6 @@ export default {
   methods: {
     onError(event) {
       this.$emit('error', event);
-    },
-
-    getFavorites() {
-      this.favorites = [...new Set(this.visits.map((v) => v.name))];
-      console.log('favorites', this.favorites);
-      this.newUser = this.favorites.length === 0;
     },
 
     logLabel() {
@@ -280,7 +237,7 @@ export default {
         category: '',
       };
       console.log(info('Added place', printJson(this.selectedSpace)));
-      this.show = 2;
+      this.show = this.CALENDAR;
     },
 
     onLogVisit(data) {
@@ -303,27 +260,14 @@ export default {
   },
 
   watch: {
-    favorite() {
-      this.selectedSpace.name = this.selectedFavorite;
-      if (this.selectedSpace.name) {
-        this.show = 2;
-      }
-    },
-
     show(newVal, oldVal) {
       if (oldVal === this.CALENDAR) {
-        this.favorite = -1;
         this.selectedSpace.name = '';
       }
-      this.getFavorites();
       switch (newVal) {
         case this.SPACES:
-          this.status = 'Type a place name. Hit tab. Hit Enter.';
-          break;
-
-        case this.FAVORITES:
           this.status =
-            'Thanks for being safer together using Local Contact Tracing.';
+            'Click the map. Or type a place name, press Tab, and hit Enter.';
           break;
 
         case this.CALENDAR:
@@ -353,7 +297,6 @@ export default {
     Visit.$fetch()
       .then((all) => {
         console.log(all);
-        this.getFavorites();
         this.show = this.visits.length ? 0 : 1;
         this.overlay = false;
         console.log(success('Visits'), printJson(this.visits));
@@ -364,7 +307,6 @@ export default {
   mounted() {
     this.places = communityData.filter((v) => v.position);
     this.selectedSpace = {};
-    this.favorite = -1;
     this.panelState = [0]; // open only the 0th element of expansion-panels
   },
 

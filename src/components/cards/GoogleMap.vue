@@ -14,19 +14,25 @@
         @closeclick="infoWinOpen = false"
       >
         <v-card>
-          <v-card-title>
+          <v-card-title class="mt-0 pt-0">
             <v-text-field
               v-model="currentPlaceInfo.name"
               dense
               hide-details
             ></v-text-field>
           </v-card-title>
-          <v-card-subtitle>{{ currentPlaceInfo.address }}</v-card-subtitle>
-          <v-card-text
-            >Place ID: {{ currentPlaceInfo.placeId }} <br />
-            Position: {{ currentPlaceInfo.position }}
+          <v-card-subtitle class="pb-0">{{
+            currentPlaceInfo.address
+          }}</v-card-subtitle>
+          <v-card-text class="pt-3"
+            ><small
+              >Place ID: {{ currentPlaceInfo.placeId }} <br />
+              Position: {{ currentPlaceInfo.position }}</small
+            >
           </v-card-text>
-          <v-card-actions>
+          <v-card-actions class="pb-1">
+            <!-- <v-row no-gutters dense class="pb-3">
+            <v-col> -->
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -43,7 +49,9 @@
               </template>
               <span>Edit the name</span></v-tooltip
             >
+            <!-- </v-col> -->
             <v-spacer></v-spacer>
+            <!-- <v-col> -->
             <v-tooltip bottom>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -60,7 +68,9 @@
               </template>
               <span>Remove marker</span></v-tooltip
             >
+            <!-- </v-col> -->
             <v-spacer></v-spacer>
+            <!-- <v-col> -->
             <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
@@ -78,6 +88,8 @@
               </template>
               <span>Mark your calendar with a Visit</span></v-tooltip
             >
+            <!-- </v-col>
+          </v-row> -->
           </v-card-actions>
         </v-card>
       </gmap-info-window>
@@ -131,11 +143,6 @@ export default {
   // see main.js for vue2-google-maps instantiation
   name: 'GoogleMap',
 
-  props: {
-    selectedSpace: Object,
-    favoritePlaces: Array,
-  },
-
   computed: {
     currentPlaceInfo() {
       return this.currentPlace ? this.currentPlace : '';
@@ -158,7 +165,6 @@ export default {
       infoWindowLatLang: null,
       currLoc: '',
       map: null,
-      infoContent: 'Your selected space is here',
       infoWindowPos: null,
       infoWinOpen: false,
       currentMidx: null,
@@ -203,7 +209,11 @@ export default {
 
     getSpaceDetails(space) {
       if (!space.placeId) {
-        this.getSpotDetails(space.latLng);
+        if (space.latLng) {
+          this.getSpotDetails(space.latLng);
+        } else if (space.lat && space.lng) {
+          this.getSpotDetails({ latLng: { lat: space.lat, lng: space.lng } });
+        }
       } else {
         this.getPlaceDetails(space.placeId);
       }
@@ -282,7 +292,6 @@ export default {
           this.zoom = 18;
           this.currentPlace = spot;
           this.center = spot.geometry.location;
-          this.infoContent = this.currentPlace;
           this.infoWinOpen = true;
         })
         .catch((e) => console.log(e));
@@ -296,7 +305,6 @@ export default {
           this.zoom = 18;
           this.currentPlace = spot;
           this.center = spot.geometry.location;
-
           this.infoWinOpen = true;
         })
         .catch((e) => console.log(e));
@@ -307,6 +315,8 @@ export default {
       return new Promise(function (resolve, reject) {
         self.$gmapApiPromiseLazy().then(() => {
           const geocoder = new window.google.maps.Geocoder();
+          // results will be an array of geographic objects with different and related values for the same spot
+          // results DO NOT include the POI name. you get that from the Places service passing in the placeId
           geocoder.geocode(geocoderRequest, function (results, status) {
             if (status === 'OK') {
               resolve(results);
@@ -321,6 +331,7 @@ export default {
     toggleInfoWindow: function (marker, idx) {
       this.infoWindowPos = marker.position;
       this.currentPlace = marker;
+      this.map.panTo(marker.position);
 
       //check if its the same marker that was selected if yes toggle
       if (this.currentMidx == idx) {
@@ -380,8 +391,41 @@ export default {
 
     setPlace(place) {
       this.currentPlace = place;
-      // TODO chech later if autocomplete needs to add a marker
-      // this.addMarker();
+      const latLng = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      };
+      let marker = {
+        position: latLng,
+        title: 'Place',
+        label: 'V' + this.markers.length,
+        placeId: '',
+        address: '',
+        name: '',
+      };
+
+      this.geoCodePromise({ latLng: latLng })
+        // get placeId
+        .then((data) => {
+          return data.filter((v) => v.types.includes('plus_code'))[0]?.place_id;
+        })
+        // use it to get Placed data from services
+        .then((placeId) => {
+          marker.placeId = placeId;
+          const request = {
+            placeId: placeId,
+            fields: ['name', 'formatted_address', 'place_id', 'geometry'],
+          };
+          return this.placeDetailsPromise(request);
+        })
+        // finish up the marker
+        .then((record) => {
+          marker.address = record.formatted_address;
+          marker.name = record.name;
+
+          // add it to the map and cache it in localSTorage
+          this.addMarker(marker);
+        });
     },
 
     addMarker({ title, label, name, placeId, address, position }) {
@@ -404,13 +448,67 @@ export default {
     },
 
     removeMarker() {
+      this.markersData.splice(this.currentMidx, 1);
+      localStorage.setItem('markersData', JSON.stringify(this.markersData));
+
       const marker = this.markers[this.currentMidx];
       marker.setMap(null);
       this.markers.splice(this.currentMidx, 1);
       this.infoWinOpen = false;
     },
 
+    recentsControl(controlDiv) {
+      const controlUI = document.createElement('div');
+      controlUI.style.backgroundColor = '#fff';
+      controlUI.style.border = '2px solid #fff';
+      controlUI.style.borderRadius = '3px';
+      controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+      controlUI.style.cursor = 'pointer';
+      controlUI.style.padding = '8px';
+      controlUI.style.marginTop = '8px';
+      controlUI.style.marginBottom = '22px';
+      controlUI.style.textAlign = 'center';
+      controlUI.title = 'Click to recenter the map';
+      controlDiv.appendChild(controlUI);
+
+      // Set CSS for the control interior.
+      const controlText = document.createElement('div');
+      controlText.style.color = 'rgb(25,25,25)';
+      controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+      controlText.style.fontSize = '18px';
+      controlText.style.lineHeight = '38px';
+      controlText.style.paddingLeft = '5px';
+      controlText.style.paddingRight = '5px';
+      controlText.innerHTML = 'Recent Visits';
+      controlUI.appendChild(controlText);
+
+      const controlList = document.createElement('ul');
+      controlUI.appendChild(controlList);
+      this.markersData.forEach((item) => {
+        const listItem = document.createElement('li');
+        listItem.style.fontSize = '16px';
+        listItem.style.textAlign = 'left';
+        listItem.style.lineHeight = 1.5;
+        listItem.innerHTML = item.name;
+        controlList.appendChild(listItem);
+      });
+
+      const self = this;
+      controlUI.addEventListener('click', (item) => {
+        const name = item.target.textContent;
+        const x = self.markersData.filter((v) => v.name === name)[0];
+        alert('Marking your calendar with ' + x.name + ' ' + x.placeId);
+        this.currentPlace = { name: x.name, placeId: x.placeId };
+        this.addVisit();
+      });
+    },
+
     init() {
+      const recentsControlDiv = document.createElement('div');
+      this.recentsControl(recentsControlDiv);
+      this.map.controls[window.google.maps.ControlPosition.LEFT_CENTER].push(
+        recentsControlDiv
+      );
       const map = this.map;
       this.markers = this.markersData
         ? this.markersData.map((c) => {
@@ -432,14 +530,7 @@ export default {
     },
   },
 
-  watch: {
-    center(n, o) {
-      console.log('center new/old', printJson(n), printJson(o));
-    },
-    currentPlace(n, o) {
-      console.log('currentPlace new/old', n, o);
-    },
-  },
+  watch: {},
 
   mounted() {
     const self = this;
