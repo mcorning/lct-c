@@ -100,11 +100,12 @@
 </template>
 
 <script>
-import { success, error, info, highlight, printJson } from '../../utils/colors';
+import { success, error, info, printJson } from '../../utils/colors';
 
 // import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
 import GoogleMap from '@/components/cards/GoogleMap';
+// import GoogleMap from '@/components/cards/x5-gmapsCard';
 import calendarCard from '@/components/cards/calendarCard';
 
 import { data as communityData } from '@/maps/communityData.json';
@@ -265,10 +266,6 @@ export default {
             'Touch and hold event, then move up/dn or change width. Move left to log, right to del.';
           break;
       }
-    },
-
-    selectedSpace(newVal) {
-      console.log(highlight(printJson(newVal)));
     },
 
     selectedCategory(newVal) {

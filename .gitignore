@@ -45,3 +45,4 @@ src/components/cards/googleMapsBare.vue
 src/components/cards/googleMapSimple.vue
 src/components/cards/googleMapsUom.vue
 src/utils/gmaps.js
+src/components/cards/x5-gmapsCard.vue

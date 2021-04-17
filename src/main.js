@@ -12,10 +12,15 @@ import './registerServiceWorker';
 import store from './store';
 import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 
+import { MAP_API_KEY } from '../hidden.json';
+
+// import x5GMaps from 'x5-gmaps';
+
 // for googleMap.vue
 import * as VueGoogleMaps from 'vue2-google-maps';
 
-import { MAP_API_KEY } from '../hidden.json';
+
+// Vue.use(x5GMaps, { key: MAP_API_KEY, libraries: ['places'] });
 
 Vue.use(VueGoogleMaps, {
   load: {

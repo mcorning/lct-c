@@ -4,6 +4,8 @@
     class="overflow-hidden fill-height"
     style="position: relative"
   >
+    <ConfirmDlg ref="confirm" />
+
     <v-navigation-drawer v-model="drawer" absolute temporary>
       <v-list-item>
         <v-list-item-avatar>
@@ -17,16 +19,23 @@
 
       <v-divider></v-divider>
 
-      <v-list dense>
-        <v-list-item v-for="visit in getFavorites()" :key="visit.name" link>
-          <v-list-item-icon>
-            <v-icon>{{ getIcon(visit) }}</v-icon>
-          </v-list-item-icon>
+      <v-list dense nav>
+        <v-list-item-group v-model="recent" mandatory color="primary">
+          <v-list-item
+            v-for="visit in getFavorites()"
+            :key="visit.name"
+            link
+            :value="visit"
+          >
+            <v-list-item-icon>
+              <v-icon>{{ getIcon(visit) }}</v-icon>
+            </v-list-item-icon>
 
-          <v-list-item-content>
-            <v-list-item-title>{{ visit }}</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
+            <v-list-item-content>
+              <v-list-item-title>{{ visit }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-item-group>
       </v-list>
     </v-navigation-drawer>
 
@@ -141,7 +150,6 @@
 import Visit from '@/models/Visit';
 
 import { info, printJson } from '../../utils/colors';
-import { formatTime } from '../../utils/luxonHelpers';
 
 import { defaultLocation } from '../../maps/mapconfig.json';
 console.log(defaultLocation);
@@ -149,6 +157,9 @@ console.log(defaultLocation);
 export default {
   // see main.js for vue2-google-maps instantiation
   name: 'GoogleMap',
+  components: {
+    ConfirmDlg: () => import('./dialogCard'),
+  },
 
   computed: {
     username() {
@@ -171,7 +182,8 @@ export default {
 
   data() {
     return {
-      loading: false,
+      recent: '',
+      loading: true,
       drawer: null,
 
       markersData: [],
@@ -192,7 +204,7 @@ export default {
       infoTitle: 'Visit',
       content: 'Default info',
       zoom: 16,
-      center: { lat: defaultLocation[0], lng: defaultLocation[1] },
+      center: defaultLocation,
       markers: [],
       places: [],
       currentPlace: null,
@@ -243,7 +255,9 @@ export default {
     // space is this.$event (and includes the placeId string and the latLng object)
     getMarker(space) {
       console.log('placeId:', printJson(space));
-      this.getSpaceDetails(space);
+      this.$refs.confirm.open('Confirm', 'Add a marker?').then((add) => {
+        if (add) this.getSpaceDetails(space);
+      });
     },
 
     getSpaceDetails(space) {
@@ -291,7 +305,7 @@ export default {
           this.addMarker({
             title: 'Gathering',
             label: 'V' + this.markers.length,
-            name: formatTime() + ' Gathering',
+            name: 'Gathering @ ' + spot.plus_code.global_code,
             placeId: spot.place_id,
             address: spot.formatted_address,
             position: spot.geometry.location,
@@ -514,7 +528,7 @@ export default {
         ? this.markersData.map((c) => {
             const marker = new window.google.maps.Marker({
               title: c.title,
-              label: c.label,
+              label: { text: c.label, color: 'white' },
               name: c.name,
               placeId: c.placeId,
               address: c.address,
@@ -530,7 +544,21 @@ export default {
     },
   },
 
-  watch: {},
+  watch: {
+    recent(val, old) {
+      if (!old) return;
+      this.$refs.confirm
+        .open('Confirm', `Mark your calendar with ${val}?`)
+        .then((add) => {
+          if (add) {
+            console.log(val);
+            this.currentPlace = { name: val, id: '', category: '' };
+
+            this.addVisit();
+          }
+        });
+    },
+  },
 
   mounted() {
     const self = this;
@@ -543,6 +571,7 @@ export default {
       self.map = map;
       self.init();
     });
+    self.loading = false;
   },
 };
 </script>
