@@ -191,7 +191,7 @@
             :nickname="username"
             :userID="userID"
             :auditor="auditor"
-            @sendExposureWarning="onSendExposureWarning"
+            @sendExposureWarning="onSendExposureWarning($event)"
             @visitorLoggedVisit="onVisitorLoggedVisit"
             @visitorUpdateLoggedVisit="onVisitorLoggedVisit"
             @visitorDeletedVisit="onVisitorDeletedVisit"
@@ -226,7 +226,7 @@ import Welcome from './components/Welcome';
 // import Chat from './components/Chat';
 
 import socket from './socket';
-import { printJson, highlight, success } from './utils/colors';
+import { printJson, highlight, success, warn } from './utils/colors';
 import update from '@/mixins/update.js';
 import helpers from '@/mixins/helpers.js';
 
@@ -412,10 +412,12 @@ export default {
       });
     },
 
-    onSendExposureWarning() {
-      socket.emit('exposureWarning', this.userID, (results) =>
+    onSendExposureWarning(reason) {
+      console.log(warn(`App.js: Emitting exposureWarning because "${reason}"`));
+
+      socket.emit('exposureWarning', this.userID, reason, (results) =>
         this.auditor.logEntry(
-          `exposureWarning results: ${printJson(results)}`,
+          `exposureWarning (for ${reason}) results: ${printJson(results)}`,
           'Warnings'
         )
       );
