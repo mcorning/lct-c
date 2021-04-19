@@ -1,7 +1,6 @@
 <template>
   <div height="600" class="overflow-hidden fill-height">
     <!-- Spaces form -->
-    <!-- <v-card v-if="showSpaces"> -->
     <div v-if="showSpaces" class="px-3 pt-1">
       <v-row no-gutters>
         <v-col cols="12">
@@ -46,19 +45,82 @@
         </v-row>
       </div>
     </div>
-    <!-- </v-card> -->
     <!-- Spaces form -->
 
-    <v-card tile v-if="showCalendar">
-      <calendarCard
-        :avgStay="avgStay"
-        :selectedSpaceName="selectedSpace.name"
-        @logVisit="onLogVisit"
-        @updateLoggedVisit="onUpdateLoggedVisit"
-        @deleteVisit="onDeleteVisit"
-        @error="onError($event)"
-      />
-    </v-card>
+    <v-dialog v-model="dialog" persistent max-width="350">
+      <!-- <template v-slot:activator="{ on, attrs }" v-slot:extension>
+        <v-fab-transition>
+          <v-btn color="error" dark v-bind="attrs" v-on="on" fab x-large>
+            <v-icon>mdi-home-alert</v-icon>
+          </v-btn></v-fab-transition
+        >
+      </template> -->
+
+      <v-card
+        v-if="visits && visits.length"
+        color="primary"
+        class="white--text"
+      >
+        <v-card-title class="headline">Exposure Warnings</v-card-title>
+        <v-card-subtitle class="white--text"
+          >Dated: {{ dated }}</v-card-subtitle
+        >
+        <v-card-subtitle class="white--text"
+          >You will warn {{ visits.length }}
+          {{ visits.length == 1 ? 'Room' : 'Rooms' }}</v-card-subtitle
+        >
+        <v-card-text>
+          <v-card class="mx-auto" max-width="400">
+            <v-list>
+              <v-list-item-group v-model="model" mandatory color="primary">
+                <v-list-item v-for="(option, i) in WarningOptions" :key="i">
+                  <v-list-item-icon>
+                    <v-icon v-text="option.icon"></v-icon>
+                  </v-list-item-icon>
+
+                  <v-list-item-content>
+                    <v-list-item-title v-text="option.text"></v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+          </v-card>
+        </v-card-text>
+        <v-divider class="mx-4"></v-divider>
+        <v-card-title class="justify-end">Send warning?</v-card-title>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="warning lighten-2" text @click="warnThem()">Yes</v-btn>
+          <v-btn color="green lighten-2" text @click="dialog = false">No</v-btn>
+        </v-card-actions>
+      </v-card>
+
+      <v-card v-else>
+        <v-card-title class="headline">Exposure Warnings</v-card-title>
+        <v-card-subtitle> Oops, there is nobody to warn.</v-card-subtitle>
+        ><v-card-text>
+          1) Be sure you have selected the correct nickname </v-card-text
+        ><v-card-text>
+          2) Check your Visits (you need at least one Entered record before you
+          can warn a Room)</v-card-text
+        >
+        <v-card-actions>
+          <v-btn text @click="dialog = false">OK</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- <v-card tile v-if="showCalendar"> -->
+    <calendarCard
+      v-if="showCalendar"
+      :avgStay="avgStay"
+      :selectedSpaceName="selectedSpace.name"
+      @logVisit="onLogVisit"
+      @updateLoggedVisit="onUpdateLoggedVisit"
+      @deleteVisit="onDeleteVisit"
+      @error="onError($event)"
+    />
+    <!-- </v-card> -->
 
     <v-bottom-navigation
       :value="value"
@@ -75,7 +137,7 @@
 
       <v-spacer></v-spacer>
 
-      <v-btn fab color="red" dark @click="warnThem">
+      <v-btn fab color="red" dark @click="dialog = true">
         <span>Warn</span>
         <v-icon dark> mdi-alert </v-icon></v-btn
       >
@@ -101,11 +163,10 @@
 
 <script>
 import { success, error, info, printJson } from '../../utils/colors';
+import { formatTime } from '../../utils/luxonHelpers';
 
-// import warnRoomCard from "@/components/cards/warnRoomCard";
 import logsCard from '@/components/cards/logsCard';
 import GoogleMap from '@/components/cards/GoogleMap';
-// import GoogleMap from '@/components/cards/x5-gmapsCard';
 import calendarCard from '@/components/cards/calendarCard';
 
 import { data as communityData } from '@/maps/communityData.json';
@@ -122,12 +183,15 @@ export default {
     auditor: Object,
   },
   components: {
-    // warnRoomCard,
     logsCard,
     GoogleMap,
     calendarCard,
   },
   computed: {
+    dated() {
+      return formatTime();
+    },
+
     showSpaces() {
       return this.show == this.SPACES;
     },
@@ -164,6 +228,30 @@ export default {
 
   data() {
     return {
+      WarningOptions: [
+        {
+          icon: 'mdi-alert',
+          text: 'I tested positive for COVID-19',
+        },
+        {
+          icon: 'mdi-account-alert',
+          text: 'LCT warned me of exposure',
+        },
+        {
+          icon: 'mdi-account-group',
+          text: 'I was near a COVID carrier',
+        },
+        {
+          icon: 'mdi-medical-bag',
+          text: 'I present COVID symptoms',
+        },
+        {
+          icon: 'mdi-arm-flex',
+          text: 'This is an LCT Drill...',
+        },
+      ],
+      model: 1,
+      dialog: false,
       SPACES: 0,
       CALENDAR: 1,
       byCategory: false,
@@ -188,12 +276,10 @@ export default {
       alert: false,
       panelState: [],
       sheet: false,
-      dialog: false,
       nsp: 'Sisters',
       filteredSpaces: [],
       categorySelected: '',
       selectedSpace: {},
-      model: null,
     };
   },
 
@@ -246,7 +332,10 @@ export default {
     },
 
     warnThem() {
-      this.$emit('exposureWarning');
+      this.dialog = false;
+      const reason = this.WarningOptions[this.model].text;
+      console.log(reason);
+      this.$emit('exposureWarning', reason);
     },
   },
 

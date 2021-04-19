@@ -133,7 +133,7 @@
           v-on="on"
           color="success"
           fab
-          medium
+          small
           dark
           class="ml-5"
           @click="addVisit"
@@ -182,6 +182,7 @@ export default {
 
   data() {
     return {
+      visits: null,
       recent: '',
       loading: true,
       drawer: null,
@@ -226,11 +227,6 @@ export default {
   },
 
   methods: {
-    getFavorites() {
-      const visits = Visit.all();
-      return [...new Set(visits.map((v) => v.name))];
-    },
-
     getIcon() {
       return 'mdi-account-group';
     },
@@ -517,13 +513,27 @@ export default {
       });
     },
 
-    init() {
+    showMap(map) {
       const recentsControlDiv = document.createElement('div');
       this.recentsControl(recentsControlDiv);
-      this.map.controls[window.google.maps.ControlPosition.LEFT_BOTTOM].push(
+      map.controls[window.google.maps.ControlPosition.LEFT_BOTTOM].push(
         recentsControlDiv
       );
-      const map = this.map;
+
+      return map;
+    },
+
+    getVisits() {
+      Visit.$fetch().then((all) => {
+        console.log(all.visits);
+        this.visits = all.visits;
+      });
+    },
+
+    getMarkers(map) {
+      const data = localStorage.getItem('markersData');
+      this.markersData = data ? JSON.parse(data) : [];
+
       this.markers = this.markersData
         ? this.markersData.map((c) => {
             const marker = new window.google.maps.Marker({
@@ -538,9 +548,15 @@ export default {
             return marker;
           })
         : [];
-      this.geoCodePromise(this.geocoderRequest).then((r) => {
-        console.log('default request:', printJson(r));
-      });
+
+      this.map = map;
+    },
+
+    getFavorites() {
+      if (this.visits && this.visits.length) {
+        const visits = this.visits.map((v) => v.name).sort();
+        return [...new Set(visits)];
+      }
     },
   },
 
@@ -562,16 +578,18 @@ export default {
 
   mounted() {
     const self = this;
-    const data = localStorage.getItem('markersData');
-    self.markersData = data ? JSON.parse(data) : [];
 
-    Visit.$fetch();
-
-    self.$refs.mapRef.$mapPromise.then((map) => {
-      self.map = map;
-      self.init();
-    });
-    self.loading = false;
+    self.$refs.mapRef.$mapPromise
+      .then((map) => self.showMap(map))
+      .then((map) => self.getMarkers(map))
+      .then(self.getVisits())
+      .then(() => {
+        console.log('Mounted GoogleMaps');
+        self.loading = false;
+      })
+      .catch((error) => {
+        this.$emit('error', error);
+      });
   },
 };
 </script>

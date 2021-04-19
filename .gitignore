@@ -3,6 +3,7 @@ node_modules
 srv/dist
 server
 imago/
+src/components/cards/archive/
 
 
 # local env files

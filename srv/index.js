@@ -171,7 +171,7 @@ io.on('connection', (socket) => {
   //  1) broadcasts message to all users (online only?) when a case of covid is found in the community
   //  2) redisGraph queries for anyone connected to the positive case (ignoring the immunity some might have)
   //  3) returns the number of possible exposures to positive case
-  socket.on('exposureWarning', async (userID, ack) => {
+  socket.on('exposureWarning', async (userID, reason, ack) => {
     let everybody = await io.allSockets();
     console.log('All Online sockets:', printJson([...everybody]));
 
@@ -182,7 +182,7 @@ io.on('connection', (socket) => {
         exposed.forEach((userID) => {
           console.log(warn('Processing '), userID);
           findExposedVisitors(userID).then((userIDs) =>
-            alertOthers(socket, userIDs, ack)
+            alertOthers(socket, userIDs, reason, ack)
           );
         });
       })
@@ -270,7 +270,7 @@ io.on('connection', (socket) => {
 });
 
 // alerts is an array of userIDs
-const alertOthers = (socket, alerts, ack) => {
+const alertOthers = (socket, alerts, reason, ack) => {
   const msPerDay = 1000 * 60 * 60 * 24;
 
   const sendExposureAlert = (to, msg) => {
@@ -284,7 +284,7 @@ const alertOthers = (socket, alerts, ack) => {
     );
   };
 
-  const msg = 'Please get tested. Quarantine, if necessary.';
+  const msg = `A fellow visitor warns, '${reason}.' For this reason, please get tested. Quarantine and warn others, if necessary.`;
   alerts.forEach((to) => {
     if (io.sockets.adapter.rooms.has(to)) {
       sendExposureAlert(to, msg);

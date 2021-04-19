@@ -311,6 +311,10 @@ export default {
     // @mousedown:event="startDrag"
     // @touchstart:event="startDrag"
     startDrag({ nativeEvent, event, timed }) {
+      if (!event) {
+        console.log('Leaving drag');
+        return;
+      }
       this.status = '';
       this.changed = false;
 
@@ -489,6 +493,10 @@ export default {
     //#region Non Pointer methods
 
     goRight() {
+      if (!this.visitId) {
+        console.log('No visit selected');
+        return;
+      }
       console.log('Going Right...');
       const visit = this.getVisit();
       this.feedbackMessage = `Are you sure you want to DELETE ${visit.name}`;
@@ -498,6 +506,11 @@ export default {
     },
 
     goLeft() {
+      if (!this.visitId) {
+        console.log('No visit selected');
+
+        return;
+      }
       console.log('Going Left...');
       const visit = this.getVisit();
 

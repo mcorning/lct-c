@@ -57,6 +57,7 @@
           @roomUpdateLoggedVisit="onRoomUpdateLoggedVisit"
           @roomDeletedVisit="onRoomDeletedVisit"
           @error="onError($event)"
+          @exposureWarning="onExposureWarning($event)"
         />
       </v-col>
     </v-row>
@@ -246,11 +247,13 @@ export default {
       });
     },
 
-    onExposureWarning() {
-      console.log(warn('emitting exposureWarning'));
+    onExposureWarning(reason) {
+      console.log(
+        warn(`Visitor.js: Emitting exposureWarning because "${reason}"`)
+      );
       this.auditor.logEntry(`emitting exposureWarning`, 'Warnings');
 
-      this.$emit('sendExposureWarning');
+      this.$emit('sendExposureWarning', reason);
     },
 
     onRoomLoggedVisit(visit) {

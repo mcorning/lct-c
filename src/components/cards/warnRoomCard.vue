@@ -11,19 +11,6 @@
           </v-btn></v-fab-transition
         >
       </template>
-      <!-- <v-card v-if="$socket.disconnected">
-        <v-card-title class="headline">Disconnected</v-card-title>
-        <v-card-subtitle>You cannot warn Rooms at the moment</v-card-subtitle>
-        <v-card-text
-          >You are not connected to the messaging server. We can cannect you,
-          then you can click the Warn Rooms button. </v-card-text
-        ><v-card-text> Do you want to connect now? </v-card-text>
-
-        <v-card-actions>
-          <v-btn color="green darken-1" text @click="connect()">Yes</v-btn>
-          <v-btn color="green darken-1" text @click="dialog = false">No</v-btn>
-        </v-card-actions>
-      </v-card> -->
 
       <v-card v-if="items && items.length" color="primary" class="white--text">
         <v-card-title class="headline">Exposure Warnings</v-card-title>
