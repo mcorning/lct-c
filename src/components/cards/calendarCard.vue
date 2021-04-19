@@ -189,7 +189,7 @@ import { error, success, highlight, printJson } from '../../utils/colors';
 export default {
   name: 'VisitLog',
   props: {
-    selectedSpaceName: String,
+    selectedSpace: Object,
     avgStay: Number,
   },
 
@@ -575,7 +575,7 @@ export default {
       this.createStart = this.roundTime(time);
       this.createEvent = {
         id: this.visitId,
-        name: this.place,
+        name: this.place.name,
         start: this.createStart,
         end: this.createStart + this.avgStay,
         interval: this.getInterval(
@@ -587,11 +587,12 @@ export default {
         color: 'secondary',
         logged: '', // this will contain the internal id of the relationship in redisGraph
       };
-      // this.visits.push(this.createEvent);
 
-      // let z = this.visits.length;
+      let newVisit = { ...this.createEvent };
+      newVisit.lat = this.place.lat;
+      newVisit.lng = this.place.lng;
 
-      Visit.updatePromise(this.createEvent)
+      Visit.updatePromise(newVisit)
         .then((p) => {
           console.log('Added visit to cache', printJson(p));
         })
@@ -814,9 +815,9 @@ export default {
 
       self.calendarElement = document.getElementById('calendar-target');
 
-      self.place = self.selectedSpaceName;
+      self.place = self.selectedSpace;
       self.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
-      if (self.place) {
+      if (self.place.name) {
         self.newEvent();
       }
     });

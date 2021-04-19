@@ -2,6 +2,31 @@
 
 This is a collection of technical details that may help you understand how some of the more arcane parts of Local Contact Tracing work.
 
+## Events
+
+The term "event" is overloaded several times in this application.
+
+The first place you have to understand is events as Vue message mechanism. Here is a summary of how events propagate in LCT-C:
+
+### RoomCard
+
+The roomCard contains the GoogleMaps.vue (identified as the Spaces vue) and the calendarCard.vue (the Calendar vue). The roomCard links the two vues using the selectedSpace object (containing name, lat, and lng properties).
+
+### Spaces
+
+The Spaces vue has an active role and a passive role. In the passive role, the user can examing the map, but does nothing else. If the user switches to the Calendar vue, nothing happens other than the user can peruse their calendar events.
+
+Before the first marked calendar event, there is no data moving throught the application.
+
+Assuming no visits, the `Spaces` vue shows a map. If you click the map or use the autocomplete field to name you place, the `selectedSpace` variable gets the name and latLng of the place.
+
+When `selectedSpace` changes (from null to something), roomCard sets the `show` variable to `CALENDAR`, and the `Calendar` vue replaces the `Spaces` view in the browser.
+
+### Calendar
+
+The `Calendar` vue `mounted()` life-cycle hook assigns the incoming `selectedSpace` prop to the `place` variable (so we can edit the incoming value safely). If `place` has a `name` property, we call the `newEvent()` method which calls the `addEvent()` method which calls `Visit.updatePromise(newVisit)`. This step blends the location of the visit to the calendar event.
+
+
 ## Calendar Events
 
 The term `event` is overloaded in the calendarCard.vue. Depending on context, it can mean a DOM Event or it can refer to an entry in the calendar (also called an event). In this document we refer to events on the calendar as "calendar events."

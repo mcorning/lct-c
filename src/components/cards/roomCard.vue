@@ -114,7 +114,7 @@
     <calendarCard
       v-if="showCalendar"
       :avgStay="avgStay"
-      :selectedSpaceName="selectedSpace.name"
+      :selectedSpace="selectedSpace"
       @logVisit="onLogVisit"
       @updateLoggedVisit="onUpdateLoggedVisit"
       @deleteVisit="onDeleteVisit"
@@ -308,10 +308,14 @@ export default {
         alert("oops. I didn't get that. Please try again.");
         return;
       }
+      // get latLng from map markers or from autocomplete respectively
+      const lat = place.position.lat() || place.geometry.location.lat();
+      const lng = place.position.lat() || place.geometry.location.lng();
       this.selectedSpace = {
         name: place.name,
         id: place.place_id,
-        category: '',
+        lat: lat,
+        lng: lng,
       };
       console.log(info('Added place', printJson(this.selectedSpace)));
       this.show = this.CALENDAR;
@@ -373,7 +377,7 @@ export default {
     Visit.$fetch()
       .then((all) => {
         console.log(all);
-        this.show = this.visits.length ? 0 : 1;
+        this.show = this.SPACES;
         this.overlay = false;
         console.log(success('Visits'), printJson(this.visits));
       })

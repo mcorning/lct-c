@@ -13,6 +13,8 @@ export default class Visit extends Model {
       marked: this.string(''),
       color: this.string('secondary'),
       start: this.number(''),
+      lat: this.number(),
+      lng: this.number(),
       end: this.number(''),
       interval: this.string(''),
 

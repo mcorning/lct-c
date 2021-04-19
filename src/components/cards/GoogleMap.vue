@@ -415,16 +415,20 @@ export default {
       this.$emit('addedPlace', this.currentPlace);
     },
 
+    // handled when autocomplete has a place
     setPlace(place) {
       this.currentPlace = place;
       const latLng = {
         lat: place.geometry.location.lat(),
         lng: place.geometry.location.lng(),
       };
+
+      const label = 'V' + this.markers.length;
+      console.log(label);
       let marker = {
         position: latLng,
         title: 'Place',
-        label: 'V' + this.markers.length,
+        label: { text: label, color: 'white' },
         placeId: '',
         address: '',
         name: '',
@@ -451,12 +455,15 @@ export default {
 
           // add it to the map and cache it in localSTorage
           this.addMarker(marker);
+          this.map.panTo(marker.position);
         });
     },
 
     addMarker({ title, label, name, placeId, address, position }) {
       this.markersData.push({ title, label, name, placeId, address, position });
       localStorage.setItem('markersData', JSON.stringify(this.markersData));
+      label = label.text || label || 'V?';
+      console.log(label);
 
       const marker = new window.google.maps.Marker({
         map: this.map,
@@ -486,6 +493,30 @@ export default {
     recentsControl(controlDiv) {
       // Set CSS for the control border.
       const controlUI = document.createElement('div');
+      controlUI.style.cursor = 'pointer';
+      controlUI.style.textAlign = 'center';
+      controlUI.title = 'Set of recent visits sorted by name';
+      controlUI.classList.add('custom-map-control-button');
+      controlDiv.appendChild(controlUI);
+      // Set CSS for the control interior.
+      const controlText = document.createElement('div');
+      controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
+      controlText.style.fontSize = '16px';
+      controlText.style.fontWeight = '300';
+      controlText.style.lineHeight = '38px';
+      controlText.style.paddingLeft = '5px';
+      controlText.style.paddingRight = '5px';
+      controlText.innerHTML = 'See Recent Visits';
+      controlUI.appendChild(controlText);
+      // Setup the click event listeners: it talks to Vue, not the map.
+      controlUI.addEventListener('click', () => {
+        this.drawer = !this.drawer;
+      });
+    },
+    // alternative to Google documentation
+    geolocateControl(controlDiv, map) {
+      // Set CSS for the control border.
+      const controlUI = document.createElement('div');
       controlUI.style.backgroundColor = '#fff';
       controlUI.style.border = '3px solid #fff';
       controlUI.style.borderRadius = '3px';
@@ -494,8 +525,10 @@ export default {
       controlUI.style.marginTop = '8px';
       controlUI.style.marginBottom = '22px';
       controlUI.style.textAlign = 'center';
-      controlUI.title = 'Click to recenter the map';
+      controlUI.title = 'Find me';
+      controlUI.classList.add('custom-map-control-button');
       controlDiv.appendChild(controlUI);
+
       // Set CSS for the control interior.
       const controlText = document.createElement('div');
       controlText.style.color = 'rgb(25,25,25)';
@@ -508,17 +541,104 @@ export default {
       controlText.innerHTML = 'See Recent Visits';
       controlUI.appendChild(controlText);
       // Setup the click event listeners: it talks to Vue, not the map.
+      const infoWindow = new window.google.maps.InfoWindow();
       controlUI.addEventListener('click', () => {
-        this.drawer = !this.drawer;
+        // Try HTML5 geolocation.
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              };
+              infoWindow.setPosition(pos);
+              infoWindow.setContent('Here you are.');
+              infoWindow.open(map);
+              map.setCenter(pos);
+            },
+            () => {
+              this.handleLocationError(true, infoWindow, map.getCenter());
+            }
+          );
+        } else {
+          // Browser doesn't support Geolocation
+          this.handleLocationError(false, infoWindow, map.getCenter());
+        }
       });
     },
 
-    showMap(map) {
-      const recentsControlDiv = document.createElement('div');
-      this.recentsControl(recentsControlDiv);
-      map.controls[window.google.maps.ControlPosition.LEFT_BOTTOM].push(
-        recentsControlDiv
+    setUpGeolocation(map) {
+      const infoWindow = new window.google.maps.InfoWindow();
+
+      const locationButton = document.createElement('button');
+      const icon = document.createElement('i');
+      icon.className = 'mdi mdi-target';
+      locationButton.appendChild(icon);
+      // <button class="btn"><i class="mdi-target"></i></button>
+      // locationButton.textContent = 'Pan to Current Location';
+      locationButton.title = 'Find Me';
+      locationButton.classList.add('custom-map-control-button-icon');
+
+      locationButton.addEventListener('click', () => {
+        // Try HTML5 geolocation.
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const pos = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              };
+              infoWindow.setPosition(pos);
+              infoWindow.setContent('Here you are.');
+              infoWindow.open(map);
+              map.setCenter(pos);
+            },
+            () => {
+              this.handleLocationError(true, infoWindow, map.getCenter());
+            }
+          );
+        } else {
+          // Browser doesn't support Geolocation
+          this.handleLocationError(false, infoWindow, map.getCenter());
+        }
+      });
+      map.controls[window.google.maps.ControlPosition.RIGHT_TOP].push(
+        locationButton
       );
+    },
+
+    setUpRecentVisits(map) {
+      const recentVisitsButton = document.createElement('button');
+      // <button class="btn"><i class="fa fa-target"></i></button>
+      recentVisitsButton.textContent = 'Recent Visits';
+      recentVisitsButton.classList.add('custom-map-control-button');
+      recentVisitsButton.title = 'Sorted set of past visits';
+      recentVisitsButton.addEventListener('click', () => {
+        this.drawer = !this.drawer;
+      });
+      map.controls[window.google.maps.ControlPosition.LEFT_BOTTOM].push(
+        recentVisitsButton
+      );
+    },
+
+    handleLocationError(browserHasGeolocation, infoWindow, pos) {
+      infoWindow.setPosition(pos);
+      infoWindow.setContent(
+        browserHasGeolocation
+          ? 'Error: The Geolocation service failed.'
+          : "Error: Your browser doesn't support geolocation."
+      );
+      infoWindow.open(this.map);
+    },
+
+    showMap(map) {
+      // const recentsControlDiv = document.createElement('div');
+      // this.recentsControl(recentsControlDiv);
+      // map.controls[window.google.maps.ControlPosition.LEFT_BOTTOM].push(
+      //   recentsControlDiv
+      // );
+      this.setUpRecentVisits(map);
+      this.setUpGeolocation(map);
 
       return map;
     },
@@ -536,9 +656,11 @@ export default {
 
       this.markers = this.markersData
         ? this.markersData.map((c) => {
+            const label = c.label.text || c.label || 'V?';
+
             const marker = new window.google.maps.Marker({
               title: c.title,
-              label: { text: c.label, color: 'white' },
+              label: { text: label, color: 'white' },
               name: c.name,
               placeId: c.placeId,
               address: c.address,
@@ -593,3 +715,33 @@ export default {
   },
 };
 </script>
+<style>
+.custom-map-control-button-icon {
+  background-color: #d500f9;
+  border: none;
+  color: white;
+  padding: 5px 5px;
+  margin: 10px;
+  font-size: 24px;
+  width: 40px;
+  cursor: pointer;
+}
+.custom-map-control-button {
+  background-color: #d500f9;
+  border: none;
+  color: white;
+  padding: 10px 10px;
+  margin: 10px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Darker background on mouse-over */
+.custom-map-control-button-icon:hover {
+  background-color: #aa00ff;
+}
+
+.custom-map-control-button:hover {
+  background-color: #aa00ff;
+}
+</style>
