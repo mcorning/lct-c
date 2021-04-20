@@ -42,7 +42,7 @@
     <gmap-map
       :center="center"
       :zoom="zoom"
-      style="width: 100%; height: 525px"
+      style="width: 100%; height: 550px"
       ref="mapRef"
       @click="getMarker($event)"
     >

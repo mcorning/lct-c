@@ -1,7 +1,7 @@
 <template>
   <div height="600" class="overflow-hidden fill-height">
     <!-- Spaces form -->
-    <div v-if="showSpaces" class="px-3 pt-1">
+    <div v-if="showSpaces">
       <v-row no-gutters>
         <v-col cols="12">
           <GoogleMap v-model="location" @addedPlace="onAddedPlace" />
@@ -260,7 +260,7 @@ export default {
       location: {},
       overlay: true,
       showWarningButton: true,
-      status: '',
+      status: 'Ready',
 
       newUser: false,
       // TODO make avgStay configurable by admin or user
@@ -279,7 +279,7 @@ export default {
       nsp: 'Sisters',
       filteredSpaces: [],
       categorySelected: '',
-      selectedSpace: {},
+      selectedSpace: null,
     };
   },
 
@@ -293,7 +293,7 @@ export default {
     },
     cancel() {
       this.sheet = !this.sheet;
-      this.selectedSpace = {};
+      this.selectedSpace = null;
     },
 
     customFilter(item, queryText) {
@@ -346,7 +346,7 @@ export default {
   watch: {
     show(newVal, oldVal) {
       if (oldVal === this.CALENDAR) {
-        this.selectedSpace.name = '';
+        this.selectedSpace = null;
       }
       switch (newVal) {
         case this.SPACES:
@@ -367,7 +367,7 @@ export default {
       this.filteredSpaces = this.spaces.filter(
         (v) => v.category == this.categorySelected
       );
-      this.selectedSpace = {};
+      this.selectedSpace = null;
 
       this.spaceLabel = `Then select a space for ${this.categorySelected} in ${this.nsp}`;
     },
@@ -386,7 +386,7 @@ export default {
 
   mounted() {
     this.places = communityData.filter((v) => v.position);
-    this.selectedSpace = {};
+    this.selectedSpace = null;
     this.panelState = [0]; // open only the 0th element of expansion-panels
   },
 

@@ -46,7 +46,10 @@
         </v-sheet>
 
         <!-- calendar -->
-        <v-sheet height="450">
+        <!-- in case we need it...
+              @mouseleave.native="cancelDrag" -->
+
+        <v-sheet height="470">
           <v-calendar
             id="calendar-target"
             ref="calendar"
@@ -62,7 +65,6 @@
             @touchstart:time="startTime"
             @mousemove:time="mouseMove"
             @touchmove:time="mouseMove"
-            @mouseleave.native="cancelDrag"
             @click:event="showEvent"
             @click:more="viewDay"
             @mouseup:time="endDrag"
@@ -107,12 +109,7 @@
     </v-row>
 
     <v-row no-gutters align="center">
-      <v-col
-        ><div class="pl-15">
-          {{ status }} {{ editableEvent ? editableEvent.start : '' }}
-        </div>
-      </v-col>
-      <v-col cols="2">
+      <v-col cols="3" class="pl-5">
         <v-dialog
           ref="dialogStart"
           v-model="modalStart"
@@ -127,6 +124,7 @@
               label="Start"
               prepend-icon="mdi-clock-time-four-outline"
               readonly
+              hide-details
               v-bind="attrs"
               v-on="on"
             ></v-text-field>
@@ -151,7 +149,7 @@
           </v-time-picker>
         </v-dialog>
       </v-col>
-      <v-col cols="2">
+      <v-col cols="3">
         <v-dialog
           ref="dialogEnd"
           v-model="modalEnd"
@@ -166,6 +164,7 @@
               label="End"
               prepend-icon="mdi-clock-time-four-outline"
               readonly
+              hide-details
               v-bind="attrs"
               v-on="on"
             ></v-text-field>
@@ -195,12 +194,20 @@
           ><v-icon>mdi-graphql</v-icon></v-btn
         >
 
-        <v-btn :disabled="!changed" @click="undo"
+        <!-- add this back later -->
+        <!-- <v-btn :disabled="!changed" @click="undo"
           ><v-icon>mdi-undo</v-icon></v-btn
-        ></v-col
-      >
+        > -->
+      </v-col>
     </v-row>
 
+    <v-row no-gutters class="mt-0">
+      <v-col
+        ><div class="pl-5">
+          <small>{{ status }}</small>
+        </div>
+      </v-col>
+    </v-row>
     <ConfirmDlg ref="confirm" />
   </v-sheet>
 </template>
@@ -512,7 +519,7 @@ export default {
     },
 
     reset() {
-      console.log(highlight('Resetting variables'));
+      this.status = 'Resetting variables';
       this.calendarElement.style.overflowY = 'auto';
 
       this.dragTime = null;
@@ -895,10 +902,10 @@ export default {
       self.visits = self.visitCache;
 
       self.calendarElement = document.getElementById('calendar-target');
+      self.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
 
       self.place = self.selectedSpace;
-      self.$refs.calendar.scrollToTime(showCurrentMilitaryTime());
-      if (self.place.name) {
+      if (self.place) {
         self.newEvent();
       }
     });
