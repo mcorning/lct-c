@@ -76,6 +76,24 @@ export default {
       this.resolve(false);
       this.dialog = false;
     },
+
+    handleKeydown(ev) {
+      console.log('key/action', ev.code, this.action);
+      this.dialog = false;
+
+      switch (ev.code) {
+        case 'KeyY':
+        case 'Enter':
+          return true;
+
+        case 'KeyN':
+        case 'Escape':
+          return false;
+      }
+    },
+  },
+  mounted() {
+    window.addEventListener('keydown', this.handleKeydown);
   },
 };
 </script>

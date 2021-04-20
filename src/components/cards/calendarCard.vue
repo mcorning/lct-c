@@ -169,6 +169,8 @@
       >
     </v-row>
     <!-- </v-container> -->
+
+    <ConfirmDlg ref="confirm" />
   </v-sheet>
 </template>
 
@@ -187,15 +189,20 @@ import {
 import { error, success, highlight, printJson } from '../../utils/colors';
 
 export default {
-  name: 'VisitLog',
+  name: 'calendarCard',
+
   props: {
     selectedSpace: Object,
     avgStay: Number,
   },
 
+  components: {
+    ConfirmDlg: () => import('./dialogCard'),
+  },
+
   computed: {
     updateFeedbackMessage() {
-      return `Ready to revert your last editto ${this.getInterval(
+      return `Ready to revert your last edit to its original value? ${this.getInterval(
         this.original.start,
         this.original.end
       )}?`;
@@ -220,7 +227,7 @@ export default {
     confirm: false,
     loading: false,
     visits: [],
-    place: '',
+    place: null,
     type: 'day',
     snackBar: false,
     snackBarNew: false,
@@ -262,7 +269,12 @@ export default {
       this.action = 'REVERT';
       this.feedbackMessage = this.updateFeedbackMessage;
       this.color = '';
-      this.confirm = true;
+      // this.confirm = true;
+      this.$refs.confirm
+        .open('Confirm', this.updateFeedbackMessage)
+        .then((act) => {
+          if (act) this.act();
+        });
       this.status = `Original interval ${this.getInterval(
         this.original.start,
         this.original.end
@@ -386,7 +398,6 @@ export default {
             this.dragEvent.start,
             this.dragEvent.end
           );
-          this.feedbackMessage = this.updateFeedbackMessage;
           this.changed = true;
         }
       }
@@ -405,7 +416,6 @@ export default {
           this.createEvent.start,
           this.createEvent.end
         );
-        this.feedbackMessage = this.updateFeedbackMessage;
 
         this.changed = true;
       }
@@ -416,8 +426,8 @@ export default {
     // handles updates:
     // this.original stores visit's original interval
     // called by drag or extendBottom
-    endDrag() {
-      if (this.changed) {
+    endDrag(event) {
+      if (event && this.changed) {
         console.log(this.visitId);
         console.log('original:');
         console.log(
@@ -467,6 +477,9 @@ export default {
       this.createEvent = null;
       this.createStart = null;
       this.extendOriginal = null;
+      this.place = null;
+      this.changed = false;
+      this.visitId = '';
     },
 
     // e.g., leaving event movement (e.g., to respond to confirmation dialog)
@@ -502,7 +515,10 @@ export default {
       this.feedbackMessage = `Are you sure you want to DELETE ${visit.name}`;
       this.action = 'DELETE';
       this.color = 'warning';
-      this.confirm = true;
+      // this.confirm = true;
+      this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
+        if (act) this.act();
+      });
     },
 
     goLeft() {
@@ -523,7 +539,10 @@ export default {
       } from ${formatTime(visit.start)} to ${formatTime(visit.end)} `;
       this.action = 'LOG';
       this.color = 'primary';
-      this.confirm = true;
+      // this.confirm = true;
+      this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
+        if (act) this.act();
+      });
     },
 
     act() {
@@ -600,7 +619,7 @@ export default {
           console.log(error(e));
         });
 
-      this.place = '';
+      this.place = null;
     },
 
     deleteVisit() {
@@ -665,7 +684,10 @@ export default {
       )}?`;
       this.action = 'UPDATE';
       this.color = 'warning';
-      this.confirm = true;
+      // this.confirm = true;
+      this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
+        if (act) this.act();
+      });
     },
 
     updateLoggedVisit() {
