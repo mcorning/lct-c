@@ -4,7 +4,6 @@
     class="overflow-hidden fill-height"
     style="position: relative"
   >
-    <!-- <v-container class="fill-height"> -->
     <v-row>
       <v-col>
         <!-- calendar controls -->
@@ -46,56 +45,8 @@
           </v-toolbar>
         </v-sheet>
 
-        <v-snackbar
-          v-model="snackBarNew"
-          :timeout="10000"
-          color="primary"
-          absolute
-          dark
-          bottom
-        >
-          {{ feedbackMessage }}
-          <template v-slot:action="{ attrs }">
-            <v-btn
-              color="white"
-              text
-              v-bind="attrs"
-              @click="snackBarNew = false"
-            >
-              Close
-            </v-btn>
-          </template>
-        </v-snackbar>
-
-        <!-- confirmation dialog -->
-        <v-snackbar
-          v-model="confirm"
-          :timeout="30000"
-          :color="color"
-          dark
-          centered
-          absolute
-          vertical
-          multi-line
-        >
-          {{ feedbackMessage }}
-          <template v-slot:action="{ attrs }">
-            <v-btn
-              dark
-              v-bind="attrs"
-              color="green"
-              @click="act"
-              elevation="10"
-            >
-              Yes (Enter)
-            </v-btn>
-            <v-btn dark v-bind="attrs" @click="cancel"> No (Esc)</v-btn>
-          </template>
-        </v-snackbar>
-
         <!-- calendar -->
-        <!-- do not change the calendar sheet's height. if you do, you will lose scrollToTime, and you will lose hours on the calendar -->
-        <v-sheet height="500">
+        <v-sheet height="450">
           <v-calendar
             id="calendar-target"
             ref="calendar"
@@ -132,8 +83,7 @@
                     v-html="eventSummary()"
                   ></div>
                 </template>
-                <span>LOG: Enter key or Left swipe</span><br /><span
-                  class="pl-8"
+                <span>LOG: Tab key or Left swipe</span><br /><span class="pl-8"
                   >DELETE: Del key or Right swipe
                 </span></v-tooltip
               >
@@ -155,20 +105,101 @@
         </v-sheet>
       </v-col>
     </v-row>
+
     <v-row no-gutters align="center">
-      <v-col cols="auto"
+      <v-col
         ><div class="pl-15">
-          {{ status }}
-        </div></v-col
-      >
-      <v-spacer></v-spacer>
-      <v-col class="text-right mr-5"
-        ><v-btn v-if="changed" @click="undo"
-          ><v-icon>mdi-undo</v-icon>Undo</v-btn
+          {{ status }} {{ editableEvent ? editableEvent.start : '' }}
+        </div>
+      </v-col>
+      <v-col cols="2">
+        <v-dialog
+          ref="dialogStart"
+          v-model="modalStart"
+          :return-value.sync="starttime"
+          persistent
+          width="290px"
+        >
+          <template v-slot:activator="{ on, attrs }">
+            <v-text-field
+              v-model="starttime"
+              :disabled="!editableEvent"
+              label="Start"
+              prepend-icon="mdi-clock-time-four-outline"
+              readonly
+              v-bind="attrs"
+              v-on="on"
+            ></v-text-field>
+          </template>
+          <v-time-picker
+            v-if="modalStart"
+            v-model="starttime"
+            full-width
+            :allowed-minutes="allowedStep"
+          >
+            <v-spacer></v-spacer>
+            <v-btn text color="primary" @click="modalStart = false">
+              Cancel
+            </v-btn>
+            <v-btn
+              text
+              color="primary"
+              @click="$refs.dialogStart.save(starttime)"
+            >
+              OK
+            </v-btn>
+          </v-time-picker>
+        </v-dialog>
+      </v-col>
+      <v-col cols="2">
+        <v-dialog
+          ref="dialogEnd"
+          v-model="modalEnd"
+          :return-value.sync="endtime"
+          persistent
+          width="290px"
+        >
+          <template v-slot:activator="{ on, attrs }">
+            <v-text-field
+              v-model="endtime"
+              :disabled="!editableEvent"
+              label="End"
+              prepend-icon="mdi-clock-time-four-outline"
+              readonly
+              v-bind="attrs"
+              v-on="on"
+            ></v-text-field>
+          </template>
+          <v-time-picker
+            v-if="modalEnd"
+            v-model="endtime"
+            full-width
+            :allowed-minutes="allowedStep"
+          >
+            <v-spacer></v-spacer>
+            <v-btn text color="primary" @click="modalEnd = false">
+              Cancel
+            </v-btn>
+            <v-btn text color="primary" @click="$refs.dialogEnd.save(endtime)">
+              OK
+            </v-btn>
+          </v-time-picker>
+        </v-dialog>
+      </v-col>
+      <v-col class="text-right mr-5">
+        <v-btn :disabled="!editableEvent" @click="goRight()"
+          ><v-icon>mdi-delete</v-icon></v-btn
+        >
+
+        <v-btn :disabled="!editableEvent" @click="goLeft()"
+          ><v-icon>mdi-graphql</v-icon></v-btn
+        >
+
+        <v-btn :disabled="!changed" @click="undo"
+          ><v-icon>mdi-undo</v-icon></v-btn
         ></v-col
       >
     </v-row>
-    <!-- </v-container> -->
 
     <ConfirmDlg ref="confirm" />
   </v-sheet>
@@ -185,6 +216,7 @@ import {
   showCurrentMilitaryTime,
   formatTime,
   formatSmallTime,
+  formatSmallTimeBare,
 } from '../../utils/luxonHelpers';
 import { error, success, highlight, printJson } from '../../utils/colors';
 
@@ -214,18 +246,23 @@ export default {
   },
 
   data: () => ({
+    editableEvent: null,
+    modalStart: false,
+    modalEnd: false,
+    starttime: null,
+    endtime: null,
+    editedStart: '',
+    editedEnd: '',
+
     onCalendar: true,
     visitId: '',
-    overlay: true,
     changed: false,
     calendarElement: null,
     status: 'Ready',
     original: { start: 0, end: 0 },
 
-    color: 'primary',
     action: '',
     confirm: false,
-    loading: false,
     visits: [],
     place: null,
     type: 'day',
@@ -255,6 +292,8 @@ export default {
   }),
 
   methods: {
+    allowedStep: (m) => m % 15 === 0,
+    formatStartEndTime: (t) => formatSmallTime(t),
     getVisit(id = this.visitId) {
       const x = this.visits
         .slice(0) // create copy of "array" for iterating
@@ -268,7 +307,6 @@ export default {
     undo() {
       this.action = 'REVERT';
       this.feedbackMessage = this.updateFeedbackMessage;
-      this.color = '';
       // this.confirm = true;
       this.$refs.confirm
         .open('Confirm', this.updateFeedbackMessage)
@@ -309,8 +347,11 @@ export default {
 
     // @click:event="showEvent"
     showEvent({ nativeEvent, event }) {
-      const { name, start, id } = event;
-      this.status = `Selected: ${name} at ${formatTime(start)} [id: ${id}]`;
+      this.editableEvent = event;
+      const { name, start, end, id } = event;
+      this.status = `Selected: ${name} [id: ${id}]`;
+      this.starttime = formatSmallTimeBare(start);
+      this.endtime = formatSmallTimeBare(end);
 
       // // shallow clone so reset() does not effect visit indirectly
 
@@ -365,7 +406,8 @@ export default {
       // new event specified by this.place
       else if (this.place) {
         this.addEvent(mouse);
-        // this.snackBar = true;
+      } else {
+        this.editableEvent = null;
       }
     },
 
@@ -470,6 +512,7 @@ export default {
     },
 
     reset() {
+      console.log(highlight('Resetting variables'));
       this.calendarElement.style.overflowY = 'auto';
 
       this.dragTime = null;
@@ -506,23 +549,26 @@ export default {
     //#region Non Pointer methods
 
     goRight() {
-      if (!this.visitId) {
+      if (!this.editableEvent) {
         console.log('No visit selected');
         return;
       }
       console.log('Going Right...');
       const visit = this.getVisit();
-      this.feedbackMessage = `Are you sure you want to DELETE ${visit.name}`;
       this.action = 'DELETE';
-      this.color = 'warning';
-      // this.confirm = true;
-      this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
-        if (act) this.act();
-      });
+      this.$refs.confirm
+        .open('Confirm', `Are you sure you want to DELETE ${visit.name}`)
+        .then((act) => {
+          if (act) {
+            this.act();
+            this.reset();
+            this.editableEvent = null;
+          }
+        });
     },
 
     goLeft() {
-      if (!this.visitId) {
+      if (!this.editableEvent) {
         console.log('No visit selected');
 
         return;
@@ -534,14 +580,15 @@ export default {
         ? `Updating a previously logged ${visit.name} visit on the server.`
         : 'Logging visit on the server...';
 
-      this.feedbackMessage = `Are you sure you want to LOG ${
+      const feedbackMessage = `Are you sure you want to LOG ${
         visit.name
       } from ${formatTime(visit.start)} to ${formatTime(visit.end)} `;
       this.action = 'LOG';
-      this.color = 'primary';
-      // this.confirm = true;
-      this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
-        if (act) this.act();
+      this.$refs.confirm.open('Confirm', feedbackMessage).then((act) => {
+        if (act) {
+          this.act();
+          this.reset();
+        }
       });
     },
 
@@ -683,7 +730,6 @@ export default {
         visit.end
       )}?`;
       this.action = 'UPDATE';
-      this.color = 'warning';
       // this.confirm = true;
       this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
         if (act) this.act();
@@ -780,20 +826,27 @@ export default {
         case 'Delete':
           this.goRight(); // calls confirmation with the Del key
           break;
+        case 'Tab':
+          this.goLeft(); // calls confirmation with the Tab key
+          break;
 
         case 'KeyY':
         case 'Enter':
           switch (this.action) {
             case 'DELETE':
-              this.deleteVisit(); // calls confirmation with the Del key
+              this.deleteVisit();
               break;
 
             case 'LOG':
-              this.logVisit(); // calls confirmation with the Enter key
+              this.logVisit();
               break;
 
-            default:
-              this.goLeft(); // brings up the log confirmation dialog
+            case 'UPDATE':
+              this.updateLoggedVisit();
+              break;
+
+            case 'REVERT':
+              this.revert();
               break;
           }
           break;
@@ -824,6 +877,13 @@ export default {
         this.visitCache.length
       );
     },
+
+    starttime(newVal) {
+      console.log('changing event start to: ', newVal);
+    },
+    endtime(newVal) {
+      console.log('changing event end to: ', newVal);
+    },
   },
 
   created() {},
@@ -832,7 +892,6 @@ export default {
     const self = this;
 
     Visit.$fetch().then(() => {
-      self.loading = false;
       self.visits = self.visitCache;
 
       self.calendarElement = document.getElementById('calendar-target');

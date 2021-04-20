@@ -46,6 +46,10 @@ const formatSmallTime = (time = Date.now()) => {
   let ds = DateTime.fromMillis(time).toLocaleString(DateTime.TIME_SIMPLE);
   return ds;
 };
+const formatSmallTimeBare = (time = Date.now()) => {
+  let ds = DateTime.fromMillis(time).toFormat('h:mm');
+  return ds;
+};
 
 const getVisitDate = () => {
   let x = DateTime.now().toFormat(calendarFormat);
@@ -64,6 +68,7 @@ module.exports = {
   isToday,
   isBetween,
   formatSmallTime,
+  formatSmallTimeBare,
   formatTime,
   formatVisitedDate,
   getVisitDate,

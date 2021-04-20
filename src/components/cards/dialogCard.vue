@@ -78,16 +78,19 @@ export default {
     },
 
     handleKeydown(ev) {
-      console.log('key/action', ev.code, this.action);
-      this.dialog = false;
+      console.log('key/action', ev.code);
 
       switch (ev.code) {
         case 'KeyY':
         case 'Enter':
+          this.dialog = false;
+
           return true;
 
         case 'KeyN':
         case 'Escape':
+          this.dialog = false;
+
           return false;
       }
     },
