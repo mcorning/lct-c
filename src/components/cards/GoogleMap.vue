@@ -119,6 +119,7 @@
     </gmap-map>
 
     <gmap-autocomplete
+      class="pl-3"
       @place_changed="setPlace"
       auto-select-first
       :options="options"
@@ -574,8 +575,6 @@ export default {
       const icon = document.createElement('i');
       icon.className = 'mdi mdi-target';
       locationButton.appendChild(icon);
-      // <button class="btn"><i class="mdi-target"></i></button>
-      // locationButton.textContent = 'Pan to Current Location';
       locationButton.title = 'Find Me';
       locationButton.classList.add('custom-map-control-button-icon');
 

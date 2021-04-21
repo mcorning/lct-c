@@ -897,7 +897,9 @@ export default {
       this.status = 'New event start: ' + formatTime(newTime);
       console.log('New event start: ', newTime);
       this.editableEvent.start = newTime;
+      this.getVisit(this.editableEvent.id).start = newTime;
     },
+
     endtime(newVal, oldVal) {
       this.status = 'New endtime: ' + newVal + ' (oldVal:' + oldVal + ')';
       if (!oldVal) {
@@ -907,6 +909,7 @@ export default {
       this.status = 'New event end: ' + formatTime(newTime);
       console.log('New event end: ', newTime);
       this.editableEvent.end = newTime;
+      this.getVisit(this.editableEvent.id).end = newTime;
     },
 
     modalStart(newVal, oldVal) {
