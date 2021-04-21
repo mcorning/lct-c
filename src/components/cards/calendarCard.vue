@@ -108,7 +108,7 @@
       </v-col>
     </v-row>
 
-    <v-row no-gutters align="center">
+    <v-row no-gutters align="center" justify="space-around">
       <v-col cols="3" class="pl-5">
         <v-dialog
           ref="dialogStart"
@@ -134,6 +134,7 @@
             v-model="starttime"
             full-width
             :allowed-minutes="allowedStep"
+            :max="endtime"
           >
             <v-spacer></v-spacer>
             <v-btn text color="primary" @click="modalStart = false">
@@ -174,6 +175,7 @@
             v-model="endtime"
             full-width
             :allowed-minutes="allowedStep"
+            :min="starttime"
           >
             <v-spacer></v-spacer>
             <v-btn text color="primary" @click="modalEnd = false">
@@ -224,6 +226,7 @@ import {
   formatTime,
   formatSmallTime,
   formatSmallTimeBare,
+  updateTime,
 } from '../../utils/luxonHelpers';
 import { error, success, highlight, printJson } from '../../utils/colors';
 
@@ -253,6 +256,7 @@ export default {
   },
 
   data: () => ({
+    editing: false,
     editableEvent: null,
     modalStart: false,
     modalEnd: false,
@@ -600,7 +604,6 @@ export default {
     },
 
     act() {
-      this.reset();
       switch (this.action) {
         case 'DELETE':
           this.deleteVisit();
@@ -615,6 +618,8 @@ export default {
           this.revert();
           break;
       }
+
+      this.reset();
     },
 
     revert() {
@@ -737,7 +742,6 @@ export default {
         visit.end
       )}?`;
       this.action = 'UPDATE';
-      // this.confirm = true;
       this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
         if (act) this.act();
       });
@@ -885,11 +889,37 @@ export default {
       );
     },
 
-    starttime(newVal) {
-      console.log('changing event start to: ', newVal);
+    starttime(newVal, oldVal) {
+      this.status = 'New starttime: ' + newVal + ' (oldVal:' + oldVal + ')';
+      if (!oldVal) {
+        return;
+      }
+      const newTime = updateTime(this.editableEvent.start, newVal, oldVal);
+      this.status = 'New event start: ' + formatTime(newTime);
+      console.log('New event start: ', newTime);
+      this.editableEvent.start = newTime;
     },
-    endtime(newVal) {
-      console.log('changing event end to: ', newVal);
+    endtime(newVal, oldVal) {
+      this.status = 'New endtime: ' + newVal + ' (oldVal:' + oldVal + ')';
+      if (!oldVal) {
+        return;
+      }
+      const newTime = updateTime(this.editableEvent.end, newVal, oldVal);
+      this.status = 'New event end: ' + formatTime(newTime);
+      console.log('New event end: ', newTime);
+      this.editableEvent.end = newTime;
+    },
+
+    modalStart(newVal, oldVal) {
+      if (!newVal && oldVal) {
+        this.confirmUpdate(this.editableEvent);
+      }
+    },
+
+    modalEnd(newVal, oldVal) {
+      if (!newVal && oldVal) {
+        this.confirmUpdate(this.editableEvent);
+      }
     },
   },
 
