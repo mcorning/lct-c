@@ -308,9 +308,10 @@ export default {
         alert("oops. I didn't get that. Please try again.");
         return;
       }
+
       // get latLng from map markers or from autocomplete respectively
-      const lat = place.position.lat() || place.geometry.location.lat();
-      const lng = place.position.lat() || place.geometry.location.lng();
+      const lat = place.position?.lat() || place.geometry.location.lat();
+      const lng = place.position?.lat() || place.geometry.location.lng();
       this.selectedSpace = {
         name: place.name,
         id: place.place_id,
