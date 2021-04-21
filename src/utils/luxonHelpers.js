@@ -62,6 +62,37 @@ const showCurrentMilitaryTime = () => {
     .toLocaleString(DateTime.TIME_24_SIMPLE);
 };
 
+// takes an old time and two time strings
+// returns the new time as the difference between intervals
+const updateTime = (time, newVal, oldVal) => {
+  if (!time) {
+    console.log('Need a time to manipulate');
+    return;
+  }
+  const newHrsMins = newVal.split(':');
+  const oldHrsMins = oldVal.split(':');
+
+  const hrs = Number(newHrsMins[0]) - Number(oldHrsMins[0]);
+  const mins = Number(newHrsMins[1]) - Number(oldHrsMins[1]);
+  const hrsInMs = hrs * 3600000;
+  const minsInMs = mins * 60000;
+  const totalMs = hrsInMs + minsInMs;
+  console.log(time);
+  console.log(`Time difference in hrs: ${hrs} and mins: ${mins}`);
+  console.log(
+    `Time difference in msHrs: ${hrsInMs} and msMins: ${minsInMs} for total of: ${totalMs} ms`
+  );
+  const newTime = time + hrs * 3600000 + mins * 60000;
+  console.log(
+    `Ms difference in original: ${time} and updated: ${newTime} is ${
+      newTime - time
+    } ms`
+  );
+  console.log('newTime:', newTime, formatTime(newTime));
+
+  return newTime;
+};
+
 module.exports = {
   getNow,
   getNowAsIso,
@@ -73,6 +104,7 @@ module.exports = {
   formatVisitedDate,
   getVisitDate,
   showCurrentMilitaryTime,
+  updateTime,
   t,
   tPlusOne,
 };

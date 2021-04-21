@@ -737,10 +737,9 @@ export default {
     confirmUpdate(visit) {
       console.assert(error('wrong visit'), (visit = this.getVisit()));
 
-      this.feedbackMessage = `Are you sure you want to UPDATE a logged visit to ${this.getInterval(
-        visit.start,
-        visit.end
-      )}?`;
+      this.feedbackMessage = `UPDATE a logged visit to ${
+        visit.name
+      } with new times: ${this.getInterval(visit.start, visit.end)}?`;
       this.action = 'UPDATE';
       this.$refs.confirm.open('Confirm', this.feedbackMessage).then((act) => {
         if (act) this.act();
