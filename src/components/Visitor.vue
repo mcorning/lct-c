@@ -47,42 +47,15 @@
           :nickname="nickname"
           :showLogs="showLogs"
           :auditor="auditor"
+          :show="show"
+          @showCalendar="onShowCalendar"
+          @showSpaces="onShowSpaces"
           @roomLoggedVisit="onRoomLoggedVisit"
           @roomUpdateLoggedVisit="onRoomUpdateLoggedVisit"
           @roomDeletedVisit="onRoomDeletedVisit"
           @error="onError($event)"
           @exposureWarning="onExposureWarning($event)"
         />
-      </v-col>
-    </v-row>
-
-    <!-- likert -->
-    <v-row no-gutters>
-      <v-col>
-        <v-card tile class="overflow-hidden">
-          <v-row align="center" justfy="space-around">
-            <v-col class="text-center">
-              <v-btn text @click="emailDev(true)">
-                <v-icon color="primary" left> mdi-thumb-up </v-icon></v-btn
-              ></v-col
-            >
-            <v-spacer></v-spacer>
-            <v-col cols="6">
-              <v-rating
-                v-model="rating"
-                background-color="primary lighten-2"
-                color="primary"
-                class="text-center"
-              ></v-rating
-            ></v-col>
-            <v-spacer></v-spacer>
-            <v-col class="text-center">
-              <v-btn text @click="emailDev(false)">
-                <v-icon color="primary" right> mdi-thumb-down </v-icon></v-btn
-              ></v-col
-            >
-          </v-row>
-        </v-card>
       </v-col>
     </v-row>
   </div>
@@ -109,6 +82,7 @@ export default {
     nickname: String,
     userID: String,
     auditor: Object,
+    show: Number,
   },
 
   components: {
@@ -179,7 +153,6 @@ export default {
     socketMessage: 'visitor',
     search: '',
 
-    rating: 0,
     alertIcon: 'mdi-alert',
     alertColor: '',
     alertMessage: '',
@@ -212,22 +185,6 @@ export default {
       this.$emit('error', e);
     },
 
-    emailDev(good) {
-      switch (good) {
-        case true:
-          this.$emit('userFeedback', 'BZ');
-          window.location = `mailto:${this.devs}?subject=LCT user says, 'BZ'`;
-          break;
-        case false:
-          this.$emit('userFeedback', 'Boo');
-          window.location = `mailto:${this.devs}?subject=LCT user says, 'Boo'`;
-          break;
-        default:
-          this.$emit('userFeedback', `${this.rating}-Stars`);
-          window.location = `mailto:${this.devs}?subject=LCT gets ${this.rating}-Star feedback`;
-      }
-    },
-
     acknowledgeAlert() {
       this.dialog = false;
 
@@ -235,7 +192,7 @@ export default {
         event: 'stepFiveVisitorReceivedAlert',
         message: this.enabled.visitor.id,
         ack: (ACK) => {
-          this.log(ACK, 'ACK: stepFiveVisitorReceivedAlert');
+          this.auditor.logEntry(ACK, 'ACK: stepFiveVisitorReceivedAlert');
         },
       });
     },
@@ -292,6 +249,13 @@ export default {
       // notify App.vue so it can send event to server
       this.$emit('visitorDeletedVisit', e);
     },
+
+    onShowCalendar() {
+      this.$emit('showCalendar');
+    },
+    onShowSpaces() {
+      this.$emit('showSpaces');
+    },
   },
 
   watch: {
@@ -304,6 +268,9 @@ export default {
     },
     rating() {
       this.emailDev();
+    },
+    show(val) {
+      console.log(val);
     },
   },
 

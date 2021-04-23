@@ -167,12 +167,12 @@ export default {
 
     deleteMessage(id) {
       let m = `Deleting message ${id}`;
-      this.log(m);
+      this.auditor.logEntry(m, 'Delete');
       Message.delete(id);
     },
 
     deleteAllMessages() {
-      this.log(`Deleting all messages`);
+      this.auditor.logEntry(`Deleting all messages`);
       Message.deleteAll();
     },
 

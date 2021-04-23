@@ -1,10 +1,6 @@
 <template>
-  <v-sheet
-    height="600"
-    class="overflow-hidden fill-height"
-    style="position: relative"
-  >
-    <v-row>
+  <v-sheet class="overflow-auto fill-height" :height="sheetHeight">
+    <v-row id="calendarRow" align="start">
       <v-col>
         <!-- calendar controls -->
         <v-sheet height="48">
@@ -49,7 +45,7 @@
         <!-- in case we need it...
               @mouseleave.native="cancelDrag" -->
 
-        <v-sheet height="470">
+        <v-sheet :height="calendarHeight">
           <v-calendar
             id="calendar-target"
             ref="calendar"
@@ -108,7 +104,7 @@
       </v-col>
     </v-row>
 
-    <v-row no-gutters align="center" justify="space-around">
+    <v-row id="editorRow" no-gutters align="center" justify="space-around">
       <v-col cols="3" class="pl-5">
         <v-dialog
           ref="dialogStart"
@@ -203,14 +199,14 @@
       </v-col>
     </v-row>
 
-    <v-row no-gutters class="mt-0">
+    <v-row id="statusRow" no-gutters class="mt-0">
       <v-col
         ><div class="pl-5">
           <small>{{ status }}</small>
         </div>
       </v-col>
     </v-row>
-    <ConfirmDlg ref="confirm" />
+    <ConfirmDlg id="confirmDlg" ref="confirm" />
   </v-sheet>
 </template>
 
@@ -256,6 +252,9 @@ export default {
   },
 
   data: () => ({
+    sheetHeight: 0,
+    calendarHeight: 0,
+    bp: null,
     editing: false,
     editableEvent: null,
     modalStart: false,
@@ -929,6 +928,25 @@ export default {
 
   mounted() {
     const self = this;
+    const bp = self.$vuetify.breakpoint;
+    console.log(
+      highlight('Breakpoint'),
+      bp.name,
+      'width',
+      bp.width,
+      'height',
+      bp.height,
+
+      'mobile?',
+      bp.mobile
+    );
+
+    const x = bp.height;
+    const y = 250;
+    self.sheetHeight = x - y;
+    self.calendarHeight = self.sheetHeight * 0.8;
+    console.log('sheetHeight:', self.sheetHeight);
+    console.log('calendarHeight:', self.calendarHeight);
 
     Visit.$fetch().then(() => {
       self.visits = self.visitCache;

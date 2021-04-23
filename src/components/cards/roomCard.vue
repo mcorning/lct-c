@@ -1,5 +1,5 @@
 <template>
-  <div height="600" class="overflow-hidden fill-height">
+  <div class="fill-height">
     <!-- Spaces form -->
     <div v-if="showSpaces">
       <v-row no-gutters>
@@ -47,15 +47,7 @@
     </div>
     <!-- Spaces form -->
 
-    <v-dialog v-model="dialog" persistent max-width="350">
-      <!-- <template v-slot:activator="{ on, attrs }" v-slot:extension>
-        <v-fab-transition>
-          <v-btn color="error" dark v-bind="attrs" v-on="on" fab x-large>
-            <v-icon>mdi-home-alert</v-icon>
-          </v-btn></v-fab-transition
-        >
-      </template> -->
-
+    <v-dialog v-model="showWarningButton" persistent max-width="350">
       <v-card
         v-if="visits && visits.length"
         color="primary"
@@ -91,7 +83,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="warning lighten-2" text @click="warnThem()">Yes</v-btn>
-          <v-btn color="green lighten-2" text @click="dialog = false">No</v-btn>
+          <v-btn color="green lighten-2" text @click="returnToSpaces">No</v-btn>
         </v-card-actions>
       </v-card>
 
@@ -110,7 +102,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- <v-card tile v-if="showCalendar"> -->
     <calendarCard
       v-if="showCalendar"
       :avgStay="avgStay"
@@ -120,35 +111,6 @@
       @deleteVisit="onDeleteVisit"
       @error="onError($event)"
     />
-    <!-- </v-card> -->
-
-    <v-bottom-navigation
-      :value="value"
-      color="secondary"
-      background-color="primary"
-      dark
-    >
-      <v-spacer></v-spacer>
-
-      <v-btn @click="show = SPACES">
-        <span>Spaces</span>
-        <v-icon>mdi-map-marker</v-icon>
-      </v-btn>
-
-      <v-spacer></v-spacer>
-
-      <v-btn fab color="red" dark @click="dialog = true">
-        <span>Warn</span>
-        <v-icon dark> mdi-alert </v-icon></v-btn
-      >
-      <v-spacer></v-spacer>
-
-      <v-btn @click="show = CALENDAR">
-        <span>Calendar</span>
-        <v-icon>mdi-calendar</v-icon>
-      </v-btn>
-      <v-spacer></v-spacer>
-    </v-bottom-navigation>
 
     <!-- Your Logs -->
     <logsCard
@@ -156,7 +118,6 @@
       :easing="easing"
       :messages="messages"
       :auditor="auditor"
-      :roomName="selectedSpace.name"
     />
   </div>
 </template>
@@ -181,6 +142,7 @@ export default {
     nickname: String,
     showLogs: Boolean,
     auditor: Object,
+    show: Number,
   },
   components: {
     logsCard,
@@ -194,6 +156,9 @@ export default {
 
     showSpaces() {
       return this.show == this.SPACES;
+    },
+    showWarningButton() {
+      return this.show == this.WARNING;
     },
     showCalendar() {
       return this.show == this.CALENDAR;
@@ -228,6 +193,7 @@ export default {
 
   data() {
     return {
+      dialog: true,
       WarningOptions: [
         {
           icon: 'mdi-alert',
@@ -251,15 +217,14 @@ export default {
         },
       ],
       model: 1,
-      dialog: false,
       SPACES: 0,
+      WARNING: 2,
       CALENDAR: 1,
       byCategory: false,
       radioGroup: 0,
       key: 1,
       location: {},
       overlay: true,
-      showWarningButton: true,
       status: 'Ready',
 
       newUser: false,
@@ -267,7 +232,6 @@ export default {
       categoryLabel: '',
       places: [],
       spaceLabel: '',
-      show: 0,
       ht: '520px',
       value: 0,
       selectedCategory: '',
@@ -326,7 +290,7 @@ export default {
           lng: lng,
         };
         console.log(info('Added place', printJson(this.selectedSpace)));
-        this.show = this.CALENDAR;
+        this.$emit('showCalendar');
       } catch (error) {
         this.onError(error);
       }
@@ -346,11 +310,16 @@ export default {
       this.$emit('roomDeletedVisit', e);
     },
 
-    warnThem() {
+    returnToSpaces() {
       this.dialog = false;
+      this.$emit('showSpaces');
+    },
+
+    warnThem() {
       const reason = this.WarningOptions[this.model].text;
       console.log(reason);
       this.$emit('exposureWarning', reason);
+      this.returnToSpaces();
     },
   },
 
@@ -388,7 +357,7 @@ export default {
     Visit.$fetch()
       .then((all) => {
         console.log(all);
-        this.show = this.SPACES;
+        // this.show = this.SPACES;
         this.overlay = false;
         console.log(success('Visits'), printJson(this.visits));
       })

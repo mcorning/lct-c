@@ -1,9 +1,5 @@
 <template>
-  <v-sheet
-    height="600"
-    class="overflow-hidden fill-height"
-    style="position: relative"
-  >
+  <v-sheet class="fill-height position:absolute">
     <ConfirmDlg ref="confirm" />
 
     <v-navigation-drawer v-model="drawer" absolute temporary>
@@ -44,7 +40,7 @@
     <gmap-map
       :center="center"
       :zoom="zoom"
-      style="width: 100%; height: 550px"
+      :style="mapSize"
       ref="mapRef"
       @click="getMarker($event)"
     >
@@ -150,6 +146,8 @@
 </template>
 
 <script>
+// See https://github.com/xkjyeah/vue-google-maps
+
 import Visit from '@/models/Visit';
 
 import { info, printJson } from '../../utils/colors';
@@ -199,6 +197,7 @@ export default {
 
   data() {
     return {
+      mapSize: '',
       visits: null,
       recent: '',
       loading: true,
@@ -719,8 +718,17 @@ export default {
     },
   },
 
+  created() {},
+
   mounted() {
     const self = this;
+
+    const bp = self.$vuetify.breakpoint;
+    console.log(bp.name, bp.height);
+    const x = bp.height;
+    const y = 260;
+    self.mapSize = `width: 100%; height: ${x - y}px`;
+    console.log('mapSize:', self.mapSize);
 
     self.$refs.mapRef.$mapPromise
       .then((map) => self.showMap(map))
