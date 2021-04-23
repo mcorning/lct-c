@@ -3,6 +3,7 @@ node_modules
 srv/dist
 imago/
 src/components/cards/archive/
+src/components/cards/futureUse/
 
 
 # local env files
@@ -34,7 +35,5 @@ src/utils/gmaps.js
 src/components/cards/test.vue
 srv/lab.js
 srv/lab2.js
-src/components/cards/futureUse/Chat.vue
-src/components/cards/futureUse/MessagePanel.vue
-src/components/cards/futureUse/StatusIcon.vue
-src/components/cards/futureUse/User.vue
+
+src/utils/test.js

@@ -19,20 +19,22 @@
 
       <v-divider></v-divider>
 
+      <!-- consider replacing list with select and use obects instead of arrays for items -->
       <v-list dense nav>
         <v-list-item-group v-model="recent" mandatory color="primary">
           <v-list-item
-            v-for="visit in getFavorites()"
+            v-for="visit in getFavoriteVisits"
             :key="visit.name"
             link
             :value="visit"
+            @click="goRecent(visit)"
           >
             <v-list-item-icon>
               <v-icon>{{ getIcon(visit) }}</v-icon>
             </v-list-item-icon>
 
             <v-list-item-content>
-              <v-list-item-title>{{ visit }}</v-list-item-title>
+              <v-list-item-title>{{ visit[0] }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-list-item-group>
@@ -163,6 +165,20 @@ export default {
   },
 
   computed: {
+    visitMap() {
+      const map =
+        this.visits && this.visits.length
+          ? this.visits.reduce((a, c) => {
+              a.set(c.name, { lat: c.lat, lng: c.lng });
+              return a;
+            }, new Map())
+          : [];
+      return map;
+    },
+    getFavoriteVisits() {
+      return [...this.visitMap];
+    },
+
     username() {
       return localStorage.getItem('username');
     },
@@ -673,27 +689,33 @@ export default {
       this.map = map;
     },
 
-    getFavorites() {
-      if (this.visits && this.visits.length) {
-        const visits = this.visits.map((v) => v.name).sort();
-        return [...new Set(visits)];
-      }
+    goRecent(val) {
+      this.$refs.confirm
+        .open('Confirm', `Mark your calendar with ${val[0]}?`)
+        .then((add) => {
+          if (add) {
+            console.log(printJson(val));
+            this.currentPlace = { name: val[0], latLng: val[1] };
+
+            this.addVisit();
+          }
+        });
     },
   },
 
   watch: {
     recent(val, old) {
       if (!old) return;
-      this.$refs.confirm
-        .open('Confirm', `Mark your calendar with ${val}?`)
-        .then((add) => {
-          if (add) {
-            console.log(val);
-            this.currentPlace = { name: val, id: '', category: '' };
+      // this.$refs.confirm
+      //   .open('Confirm', `Mark your calendar with ${val[0]}?`)
+      //   .then((add) => {
+      //     if (add) {
+      //       console.log(printJson(val));
+      //       this.currentPlace = { name: val[0], latLng: val[1] };
 
-            this.addVisit();
-          }
-        });
+      //       this.addVisit();
+      //     }
+      //   });
     },
   },
 

@@ -4,7 +4,7 @@
       <v-spacer></v-spacer>
       <v-col cols="12">
         <v-card>
-          <v-card-title>Welcome to {{ nsp }}</v-card-title>
+          <v-card-title>Welcome to LCT-{{ nsp }}</v-card-title>
           <v-card-subtitle
             >LCT is our community's way of getting back to work
             safely</v-card-subtitle
@@ -33,6 +33,22 @@
                 <v-card-title class="headline">
                   Let's get to work (safely)
                 </v-card-title>
+
+                <v-card-text>
+                  To fit LCT to your daily routine, we suggest you note some
+                  preferences.
+                  <v-row>
+                    <v-col cols="12">
+                      <v-select
+                        v-model="avgStay"
+                        :items="intervals"
+                        :menu-props="{ top: true, offsetY: true }"
+                        label="Your average stay per visit (hrs) "
+                        autofocus
+                      ></v-select>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
 
                 <v-card-text>
                   If you proceed, (using this browser) you will always log on to
@@ -79,6 +95,10 @@ export default {
 
   data() {
     return {
+      avgStay: 8,
+      intervals: [0.25, 0.5, 1, 8],
+
+      returning: false,
       dialog: false,
       nsp: 'Sisters',
       username: '',
@@ -101,9 +121,26 @@ export default {
       });
     },
   },
-
+  watch: {
+    avgStay(val) {
+      localStorage.setItem('avgStay', val);
+    },
+  },
   created() {
     this.username = localStorage.getItem('username');
+  },
+
+  beforeUnmount() {},
+
+  mounted() {
+    const self = this;
+    self.returning = localStorage.getItem('returning');
+    if (self.returning == null) {
+      localStorage.setItem('returning', true);
+      return;
+    }
+
+    this.onGo();
   },
 };
 </script>

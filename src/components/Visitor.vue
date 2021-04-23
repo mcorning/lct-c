@@ -37,12 +37,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- <diaryCard
-      :nickname="nickname"
-      :hasMessages="!!messages.length"
-      @exposureWarning="onExposureWarning"
-    /> -->
-
     <!-- roomCard -->
     <v-row no-gutters>
       <v-col>
@@ -103,7 +97,6 @@ import { warn, info } from '../utils/colors.js';
 
 import Message from '@/models/Message';
 import Visit from '@/models/Visit';
-// import diaryCard from '@/components/cards/diaryCard';
 
 import roomCard from '@/components/cards/roomCard';
 

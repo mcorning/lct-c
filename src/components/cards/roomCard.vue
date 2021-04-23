@@ -263,7 +263,6 @@ export default {
       status: 'Ready',
 
       newUser: false,
-      // TODO make avgStay configurable by admin or user
       avgStay: 3600000,
       categoryLabel: '',
       places: [],
@@ -309,17 +308,28 @@ export default {
         return;
       }
 
-      // get latLng from map markers or from autocomplete respectively
-      const lat = place.position?.lat() || place.geometry.location.lat();
-      const lng = place.position?.lat() || place.geometry.location.lng();
-      this.selectedSpace = {
-        name: place.name,
-        id: place.place_id,
-        lat: lat,
-        lng: lng,
-      };
-      console.log(info('Added place', printJson(this.selectedSpace)));
-      this.show = this.CALENDAR;
+      try {
+        // get latLng from map markers, autocomplete, or recent visits respectively
+        const lat =
+          place.position?.lat() ||
+          place.geometry?.location.lat() ||
+          place.latLng.lat;
+        const lng =
+          place.position?.lat() ||
+          place.geometry?.location.lng() ||
+          place.latLng.lng;
+
+        this.selectedSpace = {
+          name: place.name,
+          id: place.place_id,
+          lat: lat,
+          lng: lng,
+        };
+        console.log(info('Added place', printJson(this.selectedSpace)));
+        this.show = this.CALENDAR;
+      } catch (error) {
+        this.onError(error);
+      }
     },
 
     onLogVisit(data) {
@@ -386,9 +396,14 @@ export default {
   },
 
   mounted() {
+    const self = this;
     this.places = communityData.filter((v) => v.position);
     this.selectedSpace = null;
     this.panelState = [0]; // open only the 0th element of expansion-panels
+    let x = localStorage.getItem('avgStay');
+    if (x) {
+      self.avgStay = 3600000 * x;
+    }
   },
 
   destroyed() {
