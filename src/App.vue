@@ -270,7 +270,7 @@
             <br />
             The rating bar sends its own email with the rating in the subject.
           </v-card-text>
-          <v-card-text>
+          <v-card-actions>
             <v-row align="center">
               <v-col cols="2">
                 <v-btn text @click="emailDev(true)">
@@ -291,7 +291,7 @@
                 ></v-col
               >
             </v-row>
-          </v-card-text>
+          </v-card-actions>
         </v-card>
       </v-dialog>
     </v-footer>

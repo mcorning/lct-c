@@ -66,6 +66,7 @@
             @mouseup:time="endDrag"
             @touchend:time="endDrag"
             @click:date="viewDay"
+            @mouseleave.native="cancelDrag"
             v-touch="{
               left: goLeft,
               right: goRight,

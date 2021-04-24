@@ -110,8 +110,8 @@
         :key="index"
         v-for="(m, index) in markers"
         :position="m.position"
-        :draggable="true"
-        @click="toggleInfoWindow(m, index)"
+        :draggable="false"
+        @click="addVisit(m)"
         >{{ m.title }}
       </gmap-marker>
     </gmap-map>
@@ -266,22 +266,87 @@ export default {
     // click the map, mark the place, get a marker there
     // space is this.$event (and includes the placeId string and the latLng object)
     getMarker(space) {
+      this.center = space.latLng;
       console.log('placeId:', printJson(space));
-      this.$refs.confirm.open('Confirm', 'Add a marker?').then((add) => {
-        if (add) this.getSpaceDetails(space);
-      });
+      this.getSpaceDetails(space).then(() => this.addVisit());
     },
 
     getSpaceDetails(space) {
-      if (!space.placeId) {
-        if (space.latLng) {
-          this.getSpotDetails(space.latLng);
-        } else if (space.lat && space.lng) {
-          this.getSpotDetails({ latLng: { lat: space.lat, lng: space.lng } });
+      const self = this;
+      return new Promise(function (resolve, reject) {
+        if (!space.placeId) {
+          const latLng =
+            space.lat && space.lng
+              ? { lat: space.lat, lng: space.lng }
+              : space.latLng;
+
+          self
+            .geoCodePromise({ latLng: latLng })
+            .then((results) => {
+              const spot = results[results.length - 1];
+              // self.infoWindowLatLang = new window.google.maps.InfoWindow({
+              //   position: latLng,
+              // });
+              // self.infoWindowLatLang.setContent(
+              //   '<h3>Place ID</h3>' +
+              //     '<p>' +
+              //     spot.place_id +
+              //     '<p/>' +
+              //     '<h3>Plus Codes</h3>' +
+              //     '<p><strong>Local code:</strong> ' +
+              //     spot.plus_code.compound_code +
+              //     '<br/>' +
+              //     '<strong>Global code:</strong> ' +
+              //     spot.plus_code.global_code +
+              //     '</p>' +
+              //     '<h3>Position</h3>' +
+              //     '<p><strong>Latitude:</strong> ' +
+              //     spot.geometry.location.lat() +
+              //     '<br/>' +
+              //     '<strong>Longitude:</strong> ' +
+              //     spot.geometry.location.lng() +
+              //     '</p>'
+              // );
+              // self.infoWindowLatLang.open(self.map);
+
+              self.addMarker({
+                title: 'Gathering',
+                label: 'V' + self.markers?.length,
+                name: 'Gathering @ ' + spot.plus_code.global_code,
+                placeId: spot.place_id,
+                address: spot.formatted_address,
+                position: spot.geometry.location,
+              });
+
+              spot.name = spot.formatted_address;
+              self.currentPlace = spot;
+            })
+            .then(() => self.addVisit())
+            .catch((e) => console.log(e));
+        } else {
+          const request = {
+            placeId: space.placeId,
+            fields: ['name', 'formatted_address', 'place_id', 'geometry'],
+          };
+          self
+            .placeDetailsPromise(request)
+            .then((place) => {
+              console.log(info('Place:'), printJson(place));
+              self.addMarker({
+                title: 'Place',
+                label: 'V' + self.markers?.length,
+                name: place.name,
+                placeId: place.place_id,
+                address: place.formatted_address,
+                position: place.geometry.location,
+              });
+              self.currentPlace = place;
+              self.currLoc = place.geometry.location;
+            })
+            .then((place) => resolve(place))
+            .catch((error) => reject(error));
         }
-      } else {
-        this.getPlaceDetails(space.placeId);
-      }
+      });
     },
 
     getSpotDetails(latLng) {
@@ -316,7 +381,7 @@ export default {
           );
           this.addMarker({
             title: 'Gathering',
-            label: 'V' + this.markers.length,
+            label: 'V' + this.markers?.length,
             name: 'Gathering @ ' + spot.plus_code.global_code,
             placeId: spot.place_id,
             address: spot.formatted_address,
@@ -329,17 +394,14 @@ export default {
         .catch((e) => console.log(e));
     },
 
-    getPlaceDetails(placeId) {
+    getPlaceDetails(request) {
       const self = this;
-      const request = {
-        placeId: placeId,
-        fields: ['name', 'formatted_address', 'place_id', 'geometry'],
-      };
+
       this.placeDetailsPromise(request).then((place) => {
         console.log(info('Place:'), printJson(place));
-        this.addMarker({
+        self.addMarker({
           title: 'Place',
-          label: 'V' + this.markers.length,
+          label: 'V' + this.markers?.length,
           name: place.name,
           placeId: place.place_id,
           address: place.formatted_address,
@@ -378,6 +440,7 @@ export default {
 
     geoCodePromise(geocoderRequest) {
       const self = this;
+
       return new Promise(function (resolve, reject) {
         self.$gmapApiPromiseLazy().then(() => {
           const geocoder = new window.google.maps.Geocoder();
@@ -427,8 +490,21 @@ export default {
       });
     },
 
-    addVisit() {
-      this.$emit('addedPlace', this.currentPlace);
+    addVisit(marker) {
+      const self = this;
+      if (marker) {
+        this.currentPlace = marker;
+      }
+      this.$refs.confirm
+        .open(
+          self.currentPlace.name,
+          "Mark your calendar with a visit, while you're at it?"
+        )
+        .then((add) => {
+          if (add) {
+            self.$emit('addedPlace', self.currentPlace);
+          }
+        });
     },
 
     // handled when autocomplete has a place
@@ -439,7 +515,7 @@ export default {
         lng: place.geometry.location.lng(),
       };
 
-      const label = 'V' + this.markers.length;
+      const label = 'V' + this.markers?.length;
       console.log(label);
       let marker = {
         position: latLng,
