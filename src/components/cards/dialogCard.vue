@@ -5,7 +5,7 @@
     :style="{ zIndex: options.zIndex }"
     @keydown.esc="cancel"
   >
-    <v-card>
+    <v-card dark>
       <v-toolbar dark :color="options.color" dense flat>
         <v-toolbar-title class="text-body-2 font-weight-bold grey--text">
           {{ title }}
@@ -13,7 +13,7 @@
       </v-toolbar>
       <v-card-text
         v-show="!!message"
-        class="pa-4 black--text"
+        class="pa-4 white--text"
         v-html="message"
       ></v-card-text>
       <v-card-actions class="pt-3">

@@ -267,6 +267,7 @@ export default {
     },
 
     onAddedPlace(place) {
+      const { name, placeId, lat, lng } = place;
       if (!place) {
         alert("oops. I didn't get that. Please try again.");
         return;
@@ -274,21 +275,23 @@ export default {
 
       try {
         // get latLng from map markers, autocomplete, or recent visits respectively
-        const lat =
-          place.position?.lat() ||
-          place.geometry?.location.lat() ||
-          place.latLng.lat;
-        const lng =
-          place.position?.lat() ||
-          place.geometry?.location.lng() ||
-          place.latLng.lng;
+        // const lat =
+        //   place.position?.lat() ||
+        //   place.geometry?.location.lat() ||
+        //   place.latLng?.lat;
+        // const lng =
+        //   place.position?.lat() ||
+        //   place.geometry?.location.lng() ||
+        //   place.latLng?.lng;
 
+        // update the prop for calendarCard
         this.selectedSpace = {
-          name: place.name,
-          id: place.place_id,
+          name: name,
+          id: placeId,
           lat: lat,
           lng: lng,
         };
+
         console.log(info('Added place', printJson(this.selectedSpace)));
         this.$emit('showCalendar');
       } catch (error) {

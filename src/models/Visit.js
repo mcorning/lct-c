@@ -7,18 +7,24 @@ export default class Visit extends Model {
 
   static fields() {
     return {
-      id: this.attr(null),
-      name: this.string(''),
-      logged: this.string(''),
-      marked: this.string(''),
-      color: this.string('secondary'),
-      start: this.number(''),
-      lat: this.number(),
-      lng: this.number(),
-      end: this.number(''),
-      interval: this.string(''),
+      id: this.attr(null), // Unique generated value
 
-      timed: this.boolean(true),
+      // From Map component (for the graph component (calendar uses only name))
+      name: this.string(''), // POI or "Gathering"
+      placeId: this.string(''), // Unique ID of space or place
+      lat: this.number(), // Latitude of Visit space/place
+      lng: this.number(), // Longitude of Visit space/place
+
+      // From Calendar component
+      marked: this.string(''), // DateTime Visit made it to the calendar
+      color: this.string('secondary'), // New event: Secondary. Logged event: Primary
+      start: this.number(''), // Epoch milliseconds of Visit start
+      end: this.number(''), // Epoch milliseconds of Visit end
+      interval: this.string(''), // Date string of start to event values
+      timed: this.boolean(true), // True means Visit isn't all day
+
+      // From the graph component
+      logged: this.string(''), // ID of the graph node for this Visit
     };
   }
 
