@@ -1,19 +1,19 @@
 //https://github.com/RedisGraph/redisgraph.js
+
 const RedisGraph = require('redisgraph.js').Graph;
-// const hostOld = 'redis-11939.c60.us-west-1-2.ec2.cloud.redislabs.com';
-const host = 'redis-16914.c53.west-us.azure.cloud.redislabs.com';
-// const optionsOld = {
-//   host: host,
-//   port: 11939,
-//   password: '7B3DId42aDCtMjmSXg7VN0XZSMOItGAG',
-// };
+
+const appConfig = require('./config.js');
+
 const options = {
-  host: host,
-  port: 16914,
-  password: 'kqhiYfB2XwoYV2Jy3vUw3eXDrWhCaSWq',
+  host: appConfig.redisHost,
+  port: appConfig.redisPort,
+  password: appConfig.redisPassword,
 };
-const { graphName } = require('./config.js');
-// const graphName = 'Sisters';
+console.log(options);
+
+const graphName = appConfig.graphName;
+const host = appConfig.redisHost;
+
 const Graph = new RedisGraph(graphName, null, null, options);
 const {
   printJson,
@@ -229,7 +229,7 @@ function logVisit(data) {
           oldStart,
           oldEnd
         );
-        return
+        return;
       }
     }
 

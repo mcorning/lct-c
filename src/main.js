@@ -11,12 +11,18 @@ import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 // for googleMap.vue
 import * as VueGoogleMaps from 'vue2-google-maps';
 
+import configPlugin from '../config.js';
+Vue.use(configPlugin);
+
+// can't get dotenv or Vue to see environement vars here
+console.log(process.env.VUE_APP_MAP_API_KEY);
+// reverting to working code
 import { MAP_API_KEY } from '../hidden.json';
-const key = process.env.MAP_API_KEY || MAP_API_KEY;
+const mapkey = process.env.VUE_APP_MAP_API_KEY || MAP_API_KEY;
 
 Vue.use(VueGoogleMaps, {
   load: {
-    key: key,
+    key: mapkey,
     libraries: 'places', //necessary for places input
   },
   installComponents: true,
