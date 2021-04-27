@@ -17,8 +17,8 @@ Vue.use(configPlugin);
 // can't get dotenv or Vue to see environement vars here
 console.log(process.env.VUE_APP_MAP_API_KEY);
 // reverting to working code
-import { MAP_API_KEY } from '../hidden.json';
-const mapkey = process.env.VUE_APP_MAP_API_KEY || MAP_API_KEY;
+import { x } from './x.json';
+const mapkey = process.env.VUE_APP_MAP_API_KEY || x;
 
 Vue.use(VueGoogleMaps, {
   load: {

@@ -40,3 +40,4 @@ src/utils/test.js
 docs/misc.txt
 .env*
 !.env.example
+src/x.json

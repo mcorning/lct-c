@@ -1,4 +1,7 @@
 // config.js
+const dotenv = require('dotenv');
+dotenv.config();
+
 const config = {
   mapkey: process.env.MAP_API_KEY,
   redisHost: process.env.REDIS_HOST,
@@ -16,6 +19,7 @@ function feature(name) {
   return config.features[name];
 }
 
+// eslint-disable-next-line
 function parse(value, fallback) {
   if (typeof value === 'undefined') {
     return fallback;
