@@ -53,10 +53,13 @@
         <v-card>
           <v-card-title class="mt-0 pt-0">
             <v-text-field
-              v-model="InfoWinContent.name"
+              v-if="!InfoWinContent.name"
+              @change="updateName"
               dense
               hide-details
+              placeholder="Give this gathering a name"
             ></v-text-field>
+            <span v-else> {{ InfoWinContent.name }} </span>
           </v-card-title>
           <v-card-subtitle class="pb-0">{{
             InfoWinContent.address
@@ -151,7 +154,7 @@
 
 import Visit from '@/models/Visit';
 
-import { highlight, info, printJson } from '../../utils/colors';
+import { highlight, printJson } from '../../utils/colors';
 
 import { defaultLocation } from '../../maps/mapconfig.json';
 console.log(defaultLocation);
@@ -199,6 +202,7 @@ export default {
 
   data() {
     return {
+      givenName: '',
       marker: null,
       mapSize: '',
       visits: null,
@@ -250,8 +254,6 @@ export default {
   methods: {
     toggleInfoWindow(marker, idx) {
       this.infoWindowPos = marker.position;
-      // this.currentPlace = marker;
-      // this.map.panTo(marker.position);
 
       //check if its the same marker that was selected if yes toggle
       if (this.currentMidx == idx) {
@@ -297,11 +299,18 @@ export default {
           }
         );
       } else {
-        this.geocoder.geocode(space.LatLng, (results, status) => {
+        const latLng = { lat: space.latLng.lat(), lng: space.latLng.lng() };
+        this.geocoder.geocode({ location: latLng }, (results, status) => {
           if (status === 'OK') {
+            const space = results[0];
+            const position = space.geometry.location;
+
             this.addMarker({
-              title: 'Place',
-              data: results[0],
+              title: 'Space',
+              name: space.name,
+              address: space.formatted_address,
+              placeId: space.place_id,
+              position: position,
             });
             console.log(results);
           } else {
@@ -344,7 +353,21 @@ export default {
       this.toggleInfoWindow(marker);
     },
 
+    removeMarker() {
+      // const marker=this.currentPlace
+      this.markersData.splice(this.currentMidx, 1);
+      localStorage.setItem('markersData', JSON.stringify(this.markersData));
+
+      // const marker = this.markers[this.currentMidx];
+      this.marker.setMap(null);
+      this.markers.splice(this.currentMidx, 1);
+      this.infoWinOpen = false;
+    },
+
     getMarker(marker, idx) {
+      if (marker != this.marker) {
+        this.infoWinOpen = false;
+      }
       this.marker = marker;
       this.currentMidx = idx;
       this.toggleInfoWindow(marker, idx);
@@ -394,120 +417,6 @@ export default {
         });
     },
 
-    getSpaceDetails(space) {
-      const self = this;
-      return new Promise(function (resolve, reject) {
-        if (!space.placeId) {
-          const latLng =
-            space.lat && space.lng
-              ? { lat: space.lat, lng: space.lng }
-              : space.latLng;
-
-          self
-            .geoCodePromise({ latLng: latLng })
-            .then((results) => {
-              const spot = results[results.length - 1];
-              self.addMarker({
-                title: 'Gathering',
-                label: 'V' + self.markers?.length,
-                name: 'Gathering @ ' + spot.plus_code.global_code,
-                placeId: spot.place_id,
-                address: spot.formatted_address,
-                position: spot.geometry.location,
-              });
-
-              spot.name = spot.formatted_address;
-              // self.currentPlace = spot;
-            })
-            .then(() => self.addVisit())
-            .catch((e) => console.log(e));
-        } else {
-          const request = {
-            placeId: space.placeId,
-            fields: ['name', 'formatted_address', 'place_id', 'geometry'],
-          };
-          self
-            .placeDetailsPromise(request)
-            .then((place) => {
-              console.log(info('Place:'), printJson(place));
-              self.addMarker({
-                title: 'Place',
-                label: 'V' + self.markers?.length,
-                name: place.name,
-                placeId: place.place_id,
-                address: place.formatted_address,
-                position: place.geometry.location,
-              });
-              // self.currentPlace = place;
-              self.currLoc = place.geometry.location;
-            })
-            .then((place) => resolve(place))
-            .catch((error) => reject(error));
-        }
-      });
-    },
-
-    geoCodePromise(geocoderRequest) {
-      const self = this;
-
-      return new Promise(function (resolve, reject) {
-        self.$gmapApiPromiseLazy().then(() => {
-          const geocoder = new window.google.maps.Geocoder();
-          // results will be an array of geographic objects with different and related values for the same spot
-          // results DO NOT include the POI name. you get that from the Places service passing in the placeId
-          geocoder.geocode(geocoderRequest, function (results, status) {
-            if (status === 'OK') {
-              resolve(results);
-            } else {
-              reject(status);
-            }
-          });
-        });
-      });
-    },
-
-    // request includes placeId
-    placeDetailsPromise(request) {
-      const self = this;
-      return new Promise(function (resolve, reject) {
-        self.service.getDetails(request, (place, status) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            place &&
-            place.geometry &&
-            place.geometry.location
-          ) {
-            resolve(place);
-          } else {
-            reject(status);
-          }
-        });
-      });
-    },
-
-    placeDetailsPromiseX(request) {
-      const self = this;
-      return new Promise(function (resolve, reject) {
-        self.$gmapApiPromiseLazy().then(() => {
-          const map = self.map;
-          const service = new window.google.maps.places.PlacesService(map);
-
-          service.getDetails(request, (place, status) => {
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              place &&
-              place.geometry &&
-              place.geometry.location
-            ) {
-              resolve(place);
-            } else {
-              reject(status);
-            }
-          });
-        });
-      });
-    },
-
     geolocate: function () {
       navigator.geolocation.getCurrentPosition((position) => {
         this.center = {
@@ -525,17 +434,6 @@ export default {
         lat: position.lat(),
         lng: position.lng(),
       });
-    },
-
-    removeMarker() {
-      // const marker=this.currentPlace
-      this.markersData.splice(this.currentMidx, 1);
-      localStorage.setItem('markersData', JSON.stringify(this.markersData));
-
-      // const marker = this.markers[this.currentMidx];
-      this.marker.setMap(null);
-      this.markers.splice(this.currentMidx, 1);
-      this.infoWinOpen = false;
     },
 
     recentsControl(controlDiv) {
@@ -688,12 +586,11 @@ export default {
       this.map = map;
       return map;
     },
-    getAssets(map) {
+    getAssets() {
       const self = this;
       this.$gmapApiPromiseLazy().then(() => {
         self.geocoder = new window.google.maps.Geocoder();
-        self.service = new window.google.maps.places.PlacesService(map);
-        return map;
+        self.service = new window.google.maps.places.PlacesService(self.map);
       });
     },
 
@@ -707,24 +604,27 @@ export default {
     getMarkers(map) {
       const data = localStorage.getItem('markersData');
       this.markersData = data ? JSON.parse(data) : [];
+      try {
+        this.markers = this.markersData
+          ? this.markersData.map((c) => {
+              // const label = c.label?.text || c.label || 'V?';
 
-      this.markers = this.markersData
-        ? this.markersData.map((c) => {
-            const label = c.label.text || c.label || 'V?';
-
-            const marker = new window.google.maps.Marker({
-              title: c.title,
-              label: { text: label, color: 'white' },
-              name: c.name,
-              placeId: c.placeId,
-              address: c.address,
-              position: c.position,
-              map: map,
-            });
-            return marker;
-          })
-        : [];
-
+              const marker = new window.google.maps.Marker({
+                title: c.title,
+                // label: { text: label, color: 'white' },
+                name: c.name,
+                placeId: c.placeId,
+                address: c.address,
+                position: c.position,
+                map: map,
+              });
+              return marker;
+            })
+          : [];
+      } catch (error) {
+        console.log(error);
+        this.emit('error', error);
+      }
       this.map = map;
     },
 
@@ -744,23 +644,22 @@ export default {
     getIcon() {
       return 'mdi-account-group';
     },
-  },
 
-  watch: {
-    recent(val, old) {
-      if (!old) return;
-      // this.$refs.confirm
-      //   .open('Confirm', `Mark your calendar with ${val[0]}?`)
-      //   .then((add) => {
-      //     if (add) {
-      //       console.log(printJson(val));
-      //       this.currentPlace = { name: val[0], latLng: val[1] };
+    updateName(name) {
+      this.marker.name = name;
+      this.markersData.find(
+        ({ placeId }) => placeId === this.marker.placeId
+      ).name = name;
+      console.log(
+        highlight('markersData'),
+        JSON.stringify(this.markersData, null, 3)
+      );
 
-      //       this.addVisit();
-      //     }
-      //   });
+      localStorage.setItem('markersData', JSON.stringify(this.markersData));
     },
   },
+
+  watch: {},
 
   created() {},
 
@@ -776,8 +675,8 @@ export default {
 
     self.$refs.mapRef.$mapPromise
       .then((map) => self.showMap(map))
-      .then((map) => self.getAssets(map))
       .then((map) => self.getMarkers(map))
+      .then(() => self.getAssets())
       .then(() => self.getVisits())
       .then(() => {
         console.log('Mounted GoogleMaps');
