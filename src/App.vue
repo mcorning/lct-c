@@ -109,19 +109,14 @@
         </v-app-bar>
 
         <!-- PWA Update -->
-        <v-snackbar
-          centered
-          :value="updateExists"
-          :timeout="-1"
-          color="primary darken-1"
-          vertical
-        >
-          An update is available. This will have no effect on your stored data.
-          It will, however, keep your LCT in sync with the server.
-
+        <v-snackbar v-model="snackWithButtons" bottom left timeout="-1">
+          {{ snackWithBtnText }}
           <template v-slot:action="{ attrs }">
-            <v-btn color="white" text v-bind="attrs" @click="refreshApp">
-              Update
+            <v-btn text color="#00f500" v-bind="attrs" @click.stop="refreshApp">
+              {{ snackBtnText }}
+            </v-btn>
+            <v-btn icon class="ml-4" @click="snackWithButtons = false">
+              <v-icon>close</v-icon>
             </v-btn>
           </template>
         </v-snackbar>
@@ -310,7 +305,7 @@ import Welcome from './components/Welcome';
 
 import socket from './socket';
 import { printJson, highlight, success, warn } from './utils/colors';
-import update from '@/mixins/update.js';
+// import update from '@/mixins/update.js';
 import helpers from '@/mixins/helpers.js';
 
 class Auditor {
@@ -364,6 +359,12 @@ export default {
   },
   data() {
     return {
+      refreshing: false,
+      registration: null,
+      snackBtnText: '',
+      snackWithBtnText: '',
+      snackWithButtons: false,
+
       rating: 0,
       dialog: false,
       devs: 'mcorning@soteriaInstitute.org',
@@ -546,9 +547,33 @@ export default {
       this.showUsers = !this.showUsers;
       this.cols = this.showUsers ? 10 : 12;
     },
+
+    //#region PWA based on https://medium.com/@dougallrich/give-users-control-over-app-updates-in-vue-cli-3-pwas-20453aedc1f2
+    showRefreshUI(e) {
+      // Display a snackbar inviting the user to refresh/reload the app due
+      // to an app update being available.
+      // The new service worker is installed, but not yet active.
+      // Store the ServiceWorkerRegistration instance for later use.
+      this.registration = e.detail;
+      this.snackBtnText = 'Refresh';
+      this.snackWithBtnText = 'New version available!';
+      this.snackWithButtons = true;
+    },
+    refreshApp() {
+      this.snackWithButtons = false;
+      // Protect against missing registration.waiting.
+      if (!this.registration || !this.registration.waiting) {
+        return;
+      }
+      this.registration.waiting.postMessage('skipWaiting');
+    },
+    //#endregion
   },
 
-  mixins: [update, helpers],
+  mixins: [
+    // update,
+    helpers,
+  ],
 
   watch: {
     // in case we timeout on an async function
@@ -562,6 +587,20 @@ export default {
 
   //#region Lifecycle Hooks
   created() {
+    //#region PWA based on https://medium.com/@dougallrich/give-users-control-over-app-updates-in-vue-cli-3-pwas-20453aedc1f2
+    // Listen for swUpdated event and display refresh snackbar as required.
+    document.addEventListener('swUpdated', this.showRefreshUI, { once: true });
+
+    // Refresh all open app tabs when a new service worker is installed.
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (this.refreshing) return;
+        this.refreshing = true;
+        window.location.reload();
+      });
+    }
+    //#endregion
+
     this.sessionID = localStorage.getItem('sessionID');
     this.username = localStorage.getItem('username');
     console.log('created()', this.username);

@@ -7,6 +7,13 @@ module.exports = {
     devtool: 'source-map',
   },
   pwa: {
+    //PWA based on https://medium.com/@dougallrich/give-users-control-over-app-updates-in-vue-cli-3-pwas-20453aedc1f2
+    workboxPluginMode: 'InjectManifest',
+    workboxOptions: {
+      swSrc: './src/sw.js',
+      swDest: 'service-worker.js',
+    },
+    //
     name: 'LCT-C',
     short_name: 'Visitor',
     themeColor: '#673AB7',
