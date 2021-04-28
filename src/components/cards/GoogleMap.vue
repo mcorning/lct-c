@@ -66,7 +66,8 @@
           }}</v-card-subtitle>
           <v-card-text class="pt-3"
             ><small
-              >Place ID: {{ InfoWinContent.placeId }} <br />
+              >Plus_Code: {{ InfoWinContent.plus_code }} <br />
+              Place ID: {{ InfoWinContent.placeId }} <br />
               Position: {{ InfoWinContent.position }}</small
             >
           </v-card-text>
@@ -124,28 +125,22 @@
       @place_changed="setPlace"
       auto-select-first
       :options="options"
-      style="width: 70%; border: orange; border-width: 2px; border-style: solid"
+      style="
+        width: 100%;
+        border: orange;
+        border-width: 2px;
+        border-style: solid;
+      "
     >
     </gmap-autocomplete>
 
-    <!-- Button to send the returned place to the Calendar component -->
-    <v-tooltip top>
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          v-bind="attrs"
-          v-on="on"
-          color="success"
-          fab
-          small
-          dark
-          class="ml-5"
-          @click="addVisit"
-        >
-          <v-icon>mdi-calendar</v-icon>
-        </v-btn>
+    <v-banner v-if="needInput" single-line transition="slide-y-transition">
+      No details available for input value. Be sure you select the location from
+      the dropdown.
+      <template v-slot:actions="{ dismiss }">
+        <v-btn text color="primary" @click="dismiss">Dismiss</v-btn>
       </template>
-      <span>Mark your calendar </span></v-tooltip
-    >
+    </v-banner>
   </v-sheet>
 </template>
 
@@ -191,7 +186,16 @@ export default {
     },
 
     options() {
-      return { fields: ['address_components', 'geometry', 'icon', 'name'] };
+      return {
+        fields: [
+          'formatted_address',
+          'place_id',
+          'plus_code',
+          'geometry',
+          'icon',
+          'name',
+        ],
+      };
     },
 
     infowindow() {
@@ -202,7 +206,7 @@ export default {
 
   data() {
     return {
-      givenName: '',
+      needInput: false,
       marker: null,
       mapSize: '',
       visits: null,
@@ -231,13 +235,13 @@ export default {
       center: defaultLocation,
       markers: [],
       places: [],
-      // currentPlace: null,
       placeName: '',
       lastId: 1,
       ifw: true,
       ifw2text: '',
 
       geocoder: null,
+      placesService: null,
       LatLngBounds: { north: 45, south: 45.5, west: -122.0, east: -121.0 }, // get definition from Google
       GeocoderComponentRestrictions: {}, // get definition from Google
       geocoderRequest: {
@@ -266,6 +270,16 @@ export default {
       }
     },
 
+    // click on a marker
+    getMarker(marker, idx) {
+      if (marker != this.marker) {
+        this.infoWinOpen = false;
+      }
+      this.marker = marker;
+      this.currentMidx = idx;
+      this.toggleInfoWindow(marker, idx);
+    },
+
     // click the map, mark the place, get a marker there
     // space is this.$event (and includes the placeId string and the latLng object)
     setMarker(space) {
@@ -273,10 +287,16 @@ export default {
       console.log(highlight('placeId:'), printJson(space));
       // this.getSpaceDetails(space);
       if (space.placeId) {
-        this.service.getDetails(
+        this.placesService.getDetails(
           {
             placeId: space.placeId,
-            fields: ['name', 'formatted_address', 'place_id', 'geometry'],
+            fields: [
+              'name',
+              'formatted_address',
+              'place_id',
+              'geometry',
+              'plus_code',
+            ],
           },
           (place, status) => {
             if (
@@ -290,6 +310,7 @@ export default {
                 title: 'Place',
                 name: place.name,
                 address: place.formatted_address,
+                plus_code: place.plus_code.global_code,
                 placeId: place.place_id,
                 position: position,
               });
@@ -309,6 +330,7 @@ export default {
               title: 'Space',
               name: space.name,
               address: space.formatted_address,
+              plus_code: space.plus_code.global_code,
               placeId: space.place_id,
               position: position,
             });
@@ -321,15 +343,24 @@ export default {
     },
 
     addMarker(data) {
-      const { title, name, address, placeId, position, plus_code } = data;
+      const {
+        title,
+        label,
+        name,
+        address,
+        placeId,
+        position,
+        plus_code,
+      } = data;
 
       this.markersData.push({
         title,
+        label,
         name,
+        position,
+        address,
         placeId,
         plus_code,
-        address,
-        position,
       });
       localStorage.setItem('markersData', JSON.stringify(this.markersData));
 
@@ -345,6 +376,7 @@ export default {
         // displayed in map
         address, // Address or Plus_Code of public space
         placeId, // For known places, a unique identifier
+        plus_code, // unique global address (shorter than placeId)
 
         map: this.map, // Used by mapping platform to show markers
       });
@@ -354,7 +386,6 @@ export default {
     },
 
     removeMarker() {
-      // const marker=this.currentPlace
       this.markersData.splice(this.currentMidx, 1);
       localStorage.setItem('markersData', JSON.stringify(this.markersData));
 
@@ -364,57 +395,31 @@ export default {
       this.infoWinOpen = false;
     },
 
-    getMarker(marker, idx) {
-      if (marker != this.marker) {
-        this.infoWinOpen = false;
-      }
-      this.marker = marker;
-      this.currentMidx = idx;
-      this.toggleInfoWindow(marker, idx);
-    },
-
-    // handled when autocomplete has a place
+    // handled when component calls $autocomplete.getPlace()
     setPlace(place) {
-      // this.currentPlace = place;
-      const latLng = {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-      };
+      if (!place.geometry || !place.geometry.location) {
+        // User entered the name of a Place that was not suggested and
+        // pressed the Enter key, or the Place Details request failed.
 
-      const label = 'V' + this.markers?.length;
-      console.log(label);
-      let marker = {
-        position: latLng,
+        this.needInput = true;
+        return;
+      }
+
+      // If the place has a geometry, then present it on a map.
+      if (place.geometry.viewport) {
+        this.map.fitBounds(place.geometry.viewport);
+      } else {
+        this.map.setCenter(place.geometry.location);
+      }
+      this.addMarker({
         title: 'Place',
-        label: { text: label, color: 'white' },
-        placeId: '',
-        address: '',
-        name: '',
-      };
-
-      this.geoCodePromise({ latLng: latLng })
-        // get placeId
-        .then((data) => {
-          return data.filter((v) => v.types.includes('plus_code'))[0]?.place_id;
-        })
-        // use it to get Placed data from services
-        .then((placeId) => {
-          marker.placeId = placeId;
-          const request = {
-            placeId: placeId,
-            fields: ['name', 'formatted_address', 'place_id', 'geometry'],
-          };
-          return this.placeDetailsPromise(request);
-        })
-        // finish up the marker
-        .then((record) => {
-          marker.address = record.formatted_address;
-          marker.name = record.name;
-
-          // add it to the map and cache it in localSTorage
-          this.addMarker(marker);
-          this.map.panTo(marker.position);
-        });
+        label: place.name,
+        name: place.name,
+        address: place.formatted_address,
+        plus_code: place.plus_code?.global_code,
+        placeId: place.place_id,
+        position: place.geometry.location,
+      });
     },
 
     geolocate: function () {
@@ -428,11 +433,18 @@ export default {
 
     addVisit() {
       const { name, placeId, position } = this.marker;
+      // position can be lat() and lng functions, or they can be values.
+      // we want values
+      const lat =
+        typeof position.lat === 'function' ? position.lat() : position.lat;
+      const lng =
+        typeof position.lng === 'function' ? position.lng() : position.lng;
+
       this.$emit('addedPlace', {
         name,
         placeId,
-        lat: position.lat(),
-        lng: position.lng(),
+        lat: lat,
+        lng: lng,
       });
     },
 
@@ -459,6 +471,7 @@ export default {
         this.drawer = !this.drawer;
       });
     },
+
     // alternative to Google documentation
     geolocateControl(controlDiv, map) {
       // Set CSS for the control border.
@@ -586,11 +599,14 @@ export default {
       this.map = map;
       return map;
     },
+
     getAssets() {
       const self = this;
       this.$gmapApiPromiseLazy().then(() => {
         self.geocoder = new window.google.maps.Geocoder();
-        self.service = new window.google.maps.places.PlacesService(self.map);
+        self.placesService = new window.google.maps.places.PlacesService(
+          self.map
+        );
       });
     },
 
@@ -629,13 +645,18 @@ export default {
     },
 
     goRecent(val) {
+      this.marker = this.markersData.find(({ name }) => name === val[0]);
+      if (!this.marker) {
+        alert(
+          `The marker for ${val[0]} is missing. Please mark your map again, and use the marker to mark your calendar.`
+        );
+        return;
+      }
       this.$refs.confirm
         .open('Confirm', `Mark your calendar with ${val[0]}?`)
         .then((add) => {
           if (add) {
-            console.log(printJson(val));
-            // this.currentPlace = { name: val[0], latLng: val[1] };
-
+            console.log(printJson(printJson(this.marker)));
             this.addVisit();
           }
         });
