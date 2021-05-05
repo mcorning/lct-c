@@ -11,5 +11,6 @@ const database = new Database();
 database.register(Message);
 database.register(Visitor);
 database.register(Visit);
+console.log('Registered Database');
 
 export default database;

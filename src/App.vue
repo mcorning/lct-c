@@ -69,159 +69,203 @@
 
     <v-main style="padding: 40px 0px 68px">
       <v-container class="fill-height" fluid>
-        <v-card v-if="showBigQrCode" class="mt-15">
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on, attrs }">
-              <v-img
-                class="mt-5"
-                src="../src/assets/lct-c2QR.jpeg"
-                v-bind="attrs"
-                v-on="on"
-                @click="showBigQrCode = false"
-              ></v-img>
-            </template>
-            <span>Click to dismiss</span></v-tooltip
-          >
-        </v-card>
-        <v-app-bar app color="primary" dense dark>
-          <!-- <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon> -->
-          <!-- <v-navigation-drawer v-model="drawer" app>
-        <Chat :nsp="nsp" :query="query" />
-      </v-navigation-drawer> -->
-
-          <v-row align="center" no-gutters>
-            <v-col cols="auto" class="text-left">
-              <v-card-title>
-                <a
-                  class="white--text"
-                  href="https://soteriainstitute.org/safe-in-sisters/"
+        <v-card max-width="320">
+          <v-card-title>Announcing LCT-Sisters</v-card-title>
+          <v-card-subtitle>May 5, 2021</v-card-subtitle>
+          <v-card-text>
+            We upgraded LCT-C.
+            <br />
+            Also, we changed its name to be consistent with other LCT
+            installations around the world.
+            <br />
+            Please change all links from LCT-C to
+            <a href="'https://lct-sisters.herokuapp.com/">LCT-Sisters</a>.
+          </v-card-text>
+          <v-card-actions>
+            <v-row align="center" justify="center">
+              <v-col cols="auto">
+                <v-btn
+                  tile
+                  href="https://lct-sisters.herokuapp.com"
                   target="_blank"
-                  rel="noopener"
-                  style="text-decoration: none"
                 >
-                  {{ xxs ? 'LCT' : 'Local Contact Tracing' }} - {{ namespace }}
-                </a></v-card-title
+                  Take me there...
+                </v-btn>
+              </v-col>
+              <v-col cols="auto" class="text-center">
+                SCAN ME THERE...
+                <v-img
+                  width="200"
+                  height="200"
+                  src="../public/img/LCT-Sisters-QR.png"
+                ></v-img>
+              </v-col>
+            </v-row>
+          </v-card-actions>
+        </v-card>
+
+        <div style="display: none">
+          <v-card v-if="showBigQrCode" class="mt-15">
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-img
+                  class="mt-5"
+                  src="../src/assets/lct-c2QR.jpeg"
+                  v-bind="attrs"
+                  v-on="on"
+                  @click="showBigQrCode = false"
+                ></v-img>
+              </template>
+              <span>Click to dismiss</span></v-tooltip
+            >
+          </v-card>
+          <v-app-bar app color="primary" dense dark>
+            <!-- <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon> -->
+            <!-- <v-navigation-drawer v-model="drawer" app>
+          <Chat :nsp="nsp" :query="query" />
+        </v-navigation-drawer> -->
+
+            <v-row align="center" no-gutters>
+              <v-col cols="auto" class="text-left">
+                <v-card-title>
+                  <a
+                    class="white--text"
+                    href="https://soteriainstitute.org/safe-in-sisters/"
+                    target="_blank"
+                    rel="noopener"
+                    style="text-decoration: none"
+                  >
+                    {{ xxs ? 'LCT' : 'Local Contact Tracing' }} -
+                    {{ namespace }}
+                  </a></v-card-title
+                >
+              </v-col>
+              <v-spacer></v-spacer>
+              <v-col class="text-right">{{ username }}</v-col>
+            </v-row>
+          </v-app-bar>
+
+          <!-- PWA Update -->
+          <v-snackbar v-model="snackWithButtons" bottom left timeout="-1">
+            {{ snackWithBtnText }}
+            <template v-slot:action="{ attrs }">
+              <v-btn
+                text
+                color="#00f500"
+                v-bind="attrs"
+                @click.stop="refreshApp"
               >
-            </v-col>
-            <v-spacer></v-spacer>
-            <v-col class="text-right">{{ username }}</v-col>
-          </v-row>
-        </v-app-bar>
-
-        <!-- PWA Update -->
-        <v-snackbar v-model="snackWithButtons" bottom left timeout="-1">
-          {{ snackWithBtnText }}
-          <template v-slot:action="{ attrs }">
-            <v-btn text color="#00f500" v-bind="attrs" @click.stop="refreshApp">
-              {{ snackBtnText }}
-            </v-btn>
-            <v-btn icon class="ml-4" @click="snackWithButtons = false">
-              <v-icon>close</v-icon>
-            </v-btn>
-          </template>
-        </v-snackbar>
-
-        <!-- Alert Snackbar -->
-        <v-snackbar
-          top
-          :value="alertPending"
-          :timeout="-1"
-          color="orange darken-3"
-          vertical
-          dark
-          max-width="400"
-        >
-          <v-card dark color="orange darken-1" v-if="alertPending">
-            <v-card-title>COVID-19 Detected</v-card-title>
-            <v-card-subtitle>
-              Someone in your community has tested positive for COVID-19.
-            </v-card-subtitle>
-            <v-card-text class="white--text">
-              You will see an exposure alert next only if you shared the same
-              space with that person.</v-card-text
-            >
-          </v-card>
-
-          <template v-slot:action="{ attrs }">
-            <v-btn
-              color="white"
-              text
-              v-bind="attrs"
-              @click="alertPending = false"
-            >
-              OK
-            </v-btn>
-          </template>
-        </v-snackbar>
-
-        <!-- Alert Snackbar -->
-        <v-snackbar
-          :value="exposureAlert"
-          :timeout="-1"
-          color="red darken-3"
-          vertical
-          centered
-          dark
-          max-width="400"
-        >
-          <v-card dark color="red darken-1" v-if="exposureAlert">
-            <v-card-title>COVID-19 Exposure Alert</v-card-title>
-            <v-card-subtitle>
-              You shared space recently with someone who tested positive
-            </v-card-subtitle>
-            <v-card-text>
-              Please get tested. If you are positive you can spread the virus -
-              even if you are immune.</v-card-text
-            >
-          </v-card>
-
-          <template v-slot:action="{ attrs }">
-            <v-btn
-              color="white"
-              text
-              v-bind="attrs"
-              @click="exposureAlert = false"
-            >
-              OK
-            </v-btn>
-          </template>
-        </v-snackbar>
-
-        <v-row v-if="!usernameAlreadySelected" justify="center" no-gutters>
-          <Welcome @input="onUsernameSelection" />
-        </v-row>
-        <v-row v-else justify="start" no-gutters>
-          <v-col cols="cols">
-            <Visitor
-              :showLogs="showLogs"
-              :nickname="username"
-              :userID="userID"
-              :auditor="auditor"
-              :show="show"
-              @showCalendar="onShowCalendar"
-              @showSpaces="onShowSpaces"
-              @sendExposureWarning="onSendExposureWarning($event)"
-              @visitorLoggedVisit="onVisitorLoggedVisit"
-              @visitorUpdateLoggedVisit="onVisitorLoggedVisit"
-              @visitorDeletedVisit="onVisitorDeletedVisit"
-              @userFeedback="onUserFeedback"
-              @error="onError($event)"
-            />
-          </v-col>
-          <!-- Logged Visit confirmation -->
-          <v-snackbar
-            v-model="hasSaved"
-            :timeout="4000"
-            bottom
-            left
-            absolute
-            :color="confirmationColor"
-          >
-            {{ confirmationMessage }}
+                {{ snackBtnText }}
+              </v-btn>
+              <v-btn icon class="ml-4" @click="snackWithButtons = false">
+                <v-icon>close</v-icon>
+              </v-btn>
+            </template>
           </v-snackbar>
-        </v-row>
+
+          <!-- Alert Snackbar -->
+          <v-snackbar
+            top
+            :value="alertPending"
+            :timeout="-1"
+            color="orange darken-3"
+            vertical
+            dark
+            max-width="400"
+          >
+            <v-card dark color="orange darken-1" v-if="alertPending">
+              <v-card-title>COVID-19 Detected</v-card-title>
+              <v-card-subtitle>
+                Someone in your community has tested positive for COVID-19.
+              </v-card-subtitle>
+              <v-card-text class="white--text">
+                You will see an exposure alert next only if you simultansously
+                shared the same space with that person.</v-card-text
+              >
+            </v-card>
+
+            <template v-slot:action="{ attrs }">
+              <v-btn
+                color="white"
+                text
+                v-bind="attrs"
+                @click="alertPending = false"
+              >
+                OK
+              </v-btn>
+            </template>
+          </v-snackbar>
+
+          <!-- Alert Snackbar -->
+          <v-snackbar
+            :value="exposureAlert"
+            :timeout="-1"
+            color="red darken-3"
+            vertical
+            centered
+            dark
+            max-width="400"
+          >
+            <v-card dark color="red darken-1" v-if="exposureAlert">
+              <v-card-title>COVID-19 Exposure Alert</v-card-title>
+              <v-card-subtitle>
+                You shared space recently with someone who tested positive
+              </v-card-subtitle>
+              <v-card-text>
+                Please get tested. If you are positive you can spread the virus
+                - even if you are immune.</v-card-text
+              >
+            </v-card>
+
+            <template v-slot:action="{ attrs }">
+              <v-btn
+                color="white"
+                text
+                v-bind="attrs"
+                @click="exposureAlert = false"
+              >
+                OK
+              </v-btn>
+            </template>
+          </v-snackbar>
+
+          <v-row v-if="!usernameAlreadySelected" justify="center" no-gutters>
+            <Welcome @input="onUsernameSelection" />
+          </v-row>
+          <v-row v-else justify="start" no-gutters>
+            <v-col cols="cols">
+              <Visitor
+                :showLogs="showLogs"
+                :nickname="username"
+                :userID="userID"
+                :auditor="auditor"
+                :show="show"
+                @showCalendar="onShowCalendar"
+                @showSpaces="onShowSpaces"
+                @sendExposureWarning="onSendExposureWarning($event)"
+                @visitorLoggedVisit="onVisitorLoggedVisit"
+                @visitorUpdateLoggedVisit="onVisitorLoggedVisit"
+                @visitorDeletedVisit="onVisitorDeletedVisit"
+                @userFeedback="onUserFeedback"
+                @error="onError($event)"
+              />
+            </v-col>
+            <!-- Logged Visit confirmation -->
+            <v-snackbar
+              v-model="hasSaved"
+              :timeout="4000"
+              bottom
+              left
+              absolute
+              :color="confirmationColor"
+            >
+              {{ confirmationMessage }}
+            </v-snackbar>
+          </v-row>
+        </div>
       </v-container>
     </v-main>
+
     <v-footer app color="primary" class="white--text">
       <v-bottom-navigation
         :value="value"
@@ -693,7 +737,9 @@ export default {
 
   async mounted() {
     const self = this;
-    Visit.$fetch();
+    Visit.$fetch().then((visits) => {
+      console.log('Visits', printJson(visits));
+    });
     self.overlay = false;
     const bp = self.$vuetify.breakpoint;
     console.log(

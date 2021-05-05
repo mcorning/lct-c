@@ -12,4 +12,5 @@ module.exports = {
   redisHost: process.env.REDIS_HOST,
   redisPassword: process.env.REDIS_PASSWORD,
   redisPort: process.env.REDIS_PORT,
+  mapkey: process.env.VUE_APP_MAP_API_KEY,
 };

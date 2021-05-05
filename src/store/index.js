@@ -1,9 +1,9 @@
-import Vue from "vue";
-import Vuex from "vuex";
-import VuexORM from "@vuex-orm/core";
-import VuexORMLocalForage from "vuex-orm-localforage";
-import database from "@/database";
-import { version } from "../../package.json";
+import Vue from 'vue';
+import Vuex from 'vuex';
+import VuexORM from '@vuex-orm/core';
+import VuexORMLocalForage from 'vuex-orm-localforage';
+import database from '@/database';
+import { version } from '../../package.json';
 
 Vue.use(Vuex);
 
@@ -13,7 +13,7 @@ const store = new Vuex.Store({
   plugins: [VuexORM.install(database)],
   // using package.json for version number
   state: {
-    packageVersion: version || "0",
+    packageVersion: version || '0',
   },
   getters: {
     appVersion: (state) => {
@@ -21,5 +21,6 @@ const store = new Vuex.Store({
     },
   },
 });
+console.log('Registered Vuex Store');
 
 export default store;

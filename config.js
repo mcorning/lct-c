@@ -1,12 +1,10 @@
 // config.js
-const dotenv = require('dotenv');
-dotenv.config();
-
 const config = {
-  mapkey: process.env.MAP_API_KEY,
+  // mapkey: process.env.MAP_API_KEY,
   redisHost: process.env.REDIS_HOST,
   redisPassword: process.env.REDIS_PASSWORD,
   redisPort: process.env.REDIS_PORT,
+  mapkey: process.env.VUE_APP_MAP_API_KEY,
   graphName:
     process.env.NODE_ENV == 'production'
       ? process.env.GRAPH_NAME

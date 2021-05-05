@@ -327,6 +327,10 @@ export default {
   },
 
   watch: {
+    location(location) {
+      console.log(location);
+    },
+
     show(newVal, oldVal) {
       if (oldVal === this.CALENDAR) {
         this.selectedSpace = null;

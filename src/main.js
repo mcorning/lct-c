@@ -12,6 +12,7 @@ import SoteriaIcon from './components/svg/safeInSistersLogo.vue';
 import * as VueGoogleMaps from 'vue2-google-maps';
 
 import configPlugin from '../config.js';
+console.log(configPlugin);
 Vue.use(configPlugin);
 
 // can't get dotenv or Vue to see environement vars here
